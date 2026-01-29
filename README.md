@@ -270,4 +270,4 @@ the rights to use your contribution. If a CLA is required, the PR bot will provi
 
 This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).
 For more information see the [Contributor Covenant FAQ](https://www.contributor-covenant.org/faq/) or
-contact [conduct@ngcpp.org](mailto:conduct@ngcpp.org) with any additional questions or comments.
+contact [ngcpp@outlook.com](mailto:ngcpp@outlook.com) with any additional questions or comments.

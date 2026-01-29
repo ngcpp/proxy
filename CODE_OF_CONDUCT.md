@@ -6,4 +6,4 @@ Resources:
 
 - [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)
 - [Contributor Covenant FAQ](https://www.contributor-covenant.org/faq/)
-- Contact [conduct@ngcpp.org](mailto:conduct@ngcpp.org) with questions or concerns
+- Contact [ngcpp@outlook.com](mailto:ngcpp@outlook.com) with questions or concerns
