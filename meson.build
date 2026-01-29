@@ -79,7 +79,7 @@ if pkgconfig.found()
   pkgconfig.generate(
     name: meson.project_name(),
     description: 'Next Generation Polymorphism in C++',
-    url: 'https://microsoft.github.io/proxy/',
+    url: 'https://ngcpp.github.io/proxy/',
   )
 endif
 

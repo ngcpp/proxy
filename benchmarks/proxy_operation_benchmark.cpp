@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) 2022-2026 Microsoft Corporation.
 // Licensed under the MIT License.
 
 #include <benchmark/benchmark.h>

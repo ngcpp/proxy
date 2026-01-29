@@ -21,7 +21,7 @@
 
 ### <a name="why-popular">Why is "Proxy" so popular?</a>
 
-"Proxy" is built by engineers at Microsoft and initially deployed in the Windows operating system. For 40 years, the inheritance-based polymorphism paradigm has been the only scalable solution for runtime polymorphism in C++. However, a "virtual function" is no longer the optimal choice for runtime polymorphism today, and new languages with better paradigms, like [traits in Rust](https://doc.rust-lang.org/book/ch10-02-traits.html), are emerging. "Proxy" is our latest and greatest solution for generic runtime polymorphism in C++. It is easy to integrate and makes C++ feel like a brand new language when dealing with runtime abstractions.
+"Proxy" was created by Microsoft engineers and incubated at Microsoft from 2022 to Feb 2026, and initially deployed in the Windows operating system. It is now maintained by the Next Gen C++ Foundation (ngcpp). For 40 years, the inheritance-based polymorphism paradigm has been the only scalable solution for runtime polymorphism in C++. However, a "virtual function" is no longer the optimal choice for runtime polymorphism today, and new languages with better paradigms, like [traits in Rust](https://doc.rust-lang.org/book/ch10-02-traits.html), are emerging. "Proxy" is our latest and greatest solution for generic runtime polymorphism in C++. It is easy to integrate and makes C++ feel like a brand new language when dealing with runtime abstractions.
 
 ### <a name="who-for">Who is "Proxy" for?</a>
 
@@ -37,7 +37,7 @@ The fundamental abstraction of "Proxy" is called "facade". It is recommended for
 
 ### <a name="how-integrate">How to integrate "Proxy" into my project?</a>
 
-Since "Proxy" is a header-only library, you can simply navigate to the [latest release](https://github.com/microsoft/proxy/releases), download the source code, and include "proxy.h" in your project. Make sure your compiler version meets the [minimum requirements for compilers](README.md#minimum-requirements-for-compilers). If your project has already integrated with [vcpkg](https://vcpkg.io/) or [conan](https://conan.io/), just search for the keyword "proxy" and install it. Thanks to the community that helped port "Proxy" to these platforms!
+Since "Proxy" is a header-only library, you can simply navigate to the [latest release](https://github.com/ngcpp/proxy/releases), download the source code, and include "proxy.h" in your project. Make sure your compiler version meets the [minimum requirements for compilers](README.md#minimum-requirements-for-compilers). If your project has already integrated with [vcpkg](https://vcpkg.io/) or [conan](https://conan.io/), just search for the keyword "proxy" and install it. Thanks to the community that helped port "Proxy" to these platforms!
 
 ### <a name="how-migrate">My existing project uses virtual functions. How should I migrate to "Proxy"?</a>
 
@@ -92,4 +92,4 @@ These rules let old and new code coexist during the transition while keeping ODR
 
 ### <a name="help-needed">What should I do if I found this library deficient in my scenario?</a>
 
-Please search for your scenario in the existing issues first, and feel free to file an a new one on demand, following the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+Please search for your scenario in the existing issues first, and feel free to file an a new one on demand, following the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/).

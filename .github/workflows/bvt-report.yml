@@ -23,8 +23,8 @@ jobs:
         cat <<EOF > benchmarking-report.md
         # Benchmarking Report
 
-        - Generated for: [Microsoft "Proxy" library](https://github.com/microsoft/proxy)
-        - Commit ID: [${{ github.sha }}](https://github.com/microsoft/proxy/commit/${{ github.sha }})
+        - Generated for: [C++ "Proxy" library](https://github.com/ngcpp/proxy)
+        - Commit ID: [${{ github.sha }}](https://github.com/ngcpp/proxy/commit/${{ github.sha }})
         - Generated at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
         EOF
