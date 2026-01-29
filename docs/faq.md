@@ -21,7 +21,7 @@
 
 ### <a name="why-popular">Why is "Proxy" so popular?</a>
 
-"Proxy" was created by Microsoft engineers and incubated at Microsoft from 2018 to 2026, has been used in the Windows operating system since 2022. It is now maintained by the Next Gen C++ Foundation (ngcpp). For 40 years, the inheritance-based polymorphism paradigm has been the only scalable solution for runtime polymorphism in C++. However, a "virtual function" is no longer the optimal choice for runtime polymorphism today, and new languages with better paradigms, like [traits in Rust](https://doc.rust-lang.org/book/ch10-02-traits.html), are emerging. "Proxy" is our latest and greatest solution for generic runtime polymorphism in C++. It is easy to integrate and makes C++ feel like a brand new language when dealing with runtime abstractions.
+"Proxy" was created by Microsoft engineers and incubated at Microsoft from 2018 to Feb 2026, has been used in the Windows operating system since 2022. It is now maintained by the Next Gen C++ Foundation (ngcpp). For 40 years, the inheritance-based polymorphism paradigm has been the only scalable solution for runtime polymorphism in C++. However, a "virtual function" is no longer the optimal choice for runtime polymorphism today, and new languages with better paradigms, like [traits in Rust](https://doc.rust-lang.org/book/ch10-02-traits.html), are emerging. "Proxy" is our latest and greatest solution for generic runtime polymorphism in C++. It is easy to integrate and makes C++ feel like a brand new language when dealing with runtime abstractions.
 
 ### <a name="who-for">Who is "Proxy" for?</a>
 
