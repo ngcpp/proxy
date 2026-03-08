@@ -2,7 +2,7 @@
 site_name: Proxy 4
 site_url: https://ngcpp.github.io/proxy
 site_description: Next Generation Polymorphism in C++
-copyright: Copyright (c) 2022-2026 Microsoft Corporation
+copyright: Copyright (c) 2022-2026 Microsoft Corporation<br />Copyright (c) 2026-Present Next Gen C++ Foundation
 repo_url: https://github.com/ngcpp/proxy/
 edit_uri: ""
 
