@@ -1,4 +1,5 @@
 // Copyright (c) 2022-2026 Microsoft Corporation.
+// Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
 #ifndef MSFT_PROXY_V4_PROXY_H_
