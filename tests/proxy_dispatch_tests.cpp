@@ -783,11 +783,13 @@ TEST(ProxyDispatchTests, TestRhsOpPtrToMem) {
 
 TEST(ProxyDispatchTests, TestIndirectConversion) {
   struct TestFacade
-      : pro::facade_builder::add_convention<pro::conversion_dispatch,
-                                            int()>::build {};
+      : pro::facade_builder                                         //
+        ::add_convention<pro::conversion_dispatch, int(), short&()> //
+        ::build {};
   short v = 123;
   pro::proxy<TestFacade> p = &v;
-  ASSERT_EQ(static_cast<int>(*p), 123);
+  static_cast<short&>(*p) = 456;
+  ASSERT_EQ(static_cast<int>(*p), 456);
 }
 
 TEST(ProxyDispatchTests, TestDirectConversion) {

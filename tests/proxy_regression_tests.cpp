@@ -2,7 +2,15 @@
 // Licensed under the MIT License.
 
 #include <gtest/gtest.h>
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(push)
+#pragma warning(                                                               \
+    disable : 4702) // False alarm from MSVC: warning C4702: unreachable code
+#endif              // defined(_MSC_VER) && !defined(__clang__)
 #include <proxy/proxy.h>
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(pop)
+#endif // defined(_MSC_VER) && !defined(__clang__)
 #include <vector>
 
 namespace proxy_regression_tests_details {
@@ -39,6 +47,8 @@ struct Range : pro::facade_builder                                          //
                ::template add_convention<MemEnd, pro::proxy<Iterator<T>>()> //
                ::build {};
 
+PRO_DEF_MEM_DISPATCH(MemFun, Fun);
+
 } // namespace proxy_regression_tests_details
 
 namespace details = proxy_regression_tests_details;
@@ -68,4 +78,17 @@ TEST(ProxyRegressionTests, TestProxiableSelfDependency) {
     expected.push_back(i);
   }
   EXPECT_EQ(expected, original);
+}
+
+// https://github.com/ngcpp/proxy/issues/10
+TEST(ProxyRegressionTests, TestWeakDispathReferenceReturningOverload) {
+  struct MyFacade
+      : pro::facade_builder                                           //
+        ::add_convention<pro::weak_dispatch<details::MemFun>, int&()> //
+        ::build {};
+  static_assert(pro::proxiable<int*, MyFacade>);
+
+  int v = 123;
+  pro::proxy<MyFacade> p = &v;
+  EXPECT_THROW(p->Fun(), pro::not_implemented);
 }

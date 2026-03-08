@@ -1288,9 +1288,25 @@ struct converter {
   template <class T>
   operator T() && noexcept(
       std::is_nothrow_invocable_r_v<T, F, std::in_place_type_t<T>>)
-    requires(std::is_invocable_r_v<T, F, std::in_place_type_t<T>>)
+    requires(std::is_invocable_r_v<T, F, std::in_place_type_t<T>> &&
+             !std::is_invocable_r_v<T, F, std::in_place_type_t<T&>> &&
+             !std::is_invocable_r_v<T, F, std::in_place_type_t<T &&>>)
   {
     return std::move(f_)(std::in_place_type<T>);
+  }
+  template <class T>
+  operator T&() && noexcept(
+      std::is_nothrow_invocable_r_v<T&, F, std::in_place_type_t<T&>>)
+    requires(std::is_invocable_r_v<T&, F, std::in_place_type_t<T&>>)
+  {
+    return std::move(f_)(std::in_place_type<T&>);
+  }
+  template <class T>
+  operator T&&() && noexcept(
+      std::is_nothrow_invocable_r_v<T&&, F, std::in_place_type_t<T&&>>)
+    requires(std::is_invocable_r_v<T &&, F, std::in_place_type_t<T &&>>)
+  {
+    return std::move(f_)(std::in_place_type<T&&>);
   }
 
 private:
@@ -2346,14 +2362,29 @@ struct sign {
 template <std::size_t N>
 sign(const char (&str)[N]) -> sign<N - 1u>;
 
-struct wildcard {
-  wildcard() = delete;
+// When std::reference_constructs_from_temporary_v (C++23) is not available, we
+// fall back to a conservative approximation that disallows binding a temporary
+// to a reference type if the source type is not a reference or if the source
+// and target reference types are not compatible.
+template <class T, class U>
+concept explicitly_convertible =
+    std::is_constructible_v<U, T> &&
+#if __cpp_lib_reference_from_temporary >= 202202L
+    !std::reference_constructs_from_temporary_v<U, T>;
+#else
+    (!std::is_reference_v<U> ||
+     (std::is_reference_v<T> &&
+      std::is_convertible_v<std::add_pointer_t<std::remove_reference_t<T>>,
+                            std::add_pointer_t<std::remove_reference_t<U>>>));
+#endif // __cpp_lib_reference_from_temporary >= 202202L
 
+struct noreturn_conversion {
   template <class T>
-  [[noreturn]] operator T() const {
+  [[noreturn]] PRO4D_STATIC_CALL(T, std::in_place_type_t<T>) {
     PROD_UNREACHABLE();
   }
 };
+using wildcard = converter<noreturn_conversion>;
 
 } // namespace details
 
@@ -2577,9 +2608,9 @@ struct explicit_conversion_dispatch : details::cast_dispatch_base<true, false> {
   PRO4D_STATIC_CALL(auto, T&& self) noexcept {
     return details::converter{
         [&self]<class U>(std::in_place_type_t<U>) noexcept(
-            std::is_nothrow_constructible_v<U, T>)
-          requires(std::is_constructible_v<U, T>)
-        { return U{std::forward<T>(self)}; }};
+            std::is_nothrow_constructible_v<U, T>) -> U
+          requires(details::explicitly_convertible < T &&, U >)
+        { return static_cast<U>(std::forward<T>(self)); }};
   }
 };
 using conversion_dispatch = explicit_conversion_dispatch;
