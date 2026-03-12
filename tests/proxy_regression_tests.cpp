@@ -81,7 +81,7 @@ TEST(ProxyRegressionTests, TestProxiableSelfDependency) {
 }
 
 // https://github.com/ngcpp/proxy/issues/10
-TEST(ProxyRegressionTests, TestWeakDispathReferenceReturningOverload) {
+TEST(ProxyRegressionTests, TestWeakDispatchReferenceReturningOverload) {
   struct MyFacade
       : pro::facade_builder                                           //
         ::add_convention<pro::weak_dispatch<details::MemFun>, int&()> //
