@@ -29,7 +29,7 @@
 #define PRO4D_DEBUG(...) __VA_ARGS__
 #endif // NDEBUG
 
-#define __msft_lib_proxy4 202510L
+#define __msft_lib_proxy4 202603L
 
 #define PRO4D_DIRECT_FUNC_IMPL(...)                                            \
   noexcept(noexcept(__VA_ARGS__))                                              \
