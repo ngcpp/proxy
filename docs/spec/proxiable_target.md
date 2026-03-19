@@ -10,7 +10,7 @@ template <class T, class F>
 concept proxiable_target = proxiable<observer-ptr<T>, F>;
 ```
 
-See [`make_proxy_view`](make_proxy_view.md) for the definition of the exposition-only class template *observer-ptr*.
+See [`make_proxy_ref`](make_proxy_ref.md) for the definition of the exposition-only class template *observer-ptr*.
 
 ## Example
 

@@ -13,7 +13,7 @@ template <facade F>
 using proxy_view = proxy<observer_facade<F>>;
 ```
 
-`proxy_view<F>` is a non-owning, trivially copyable, trivially relocatable view of an object that models [`proxiable_target<T, F>`](proxiable_target.md). It behaves like a `proxy<F>` except that it never owns the lifetime of the underlying object.
+`proxy_view<F>` is a non-owning, trivially copyable, trivially relocatable view of an object that models [`proxiable_target<T, observer_facade<F>>`](proxiable_target.md). It behaves like a `proxy<F>` except that it never owns the lifetime of the underlying object.
 
 `observer_facade<F>` adapts an existing [facade](facade.md) `F` for this non-owning use. The adaptation preserves only those parts of `F` that remain semantically valid when the storage is reduced to a single pointer and modifies substitution conversions so that view-ness is preserved (substitution that would have produced an owning `proxy<G>` instead produces a `proxy_view<G>`).
 
