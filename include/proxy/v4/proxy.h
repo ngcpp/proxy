@@ -1825,8 +1825,7 @@ constexpr proxy<F> make_proxy_ref(T& value) noexcept {
 
 template <facade F, class T>
 constexpr proxy_view<F> make_proxy_view(T& value) noexcept {
-  return proxy_view<F>{
-      details::observer_ptr<T&, const T&, T&&, const T&&>{value}};
+  return make_proxy_ref<observer_facade<F>>(value);
 }
 
 #if __STDC_HOSTED__
