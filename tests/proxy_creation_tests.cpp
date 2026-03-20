@@ -1238,7 +1238,8 @@ TEST(ProxyCreationTests, TestMakeProxyObserved) {
     int operator()() const&& noexcept { return 3; }
   } test_callable;
 
-  pro::proxy<TestFacade> p = pro::make_proxy_observed<TestFacade>(test_callable);
+  pro::proxy<TestFacade> p =
+      pro::make_proxy_observed<TestFacade>(test_callable);
   static_assert(!noexcept((*p)()));
   static_assert(noexcept((*std::move(p))()));
   ASSERT_EQ((*p)(), 0);
