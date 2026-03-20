@@ -1,15 +1,15 @@
-# Function template `make_proxy_ref`
+# Function template `make_proxy_observed`
 
 > Header: `proxy.h`  
 > Module: `proxy`  
 > Namespace: `pro::inline v4`  
 > Since: 4.1.0
 
-The definition of `make_proxy_ref` makes use of an exposition-only class template *observer-ptr*. `observer-ptr<T>` contains a raw pointer to an object of type `T`, and provides `operator*` for access with the same qualifiers.
+The definition of `make_proxy_observed` makes use of an exposition-only class template *observer-ptr*. `observer-ptr<T>` contains a raw pointer to an object of type `T`, and provides `operator*` for access with the same qualifiers.
 
 ```cpp
 template <facade F, class T>
-proxy<F> make_proxy_ref(T& value) noexcept;
+proxy<F> make_proxy_observed(T& value) noexcept;
 ```
 
 Creates a `proxy<F>` object containing a value `p` of type `observer-ptr<T>`, where `*p` is direct-non-list-initialized with `std::addressof(value)`. If [`proxiable_target<T, F>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
@@ -32,7 +32,7 @@ struct Printable : pro::facade_builder //
 
 int main() {
   int val = 123;
-  pro::proxy<Printable> p = pro::make_proxy_ref<Printable>(val);
+  pro::proxy<Printable> p = pro::make_proxy_observed<Printable>(val);
 
   // Prints "123"
   std::cout << *p << "\n";

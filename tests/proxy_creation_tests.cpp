@@ -1224,7 +1224,7 @@ TEST(ProxyCreationTests, TestMakeProxyView) {
   ASSERT_EQ((*std::move(std::as_const(p)))(), 3);
 }
 
-TEST(ProxyCreationTests, TestMakeProxyRef) {
+TEST(ProxyCreationTests, TestMakeProxyObserved) {
   struct TestFacade
       : pro::facade_builder //
         ::add_convention<pro::operator_dispatch<"()">, int() &, int() const&,
@@ -1238,12 +1238,12 @@ TEST(ProxyCreationTests, TestMakeProxyRef) {
     int operator()() const&& noexcept { return 3; }
   } test_callable;
 
-  pro::proxy<TestFacade> p = pro::make_proxy_ref<TestFacade>(test_callable);
+  pro::proxy<TestFacade> p = pro::make_proxy_observed<TestFacade>(test_callable);
   static_assert(!noexcept((*p)()));
   static_assert(noexcept((*std::move(p))()));
   ASSERT_EQ((*p)(), 0);
   ASSERT_EQ((*std::as_const(p))(), 1);
   ASSERT_EQ((*std::move(p))(), 2);
-  p = pro::make_proxy_ref<TestFacade>(test_callable);
+  p = pro::make_proxy_observed<TestFacade>(test_callable);
   ASSERT_EQ((*std::move(std::as_const(p)))(), 3);
 }

@@ -1819,13 +1819,13 @@ constexpr proxy<F> make_proxy_inplace(T&& value) noexcept(
 }
 
 template <facade F, class T>
-constexpr proxy<F> make_proxy_ref(T& value) noexcept {
+constexpr proxy<F> make_proxy_observed(T& value) noexcept {
   return proxy<F>{details::observer_ptr<T&, const T&, T&&, const T&&>{value}};
 }
 
 template <facade F, class T>
 constexpr proxy_view<F> make_proxy_view(T& value) noexcept {
-  return make_proxy_ref<observer_facade<F>>(value);
+  return make_proxy_observed<observer_facade<F>>(value);
 }
 
 #if __STDC_HOSTED__

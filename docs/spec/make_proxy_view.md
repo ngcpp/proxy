@@ -10,7 +10,7 @@ template <facade F, class T>
 proxy_view<F> make_proxy_view(T& value) noexcept;
 ```
 
-Equivalent to `return make_proxy_ref<observer_facade<F>>(value)`.
+Equivalent to `return make_proxy_observed<observer_facade<F>>(value)`.
 
 ## Return Value
 

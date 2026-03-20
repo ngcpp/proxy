@@ -22,7 +22,7 @@ using v4::is_bitwise_trivially_relocatable;
 using v4::is_bitwise_trivially_relocatable_v;
 using v4::make_proxy;
 using v4::make_proxy_inplace;
-using v4::make_proxy_ref;
+using v4::make_proxy_observed;
 using v4::make_proxy_shared;
 using v4::make_proxy_view;
 using v4::not_implemented;

@@ -52,7 +52,7 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`allocate_proxy_shared`](allocate_proxy_shared.md) | Creates a `proxy` object with shared ownership using an allocator |
 | [`allocate_proxy`](allocate_proxy.md)               | Creates a `proxy` object with an allocator                   |
 | [`make_proxy_inplace`](make_proxy_inplace.md)       | Creates a `proxy` object with strong no-allocation guarantee |
-| [`make_proxy_ref`](make_proxy_ref.md)               | Creates a `proxy` object with no ownership                   |
+| [`make_proxy_observed`](make_proxy_observed.md)     | Creates a `proxy` object with no ownership                   |
 | [`make_proxy_shared`](make_proxy_shared.md)         | Creates a `proxy` object with shared ownership               |
 | [`make_proxy_view`](make_proxy_view.md)             | Creates a `proxy_view` object                                |
 | [`make_proxy`](make_proxy.md)                       | Creates a `proxy` object potentially with heap allocation    |

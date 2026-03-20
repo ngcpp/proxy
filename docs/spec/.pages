@@ -32,7 +32,7 @@ nav:
     - allocate_proxy_shared: allocate_proxy_shared.md
     - allocate_proxy: allocate_proxy.md
     - make_proxy_inplace: make_proxy_inplace.md
-    - make_proxy_ref: make_proxy_ref.md
+    - make_proxy_observed: make_proxy_observed.md
     - make_proxy_shared: make_proxy_shared.md
     - make_proxy_view: make_proxy_view.md
     - make_proxy: make_proxy.md
