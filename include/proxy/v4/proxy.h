@@ -1784,7 +1784,8 @@ concept inplace_proxiable_target = proxiable<details::inplace_ptr<T>, F>;
 
 template <class T, class F>
 concept proxiable_target =
-    proxiable<details::observer_ptr<T&, const T&, T&&, const T&&>, F>;
+    proxiable<details::observer_ptr<T&, const T&, T&&, const T&&>,
+              observer_facade<F>>;
 
 template <class T>
   requires(is_bitwise_trivially_relocatable_v<T>)

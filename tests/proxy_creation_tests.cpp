@@ -174,6 +174,7 @@ struct TestWeakSharedStringable : pro::facade_builder                      //
 
 static_assert(pro::proxiable<int*, TestSharedStringable>);
 static_assert(!pro::proxiable<int*, TestWeakSharedStringable>);
+static_assert(pro::proxiable_target<int, TestWeakSharedStringable>);
 
 } // namespace proxy_creation_tests_details
 
