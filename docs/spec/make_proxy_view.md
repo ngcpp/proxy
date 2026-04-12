@@ -12,7 +12,7 @@ template <facade F, class T>
 proxy_view<F> make_proxy_view(T& value) noexcept;
 ```
 
-Creates a `proxy_view<F>` object containing a value `p` of type `observer-ptr<T>`, where `*p` is direct-non-list-initialized with `std::addressof(value)`. If [`proxiable_target<T, F>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+Creates a `proxy_view<F>` object containing a value `p` of type `observer-ptr<T>`, where `p` is direct-non-list-initialized with `std::addressof(value)`. If [`proxiable_target<T, F>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
 
 ## Return Value
 
