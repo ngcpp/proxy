@@ -1267,74 +1267,60 @@ template <class D, class O, facade F, class... Args>
 [[deprecated("Use unqualified invoke instead")]] auto
     proxy_invoke(proxy_indirect_accessor<F>& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, false, D, O>(
-      details::as_proxy<F, details::qualifier_type::lv>(p),
-      std::forward<Args>(args)...);
+  return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
 [[deprecated("Use unqualified invoke instead")]] auto
     proxy_invoke(const proxy_indirect_accessor<F>& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, false, D, O>(
-      details::as_proxy<F, details::qualifier_type::const_lv>(p),
-      std::forward<Args>(args)...);
+  return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
 [[deprecated("Use unqualified invoke instead")]] auto
     proxy_invoke(proxy_indirect_accessor<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, false, D, O>(
-      details::as_proxy<F, details::qualifier_type::rv>(std::move(p)),
-      std::forward<Args>(args)...);
+  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
 [[deprecated("Use unqualified invoke instead")]] auto
     proxy_invoke(const proxy_indirect_accessor<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, false, D, O>(
-      details::as_proxy<F, details::qualifier_type::const_rv>(std::move(p)),
-      std::forward<Args>(args)...);
+  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
 [[deprecated("Use unqualified invoke instead")]] auto
     proxy_invoke(proxy<F>& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
+  return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(const proxy<F>& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(const proxy<F>& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
+  return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
 [[deprecated("Use unqualified invoke instead")]] auto
     proxy_invoke(proxy<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, true, D, O>(std::move(p),
-                                             std::forward<Args>(args)...);
+  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
 [[deprecated("Use unqualified invoke instead")]] auto
     proxy_invoke(const proxy<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
-  return details::invoke_impl<F, true, D, O>(std::move(p),
-                                             std::forward<Args>(args)...);
+  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 
 template <class R, facade F>
 [[deprecated("Use unqualified reflect instead")]] const R&
     proxy_reflect(const proxy_indirect_accessor<F>& p) noexcept {
-  return static_cast<const details::refl_meta<false, R>&>(
-             details::proxy_helper::get_meta(
-                 details::as_proxy<F, details::qualifier_type::const_lv>(p)))
-      .reflector;
+  return reflect<R>(p);
 }
 template <class R, facade F>
 [[deprecated("Use unqualified reflect instead")]] const R&
     proxy_reflect(const proxy<F>& p) noexcept {
-  return static_cast<const details::refl_meta<true, R>&>(
-             details::proxy_helper::get_meta(p))
-      .reflector;
+  return reflect<R>(p);
 }
 
 // =============================================================================
