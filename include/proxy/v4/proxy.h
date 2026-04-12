@@ -924,6 +924,43 @@ class proxy_indirect_accessor
   proxy_indirect_accessor() = default;
   proxy_indirect_accessor(const proxy_indirect_accessor&) = default;
   proxy_indirect_accessor& operator=(const proxy_indirect_accessor&) = default;
+
+public:
+  template <class D, class O, class... Args>
+  friend auto invoke(proxy_indirect_accessor& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, false, D, O>(
+        details::as_proxy<F, details::qualifier_type::lv>(p),
+        std::forward<Args>(args)...);
+  }
+  template <class D, class O, class... Args>
+  friend auto invoke(const proxy_indirect_accessor& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, false, D, O>(
+        details::as_proxy<F, details::qualifier_type::const_lv>(p),
+        std::forward<Args>(args)...);
+  }
+  template <class D, class O, class... Args>
+  friend auto invoke(proxy_indirect_accessor&& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, false, D, O>(
+        details::as_proxy<F, details::qualifier_type::rv>(std::move(p)),
+        std::forward<Args>(args)...);
+  }
+  template <class D, class O, class... Args>
+  friend auto invoke(const proxy_indirect_accessor&& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, false, D, O>(
+        details::as_proxy<F, details::qualifier_type::const_rv>(std::move(p)),
+        std::forward<Args>(args)...);
+  }
+  template <class R>
+  friend const R& reflect(const proxy_indirect_accessor& p) noexcept {
+    return static_cast<const details::refl_meta<false, R>&>(
+               details::proxy_helper::get_meta(
+                   details::as_proxy<F, details::qualifier_type::const_lv>(p)))
+        .reflector;
+  }
 };
 
 template <facade F>
@@ -1118,6 +1155,34 @@ public:
   friend bool operator==(const proxy& lhs, std::nullptr_t) noexcept {
     return !lhs.has_value();
   }
+  template <class D, class O, class... Args>
+  friend auto invoke(proxy& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
+  }
+  template <class D, class O, class... Args>
+  friend auto invoke(const proxy& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
+  }
+  template <class D, class O, class... Args>
+  friend auto invoke(proxy<F>&& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, true, D, O>(std::move(p),
+                                               std::forward<Args>(args)...);
+  }
+  template <class D, class O, class... Args>
+  friend auto invoke(const proxy&& p, Args&&... args) ->
+      typename details::overload_traits<O>::return_type {
+    return details::invoke_impl<F, true, D, O>(std::move(p),
+                                               std::forward<Args>(args)...);
+  }
+  template <class R>
+  friend const R& reflect(const proxy& p) noexcept {
+    return static_cast<const details::refl_meta<true, R>&>(
+               details::proxy_helper::get_meta(p))
+        .reflector;
+  }
 
 private:
   void initialize() {
@@ -1133,10 +1198,9 @@ private:
         std::ranges::uninitialized_copy(rhs.ptr_, ptr_);
         meta_ = rhs.meta_;
       } else {
-        proxy_invoke<details::copy_dispatch,
-                     void(proxy&) const noexcept(
-                         F::copyability == constraint_level::nothrow)>(rhs,
-                                                                       *this);
+        invoke<details::copy_dispatch,
+               void(proxy&) const noexcept(
+                   F::copyability == constraint_level::nothrow)>(rhs, *this);
       }
     } else {
       meta_.reset();
@@ -1152,9 +1216,9 @@ private:
         meta_ = rhs.meta_;
         rhs.meta_.reset();
       } else {
-        proxy_invoke<details::relocate_dispatch,
-                     void(proxy&) && noexcept(F::relocatability ==
-                                              constraint_level::nothrow)>(
+        invoke<details::relocate_dispatch,
+               void(proxy&) &&
+                   noexcept(F::relocatability == constraint_level::nothrow)>(
             std::move(rhs), *this);
       }
     } else {
@@ -1179,9 +1243,9 @@ private:
   {
     if constexpr (F::destructibility != constraint_level::trivial) {
       if (meta_.has_value()) {
-        proxy_invoke<details::destroy_dispatch,
-                     void() noexcept(F::destructibility ==
-                                     constraint_level::nothrow)>(*this);
+        invoke<details::destroy_dispatch,
+               void() noexcept(F::destructibility ==
+                               constraint_level::nothrow)>(*this);
       }
     }
   }
@@ -1200,35 +1264,40 @@ private:
 };
 
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(proxy_indirect_accessor<F>& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(proxy_indirect_accessor<F>& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
   return details::invoke_impl<F, false, D, O>(
       details::as_proxy<F, details::qualifier_type::lv>(p),
       std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(const proxy_indirect_accessor<F>& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(const proxy_indirect_accessor<F>& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
   return details::invoke_impl<F, false, D, O>(
       details::as_proxy<F, details::qualifier_type::const_lv>(p),
       std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(proxy_indirect_accessor<F>&& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(proxy_indirect_accessor<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
   return details::invoke_impl<F, false, D, O>(
       details::as_proxy<F, details::qualifier_type::rv>(std::move(p)),
       std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(const proxy_indirect_accessor<F>&& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(const proxy_indirect_accessor<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
   return details::invoke_impl<F, false, D, O>(
       details::as_proxy<F, details::qualifier_type::const_rv>(std::move(p)),
       std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(proxy<F>& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(proxy<F>& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
   return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
 }
@@ -1238,27 +1307,31 @@ auto proxy_invoke(const proxy<F>& p, Args&&... args) ->
   return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(proxy<F>&& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(proxy<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
   return details::invoke_impl<F, true, D, O>(std::move(p),
                                              std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-auto proxy_invoke(const proxy<F>&& p, Args&&... args) ->
+[[deprecated("Use unqualified invoke instead")]] auto
+    proxy_invoke(const proxy<F>&& p, Args&&... args) ->
     typename details::overload_traits<O>::return_type {
   return details::invoke_impl<F, true, D, O>(std::move(p),
                                              std::forward<Args>(args)...);
 }
 
 template <class R, facade F>
-const R& proxy_reflect(const proxy_indirect_accessor<F>& p) noexcept {
+[[deprecated("Use unqualified reflect instead")]] const R&
+    proxy_reflect(const proxy_indirect_accessor<F>& p) noexcept {
   return static_cast<const details::refl_meta<false, R>&>(
              details::proxy_helper::get_meta(
                  details::as_proxy<F, details::qualifier_type::const_lv>(p)))
       .reflector;
 }
 template <class R, facade F>
-const R& proxy_reflect(const proxy<F>& p) noexcept {
+[[deprecated("Use unqualified reflect instead")]] const R&
+    proxy_reflect(const proxy<F>& p) noexcept {
   return static_cast<const details::refl_meta<true, R>&>(
              details::proxy_helper::get_meta(p))
       .reflector;
@@ -1324,7 +1397,7 @@ private:
           return nullptr;                                                      \
         }                                                                      \
       }                                                                        \
-      return proxy_invoke<D, T() oq ne>(static_cast<P pq>(*this));             \
+      return invoke<D, T() oq ne>(static_cast<P pq>(*this));                   \
     }                                                                          \
   }
 template <bool Expl, bool Nullable>
@@ -2209,7 +2282,7 @@ struct proxy_cast_accessor_impl {
                              .is_ref = true,
                              .is_const = std::is_const_v<U>,
                              .result_ptr = &result};
-      proxy_invoke<D, O>(static_cast<Self>(self), ctx);
+      invoke<D, O>(static_cast<Self>(self), ctx);
       if (result == nullptr) [[unlikely]] {
         PRO4D_THROW(bad_proxy_cast{});
       }
@@ -2220,7 +2293,7 @@ struct proxy_cast_accessor_impl {
                              .is_ref = false,
                              .is_const = false,
                              .result_ptr = &result};
-      proxy_invoke<D, O>(static_cast<Self>(self), ctx);
+      invoke<D, O>(static_cast<Self>(self), ctx);
       if (!result.has_value()) [[unlikely]] {
         PRO4D_THROW(bad_proxy_cast{});
       }
@@ -2236,7 +2309,7 @@ struct proxy_cast_accessor_impl {
                            .is_ref = true,
                            .is_const = std::is_const_v<T>,
                            .result_ptr = &result};
-    proxy_invoke<D, O>(*self, ctx);
+    invoke<D, O>(*self, ctx);
     return static_cast<T*>(result);
   }
 };
@@ -2276,7 +2349,7 @@ struct proxy_typeid_reflector {
   template <class Self, class R>
   struct accessor {
     friend const std::type_info& proxy_typeid(const Self& self) noexcept {
-      const proxy_typeid_reflector& refl = proxy_reflect<R>(self);
+      const proxy_typeid_reflector& refl = reflect<R>(self);
       return *refl.info;
     }
     PRO4D_DEBUG(
@@ -2397,7 +2470,7 @@ struct operator_dispatch;
   struct accessor<P, D, R() oq ne> {                                           \
     PRO4D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(__VA_ARGS__)                       \
     R __VA_ARGS__() oq ne {                                                    \
-      return proxy_invoke<D, R() oq ne>(static_cast<P pq>(*this));             \
+      return invoke<D, R() oq ne>(static_cast<P pq>(*this));                   \
     }                                                                          \
   }
 #define PROD_DEF_LHS_UNARY_OP_ACCESSOR(oq, pq, ne, ...)                        \
@@ -2405,7 +2478,7 @@ struct operator_dispatch;
   struct accessor<P, D, R() oq ne> {                                           \
     PRO4D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(__VA_ARGS__)                       \
     decltype(auto) __VA_ARGS__() oq ne {                                       \
-      proxy_invoke<D, R() oq ne>(static_cast<P pq>(*this));                    \
+      invoke<D, R() oq ne>(static_cast<P pq>(*this));                          \
       return static_cast<P pq>(*this);                                         \
     }                                                                          \
   };                                                                           \
@@ -2413,7 +2486,7 @@ struct operator_dispatch;
   struct accessor<P, D, R(int) oq ne> {                                        \
     PRO4D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(__VA_ARGS__)                       \
     R __VA_ARGS__(int) oq ne {                                                 \
-      return proxy_invoke<D, R(int) oq ne>(static_cast<P pq>(*this), 0);       \
+      return invoke<D, R(int) oq ne>(static_cast<P pq>(*this), 0);             \
     }                                                                          \
   }
 #define PROD_DEF_LHS_BINARY_OP_ACCESSOR PRO4D_DEF_MEM_ACCESSOR
@@ -2448,8 +2521,8 @@ struct operator_dispatch;
   template <class P, class D, class R, class Arg>                              \
   struct accessor<P, D, R(Arg) oq ne> {                                        \
     friend R operator __VA_ARGS__(Arg arg, P pq self) ne {                     \
-      return proxy_invoke<D, R(Arg) oq ne>(static_cast<P pq>(self),            \
-                                           std::forward<Arg>(arg));            \
+      return invoke<D, R(Arg) oq ne>(static_cast<P pq>(self),                  \
+                                     std::forward<Arg>(arg));                  \
     }                                                                          \
     PRO4D_DEBUG(                                                             \
       accessor() noexcept { std::ignore = &pro_symbol_guard; }               \
@@ -2484,8 +2557,8 @@ struct operator_dispatch;
   struct accessor<P, D, R(Arg) oq ne> {                                        \
     PRO4D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(__VA_ARGS__)                       \
     decltype(auto) __VA_ARGS__(Arg arg) oq ne {                                \
-      proxy_invoke<D, R(Arg) oq ne>(static_cast<P pq>(*this),                  \
-                                    std::forward<Arg>(arg));                   \
+      invoke<D, R(Arg) oq ne>(static_cast<P pq>(*this),                        \
+                              std::forward<Arg>(arg));                         \
       return static_cast<P pq>(*this);                                         \
     }                                                                          \
   }
@@ -2493,7 +2566,7 @@ struct operator_dispatch;
   template <class P, class D, class R, class Arg>                              \
   struct accessor<P, D, R(Arg&) oq ne> {                                       \
     friend Arg& operator __VA_ARGS__(Arg& arg, P pq self) ne {                 \
-      proxy_invoke<D, R(Arg&) oq ne>(static_cast<P pq>(self), arg);            \
+      invoke<D, R(Arg&) oq ne>(static_cast<P pq>(self), arg);                  \
       return arg;                                                              \
     }                                                                          \
     PRO4D_DEBUG(                                                               \
@@ -2661,9 +2734,8 @@ struct formatter<pro::v4::proxy_indirect_accessor<F>, CharT> {
   template <class OutIt>
   OutIt format(const pro::v4::proxy_indirect_accessor<F>& p,
                basic_format_context<OutIt, CharT>& fc) const {
-    return pro::v4::proxy_invoke<pro::v4::details::format_dispatch,
-                                 pro::v4::details::format_overload_t<CharT>>(
-        p, spec_, fc);
+    return invoke<pro::v4::details::format_dispatch,
+                  pro::v4::details::format_overload_t<CharT>>(p, spec_, fc);
   }
 
 private:

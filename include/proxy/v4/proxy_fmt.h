@@ -84,9 +84,8 @@ struct formatter<pro::v4::proxy_indirect_accessor<F>, CharT> {
   template <class FormatContext>
   auto format(const pro::v4::proxy_indirect_accessor<F>& p,
               FormatContext& fc) const -> typename FormatContext::iterator {
-    return pro::v4::proxy_invoke<
-        pro::v4::details::fmt_format_dispatch,
-        pro::v4::details::fmt_format_overload_t<CharT>>(p, spec_, fc);
+    return invoke<pro::v4::details::fmt_format_dispatch,
+                  pro::v4::details::fmt_format_overload_t<CharT>>(p, spec_, fc);
   }
 
 private:
