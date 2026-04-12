@@ -55,7 +55,7 @@ struct LifetimeModelReflector {
   struct accessor {
     LifetimeModelType GetLifetimeType() const noexcept {
       const LifetimeModelReflector& refl =
-          pro::proxy_reflect<R>(static_cast<const Self&>(*this));
+          reflect<R>(static_cast<const Self&>(*this));
       return refl.Type;
     }
   };

@@ -24,7 +24,7 @@ public:
   template <class Self, class R>
   struct accessor {
     const TraitsReflector& ReflectTraits() const noexcept {
-      return pro::proxy_reflect<R>(static_cast<const Self&>(*this));
+      return reflect<R>(static_cast<const Self&>(*this));
     }
   };
 

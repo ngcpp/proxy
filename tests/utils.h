@@ -112,8 +112,7 @@ public:
   template <class P, class R>
   struct accessor {
     const char* GetTypeName() const noexcept {
-      const RttiReflector& self =
-          pro::proxy_reflect<R>(static_cast<const P&>(*this));
+      const RttiReflector& self = reflect<R>(static_cast<const P&>(*this));
       return self.type_.name();
     }
   };
