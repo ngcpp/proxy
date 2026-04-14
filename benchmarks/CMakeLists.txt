@@ -2,8 +2,8 @@ project(msft_proxy_benchmarks)
 
 FetchContent_Declare(
   benchmark
-  URL https://github.com/google/benchmark/archive/refs/tags/v1.9.4.tar.gz
-  URL_HASH SHA256=b334658edd35efcf06a99d9be21e4e93e092bd5f95074c1673d5c8705d95c104
+  URL https://github.com/google/benchmark/archive/refs/tags/v1.9.5.tar.gz
+  URL_HASH SHA256=9631341c82bac4a288bef951f8b26b41f69021794184ece969f8473977eaa340
 )
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Disable tests for google benchmark")
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "Disable google benchmark unit tests")

@@ -15,6 +15,7 @@ jobs:
           - {family: clang, version: 18, modules: false}
           - {family: clang, version: 19, modules: false}
           - {family: clang, version: 20, modules: true}
+          - {family: clang, version: 21, modules: true}
 
     steps:
     - uses: actions/checkout@v4
@@ -31,6 +32,9 @@ jobs:
     - name: install clang
       if: ${{ matrix.compiler.family == 'clang' }}
       run: |
+        if [ '${{ matrix.compiler.version }}' -ge 21 ]; then
+          curl https://apt.llvm.org/llvm.sh | sudo bash -s -- '${{ matrix.compiler.version }}'
+        fi
         sudo apt install -y 'clang-${{ matrix.compiler.version }}' 'clang-tools-${{ matrix.compiler.version }}' 'libc++-${{ matrix.compiler.version }}-dev' 'libc++abi-${{ matrix.compiler.version }}-dev'
         cat <<'EOF' >> "$GITHUB_ENV"
         CC=clang-${{ matrix.compiler.version }}
