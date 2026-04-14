@@ -2017,6 +2017,14 @@ using merge_facade_conv_t = typename add_substitution_conv<
         ? F::relocatability
         : constraint_level::none>::type;
 
+template <bool WithSubstitution>
+struct add_facade_deprecation_traits : std::bool_constant<WithSubstitution> {};
+template <>
+struct [[deprecated(
+    "basic_facade_builder::add_facade<F, true> is deprecated; use "
+    "basic_facade_builder::add_facade_with_substitution<F> instead.")]]
+add_facade_deprecation_traits<true> : std::bool_constant<true> {};
+
 } // namespace details
 
 template <class Cs, class Rs, std::size_t MaxSize, std::size_t MaxAlign,
@@ -2048,7 +2056,18 @@ struct basic_facade_builder {
   using add_reflection = add_indirect_reflection<R>;
   template <facade F, bool WithSubstitution = false>
   using add_facade = basic_facade_builder<
-      details::merge_facade_conv_t<Cs, F, WithSubstitution>,
+      details::merge_facade_conv_t<
+          Cs, F,
+          details::add_facade_deprecation_traits<WithSubstitution>::value>,
+      details::merge_tuple_t<Rs, typename F::reflection_types>,
+      details::merge_size(MaxSize, F::max_size),
+      details::merge_size(MaxAlign, F::max_align),
+      details::merge_constraint(Copyability, F::copyability),
+      details::merge_constraint(Relocatability, F::relocatability),
+      details::merge_constraint(Destructibility, F::destructibility)>;
+  template <facade F>
+  using add_facade_with_substitution = basic_facade_builder<
+      details::merge_facade_conv_t<Cs, F, true>,
       details::merge_tuple_t<Rs, typename F::reflection_types>,
       details::merge_size(MaxSize, F::max_size),
       details::merge_size(MaxAlign, F::max_align),
