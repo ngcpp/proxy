@@ -1,6 +1,9 @@
 on:
   workflow_call:
 
+env:
+  NVHPC_VERSION: 26.3
+
 jobs:
   bvt-nvhpc:
     runs-on: ubuntu-24.04
@@ -14,18 +17,18 @@ jobs:
     #   # FIXME: install from upstream once https://github.com/mesonbuild/meson/pull/15353 is released
     #   run: pipx install git+https://github.com/mesonbuild/meson@02b85a846629090a0c7f18e860bab0a10ea4349b
 
-    - name: install NVHPC 25.11
+    - name: install NVHPC ${{ env.NVHPC_VERSION }}
       run: |
         curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
         sudo apt-get update -y
-        sudo apt-get install -y nvhpc-25-11
-        cat<<'EOF' >> "$GITHUB_ENV"
-        CC=/opt/nvidia/hpc_sdk/Linux_x86_64/25.11/compilers/bin/nvc
-        CXX=/opt/nvidia/hpc_sdk/Linux_x86_64/25.11/compilers/bin/nvc++
-        EOF
+        sudo apt-get install -y "nvhpc-${NVHPC_VERSION/./-}"
+        {
+          echo "CC=/opt/nvidia/hpc_sdk/Linux_x86_64/$NVHPC_VERSION/compilers/bin/nvc"
+          echo "CXX=/opt/nvidia/hpc_sdk/Linux_x86_64/$NVHPC_VERSION/compilers/bin/nvc++"
+        } >> "$GITHUB_ENV"
 
-    - name: build and run test with NVHPC 25.11 on cmake
+    - name: build and run test with NVHPC ${{ env.NVHPC_VERSION }} on cmake
       run: |
         cmake -B build-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DPROXY_BUILD_MODULES=FALSE
         cmake --build build-cmake -j
@@ -34,7 +37,7 @@ jobs:
         chmod +x tools/dump_build_env.sh
         ./tools/dump_build_env.sh "$CXX" build-cmake/drop/env-info.json
 
-    # - name: build and run test with NVHPC 25.11 on meson
+    # - name: build and run test with NVHPC ${{ env.NVHPC_VERSION }} on meson
     #   run: |
     #     meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled --force-fallback-for=fmt
     #     meson test -C build-meson
