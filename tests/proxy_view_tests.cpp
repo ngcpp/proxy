@@ -139,9 +139,9 @@ TEST(ProxyViewTests, TestOverloadShadowing) {
 
 TEST(ProxyViewTests, TestSubstitution_FromNull) {
   struct TestFacade1 : pro::facade_builder::build {};
-  struct TestFacade2 : pro::facade_builder             //
-                       ::add_facade<TestFacade1, true> // Supports substitution
-                       ::add_skill<pro::skills::as_view> //
+  struct TestFacade2 : pro::facade_builder                         //
+                       ::add_facade_with_substitution<TestFacade1> //
+                       ::add_skill<pro::skills::as_view>           //
                        ::build {};
   pro::proxy<TestFacade2> p1;
   pro::proxy_view<TestFacade2> p2 = p1;
@@ -158,8 +158,8 @@ TEST(ProxyViewTests, TestSubstitution_FromValue) {
         ::build {};
   struct TestFacade2 : pro::facade_builder                               //
                        ::support_copy<pro::constraint_level::nontrivial> //
-                       ::add_facade<TestFacade1, true> // Supports substitution
-                       ::add_skill<pro::skills::as_view> //
+                       ::add_facade_with_substitution<TestFacade1>       //
+                       ::add_skill<pro::skills::as_view>                 //
                        ::build {};
   pro::proxy<TestFacade2> p1 = pro::make_proxy<TestFacade2>(123);
   pro::proxy_view<TestFacade2> p2 = p1;
