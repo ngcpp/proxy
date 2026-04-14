@@ -121,7 +121,7 @@ void BM_LargeObjectInvocationViaVirtualFunction(benchmark::State& state) {
 
 void BM_LargeObjectInvocationViaVirtualFunction_Shared(
     benchmark::State& state) {
-  auto data = GenerateLargeObjectVirtualFunctionTestData();
+  auto data = GenerateLargeObjectVirtualFunctionTestData_Shared();
   for (auto _ : state) {
     for (auto& p : data) {
       int result = p->Fun();
