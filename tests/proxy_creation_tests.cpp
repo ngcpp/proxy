@@ -167,10 +167,11 @@ struct TestSharedStringable
       ::add_direct_reflection<LifetimeModelReflector>            //
       ::build {};
 
-struct TestWeakSharedStringable : pro::facade_builder                      //
-                                  ::add_facade<TestSharedStringable, true> //
-                                  ::add_skill<pro::skills::as_weak>        //
-                                  ::build {};
+struct TestWeakSharedStringable
+    : pro::facade_builder                                  //
+      ::add_facade_with_substitution<TestSharedStringable> //
+      ::add_skill<pro::skills::as_weak>                    //
+      ::build {};
 
 static_assert(pro::proxiable<int*, TestSharedStringable>);
 static_assert(!pro::proxiable<int*, TestWeakSharedStringable>);
