@@ -465,10 +465,9 @@ template <class T, class... Args>
 using accessor_t = typename a11y_traits<void, T, Args...>::type;
 
 template <class C, class F, class... Os>
-struct conv_traits_impl : inapplicable_traits {};
-template <class C, class F, class... Os>
-  requires(overload_traits<substituted_overload_t<Os, F>>::applicable && ...)
-struct conv_traits_impl<C, F, Os...> : applicable_traits {
+struct conv_traits_impl {
+  static_assert((overload_traits<substituted_overload_t<Os, F>>::applicable &&
+                 ...));
   using meta =
       composite_meta<invocation_meta<F, C::is_direct, typename C::dispatch_type,
                                      substituted_overload_t<Os, F>>...>;
@@ -727,10 +726,7 @@ template <class F>
 struct basic_facade_traits<F> : applicable_traits {};
 
 template <class F, class... Cs>
-struct facade_conv_traits_impl : inapplicable_traits {};
-template <class F, class... Cs>
-  requires(conv_traits<Cs, F>::applicable && ...)
-struct facade_conv_traits_impl<F, Cs...> : applicable_traits {
+struct facade_conv_traits_impl {
   using conv_meta =
       composite_t<composite_meta<>, typename conv_traits<Cs, F>::meta...>;
   using conv_indirect_accessor =
@@ -772,11 +768,7 @@ struct facade_refl_traits_impl {
       (refl_traits<Rs>::template applicable_ptr<P> && ...);
 };
 template <class F>
-struct facade_traits : inapplicable_traits {};
-template <class F>
-  requires(instantiated_t<facade_conv_traits_impl, typename F::convention_types,
-                          F>::applicable)
-struct facade_traits<F>
+struct facade_traits
     : instantiated_t<facade_conv_traits_impl, typename F::convention_types, F>,
       instantiated_t<facade_refl_traits_impl, typename F::reflection_types, F> {
   using meta = composite_t<
@@ -913,8 +905,7 @@ add_qualifier_t<proxy<F>, Q>
 } // namespace details
 
 template <class P, class F>
-concept proxiable = facade<F> && details::facade_traits<F>::applicable &&
-                    details::ptr_traits<P>::applicable &&
+concept proxiable = facade<F> && details::ptr_traits<P>::applicable &&
                     details::facade_traits<F>::template applicable_ptr<P>;
 
 template <facade F>
@@ -967,7 +958,6 @@ template <facade F>
 class proxy : public details::facade_traits<F>::direct_accessor,
               public details::inplace_ptr<proxy_indirect_accessor<F>> {
   friend struct details::proxy_helper;
-  static_assert(details::facade_traits<F>::applicable);
 
 public:
   using facade_type = F;
