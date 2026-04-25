@@ -5,10 +5,10 @@ jobs:
   bvt-report:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: download all workflow run artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         path: artifacts
 
@@ -31,7 +31,7 @@ jobs:
         tools/report_generator/build/report_generator tools/report_generator/report-config.json
 
     - name: archive benchmarking report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: benchmarking-report
         path: benchmarking-report.md
