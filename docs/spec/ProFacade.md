@@ -12,7 +12,7 @@ A type `F` meets the *ProFacade* requirements of a type `P` if `F` meets the [*P
 | `F::relocatability`            | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required relocatability of `P`. |
 | `F::destructibility`           | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required destructibility of `P`. |
 
-*Since 4.0.2*: `P` shall be a pointer-like type eligible for `proxy`. A type `P` is eligible if `P` is not a specialization of `proxy` and the following condition is satisfied:
+*Since 4.0.2*: `P` shall be a pointer-like type eligible for `proxy`. A type `P` is eligible if the following condition is satisfied:
 
 ```cpp
 (requires { *std::declval<P&>(); } || requires { typename P::element_type; }) &&

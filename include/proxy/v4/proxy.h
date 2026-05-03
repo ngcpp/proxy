@@ -635,16 +635,17 @@ struct refl_accessor_traits<R, F, true>
 template <class R, class F, bool IsDirect>
 using refl_accessor_t = typename refl_accessor_traits<R, F, IsDirect>::type;
 
-template <class P>
-struct ptr_traits : inapplicable_traits {};
-template <class P>
-  requires((
-               requires { *std::declval<P&>(); } ||
-               requires { typename P::element_type; }) &&
-           requires { typename std::pointer_traits<P>::element_type; })
-struct ptr_traits<P> : applicable_traits {};
-template <class F>
-struct ptr_traits<proxy<F>> : inapplicable_traits {};
+template <class T>
+concept pointer_like = (requires { *std::declval<T&>(); } ||
+    requires { typename T::element_type; }) &&
+    requires { typename std::pointer_traits<T>::element_type; };
+
+template <class T, template <class...> class TT>
+struct specialization_traits : inapplicable_traits {};
+template <template <class...> class TT, class... Args>
+struct specialization_traits<TT<Args...>, TT> : applicable_traits {};
+template <class T, template <class...> class TT>
+concept specialization_of = specialization_traits<T, TT>::applicable;
 
 template <class P, class F, std::size_t ActualSize, std::size_t MaxSize>
 consteval bool diagnose_proxiable_size_too_large() {
@@ -912,7 +913,7 @@ add_qualifier_t<proxy<F>, Q>
 } // namespace details
 
 template <class P, class F>
-concept proxiable = facade<F> && details::ptr_traits<P>::applicable &&
+concept proxiable = facade<F> && details::pointer_like<P> &&
                     details::facade_traits<F>::template applicable_ptr<P>;
 
 template <facade F>
@@ -990,7 +991,8 @@ public:
   template <class P>
   constexpr proxy(P&& ptr) noexcept(
       std::is_nothrow_constructible_v<std::decay_t<P>, P>)
-    requires(details::ptr_traits<std::decay_t<P>>::applicable &&
+    requires(!details::specialization_of<std::decay_t<P>, proxy> &&
+             details::pointer_like<std::decay_t<P>> &&
              std::is_constructible_v<std::decay_t<P>, P>)
   {
     initialize<std::decay_t<P>>(std::forward<P>(ptr));
@@ -998,8 +1000,7 @@ public:
   template <class P, class... Args>
   constexpr explicit proxy(std::in_place_type_t<P>, Args&&... args) noexcept(
       std::is_nothrow_constructible_v<P, Args...>)
-    requires(details::ptr_traits<P>::applicable &&
-             std::is_constructible_v<P, Args...>)
+    requires(details::pointer_like<P> && std::is_constructible_v<P, Args...>)
   {
     initialize<P>(std::forward<Args>(args)...);
   }
@@ -1009,7 +1010,7 @@ public:
       Args&&... args) noexcept(std::
                                    is_nothrow_constructible_v<
                                        P, std::initializer_list<U>&, Args...>)
-    requires(details::ptr_traits<P>::applicable &&
+    requires(details::pointer_like<P> &&
              std::is_constructible_v<P, std::initializer_list<U>&, Args...>)
   {
     initialize<P>(il, std::forward<Args>(args)...);
@@ -1060,7 +1061,8 @@ public:
   constexpr proxy& operator=(P&& ptr) noexcept(
       std::is_nothrow_constructible_v<std::decay_t<P>, P> &&
       F::destructibility >= constraint_level::nothrow)
-    requires(details::ptr_traits<std::decay_t<P>>::applicable &&
+    requires(!details::specialization_of<std::decay_t<P>, proxy> &&
+             details::pointer_like<std::decay_t<P>> &&
              std::is_constructible_v<std::decay_t<P>, P> &&
              F::destructibility >= constraint_level::nontrivial)
   {
@@ -1127,8 +1129,7 @@ public:
   constexpr P& emplace(Args&&... args) noexcept(
       std::is_nothrow_constructible_v<P, Args...> &&
       F::destructibility >= constraint_level::nothrow)
-    requires(details::ptr_traits<P>::applicable &&
-             std::is_constructible_v<P, Args...> &&
+    requires(details::pointer_like<P> && std::is_constructible_v<P, Args...> &&
              F::destructibility >= constraint_level::nontrivial)
   {
     reset();
@@ -1138,7 +1139,7 @@ public:
   constexpr P& emplace(std::initializer_list<U> il, Args&&... args) noexcept(
       std::is_nothrow_constructible_v<P, std::initializer_list<U>&, Args...> &&
       F::destructibility >= constraint_level::nothrow)
-    requires(details::ptr_traits<P>::applicable &&
+    requires(details::pointer_like<P> &&
              std::is_constructible_v<P, std::initializer_list<U>&, Args...> &&
              F::destructibility >= constraint_level::nontrivial)
   {
@@ -1146,7 +1147,9 @@ public:
     return initialize<P>(il, std::forward<Args>(args)...);
   }
 
-  friend void swap(proxy& lhs, proxy& rhs) noexcept(noexcept(lhs.swap(rhs))) {
+  friend void swap(proxy& lhs, proxy& rhs) noexcept(noexcept(lhs.swap(rhs)))
+    requires(requires { lhs.swap(rhs); })
+  {
     lhs.swap(rhs);
   }
   friend bool operator==(const proxy& lhs, std::nullptr_t) noexcept {
@@ -1163,7 +1166,7 @@ public:
     return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
   }
   template <class D, class O, class... Args>
-  friend auto invoke(proxy<F>&& p, Args&&... args) ->
+  friend auto invoke(proxy&& p, Args&&... args) ->
       typename details::overload_traits<O>::return_type {
     return details::invoke_impl<F, true, D, O>(std::move(p),
                                                std::forward<Args>(args)...);
