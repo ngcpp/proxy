@@ -498,4 +498,7 @@ static_assert(!std::is_constructible_v<pro::proxy<DefaultFacade>,
                                        ProxyWrapperTemplate<void>>);
 static_assert(std::is_move_constructible_v<ProxyWrapperTemplate<void>>);
 
+// proxiable shall not reject a specialization of proxy.
+static_assert(pro::proxiable<pro::proxy_view<DefaultFacade>, DefaultFacade>);
+
 } // namespace proxy_traits_tests_details
