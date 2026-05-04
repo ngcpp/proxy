@@ -499,15 +499,15 @@ struct conv_traits
     : instantiated_t<conv_traits_impl, typename C::overload_types, C, F> {};
 
 template <bool IsDirect, class R>
-struct refl_meta {
-  refl_meta() = default;
+struct reflection_meta {
+  reflection_meta() = default;
   template <class P>
     requires(IsDirect)
-  constexpr explicit refl_meta(std::in_place_type_t<P>)
+  constexpr explicit reflection_meta(std::in_place_type_t<P>)
       : reflector(std::in_place_type<P>) {}
   template <class P>
     requires(!IsDirect)
-  constexpr explicit refl_meta(std::in_place_type_t<P>)
+  constexpr explicit reflection_meta(std::in_place_type_t<P>)
       : reflector(
             std::in_place_type<typename std::pointer_traits<P>::element_type>) {
   }
@@ -719,8 +719,8 @@ struct facade_conv_traits_impl {
 };
 template <class F, class... Rs>
 struct facade_refl_traits_impl {
-  using refl_meta =
-      composite_meta<refl_meta<Rs::is_direct, typename Rs::reflector_type>...>;
+  using refl_meta = composite_meta<
+      reflection_meta<Rs::is_direct, typename Rs::reflector_type>...>;
   using refl_indirect_accessor =
       composite_t<composite_accessor<>, refl_accessor_t<Rs, F, false>...>;
   using refl_direct_accessor =
@@ -909,7 +909,7 @@ public:
   }
   template <class R>
   friend const R& reflect(const proxy_indirect_accessor& p) noexcept {
-    return static_cast<const details::refl_meta<false, R>&>(
+    return static_cast<const details::reflection_meta<false, R>&>(
                details::proxy_helper::get_meta(
                    details::as_proxy<F, details::qualifier_type::const_lv>(p)))
         .reflector;
@@ -1131,7 +1131,7 @@ public:
   }
   template <class R>
   friend const R& reflect(const proxy& p) noexcept {
-    return static_cast<const details::refl_meta<true, R>&>(
+    return static_cast<const details::reflection_meta<true, R>&>(
                details::proxy_helper::get_meta(p))
         .reflector;
   }
