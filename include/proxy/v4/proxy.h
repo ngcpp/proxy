@@ -636,8 +636,8 @@ template <class R, class F, bool IsDirect>
 using refl_accessor_t = typename refl_accessor_traits<R, F, IsDirect>::type;
 
 template <class T>
-concept pointer_like = (requires { *std::declval<T&>(); } ||
-    requires { typename T::element_type; }) &&
+concept pointer_like = (std::is_pointer_v<T> ||
+    requires { typename T::element_type; } || requires(T val) { *val; }) &&
     requires { typename std::pointer_traits<T>::element_type; };
 
 template <class T, template <class...> class TT>

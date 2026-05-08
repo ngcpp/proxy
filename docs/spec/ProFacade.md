@@ -15,8 +15,7 @@ A type `F` meets the *ProFacade* requirements of a type `P` if `F` meets the [*P
 *Since 4.0.2*: `P` shall be a pointer-like type eligible for `proxy`. A type `P` is eligible if the following condition is satisfied:
 
 ```cpp
-(requires { *std::declval<P&>(); } || requires { typename P::element_type; }) &&
-requires { typename std::pointer_traits<P>::element_type; }
+(std::is_pointer_v<T> || requires { typename T::element_type; } || requires(T val) { *val; }) && requires { typename std::pointer_traits<T>::element_type; }
 ```
 
 In other words, `P` either supports dereferencing or provides an `element_type`, and `std::pointer_traits<P>` yields a valid `element_type`.
