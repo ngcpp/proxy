@@ -112,10 +112,10 @@ if (BUILD_TESTING)
 
   if(MSVC)
     set(PROXY_WARNING_FLAGS /W4)
-    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_WARNING_FLAGS})
+    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_WARNING_FLAGS} /WX)
   else()
     set(PROXY_WARNING_FLAGS -Wall -Wextra -Wpedantic $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2b-extensions>)
-    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_WARNING_FLAGS})
+    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_WARNING_FLAGS} -Werror)
   endif()
 
   add_subdirectory(tests)
