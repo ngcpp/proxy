@@ -14,6 +14,7 @@ add_executable(msft_proxy_tests
   proxy_creation_tests.cpp
   proxy_details_tests.cpp
   proxy_dispatch_tests.cpp
+  proxy_fmt_format_no_wchar_tests.cpp
   proxy_fmt_format_tests.cpp
   proxy_format_tests.cpp
   proxy_integration_tests.cpp
@@ -27,18 +28,12 @@ add_executable(msft_proxy_tests
 )
 target_include_directories(msft_proxy_tests PRIVATE .)
 target_link_libraries(msft_proxy_tests PRIVATE msft_proxy4::proxy gtest_main fmt::fmt)
-
-if(MSVC)
-  target_compile_options(msft_proxy_tests PRIVATE /W4 /WX)
-else()
-  target_compile_options(msft_proxy_tests PRIVATE -Wall -Wextra -Wpedantic -Werror $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2b-extensions>)
-endif()
-
+target_compile_options(msft_proxy_tests PRIVATE ${PROXY_STRICT_WARNING_FLAGS})
 gtest_discover_tests(msft_proxy_tests)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_executable(msft_proxy_freestanding_tests freestanding/proxy_freestanding_tests.cpp)
-  target_compile_options(msft_proxy_freestanding_tests PRIVATE -ffreestanding -fno-exceptions -fno-rtti -Wall -Wextra -Wpedantic -Werror $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2b-extensions>)
+  target_compile_options(msft_proxy_freestanding_tests PRIVATE -ffreestanding -fno-exceptions -fno-rtti ${PROXY_STRICT_WARNING_FLAGS})
   target_link_options(msft_proxy_freestanding_tests PRIVATE -nodefaultlibs -lc)
   target_link_libraries(msft_proxy_freestanding_tests PRIVATE msft_proxy4::proxy)
   add_test(NAME ProxyFreestandingTests COMMAND msft_proxy_freestanding_tests)

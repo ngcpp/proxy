@@ -5,7 +5,9 @@
 #include <gtest/gtest.h>
 
 #include <fmt/format.h>
+#if FMT_VERSION >= 80000
 #include <fmt/xchar.h>
+#endif // FMT_VERSION >= 80000
 #include <proxy/proxy.h>
 #include <proxy/proxy_fmt.h>
 
