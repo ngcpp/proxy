@@ -16,4 +16,4 @@ add_executable(msft_proxy_benchmarks
 )
 target_include_directories(msft_proxy_benchmarks PRIVATE .)
 target_link_libraries(msft_proxy_benchmarks PRIVATE msft_proxy4::proxy benchmark::benchmark benchmark::benchmark_main)
-target_compile_options(msft_proxy_benchmarks PRIVATE ${PROXY_STRICT_WARNING_FLAGS})
+target_compile_options(msft_proxy_benchmarks PRIVATE ${PROXY_WARNING_FLAGS})
