@@ -2130,7 +2130,6 @@ using facade_builder =
                          details::invalid_size, details::invalid_cl,
                          details::invalid_cl, details::invalid_cl>;
 
-
 // =============================================================================
 // == Dispatch Extensions (operator_dispatch, weak_dispatch, etc.)            ==
 // =============================================================================
