@@ -232,10 +232,19 @@ template <class T>
 struct destructibility_traits<T, constraint_level::trivial>
     : applicable_traits {};
 
+template <class F, bool IsDirect, qualifier_type Q>
+using proxy_accessor = add_qualifier_t<
+    std::conditional_t<IsDirect, proxy<F>, proxy_indirect_accessor<F>>, Q>;
+template <class F, qualifier_type Q>
+add_qualifier_t<proxy<F>, Q>
+    as_proxy(add_qualifier_t<proxy_indirect_accessor<F>, Q> p);
+
 struct proxy_helper {
   template <class P, class F>
   struct resetting_guard {
     explicit resetting_guard(proxy<F>& p) noexcept : p_(p) {}
+    explicit resetting_guard(proxy_indirect_accessor<F>& p) noexcept
+        : p_(as_proxy<F, qualifier_type::lv>(p)) {}
     ~resetting_guard() noexcept(std::is_nothrow_destructible_v<P>) {
       std::destroy_at(std::addressof(get_ptr<P, F, qualifier_type::lv>(p_)));
       p_.meta_.reset();
@@ -245,10 +254,14 @@ struct proxy_helper {
     proxy<F>& p_;
   };
 
-  template <class F>
-  static const auto& get_meta(const proxy<F>& p) noexcept {
+  template <class M, class F>
+  static const M& get_meta(const proxy<F>& p) noexcept {
     assert(p.has_value());
-    return *p.meta_.operator->();
+    return static_cast<const M&>(*p.meta_.operator->());
+  }
+  template <class M, class F>
+  static const M& get_meta(const proxy_indirect_accessor<F>& p) noexcept {
+    return get_meta<M>(as_proxy<F, qualifier_type::const_lv>(p));
   }
   template <class P, class F, qualifier_type Q>
   static add_qualifier_t<P, Q> get_ptr(add_qualifier_t<proxy<F>, Q> p) {
@@ -282,64 +295,13 @@ concept invocable_dispatch =
     (Q != qualifier_type::rv || (NE && std::is_nothrow_destructible_v<P>) ||
      (!NE && std::is_destructible_v<P>));
 
-template <class D, class R, class... Args>
-R invoke_dispatch_impl(Args&&... args) {
-  if constexpr (std::is_void_v<R>) {
-    D()(std::forward<Args>(args)...);
-  } else {
-    return D()(std::forward<Args>(args)...);
-  }
-}
-template <bool IsDirect, class P>
-decltype(auto) get_operand(P&& ptr) {
-  if constexpr (IsDirect) {
-    return std::forward<P>(ptr);
-  } else {
-    if constexpr (std::is_constructible_v<bool, P&>) {
-      assert(ptr);
-    }
-    return *std::forward<P>(ptr);
-  }
-}
 struct internal_dispatch {};
-template <class P, class F, bool IsDirect, class D, qualifier_type Q, bool NE,
-          class R, class... Args>
-R invoke_dispatch(add_qualifier_t<proxy<F>, Q> self,
-                  Args... args) noexcept(NE) {
-  if constexpr (Q == qualifier_type::rv) {
-    if constexpr (std::is_base_of_v<internal_dispatch, D> &&
-                  is_bitwise_trivially_relocatable_v<P>) {
-      static_assert(IsDirect);
-      return D{}(std::in_place_type<P>,
-                 std::forward<add_qualifier_t<proxy<F>, Q>>(self),
-                 std::forward<Args>(args)...);
-    } else {
-      proxy_helper::resetting_guard<P, F> guard{self};
-      return invoke_dispatch_impl<D, R>(
-          get_operand<IsDirect>(
-              proxy_helper::get_ptr<P, F, Q>(std::move(self))),
-          std::forward<Args>(args)...);
-    }
-  } else {
-    return invoke_dispatch_impl<D, R>(
-        get_operand<IsDirect>(proxy_helper::get_ptr<P, F, Q>(
-            std::forward<add_qualifier_t<proxy<F>, Q>>(self))),
-        std::forward<Args>(args)...);
-  }
-}
 
 template <class O>
 struct overload_traits : inapplicable_traits {};
 template <qualifier_type Q, bool NE, class R, class... Args>
 struct overload_traits_impl : applicable_traits {
   using return_type = R;
-  template <class F>
-  using dispatcher_type = R (*)(add_qualifier_t<proxy<F>, Q>,
-                                Args...) noexcept(NE);
-
-  template <class P, class F, bool IsDirect, class D>
-  static constexpr auto dispatcher =
-      &invoke_dispatch<P, F, IsDirect, D, Q, NE, R, Args...>;
 
   template <class P, bool IsDirect, class D>
   static constexpr bool applicable_ptr =
@@ -381,6 +343,8 @@ struct overload_traits<R(Args...) const&&>
 template <class R, class... Args>
 struct overload_traits<R(Args...) const && noexcept>
     : overload_traits_impl<qualifier_type::const_rv, true, R, Args...> {};
+template <class O>
+using ret_t = typename overload_traits<O>::return_type;
 
 template <class O>
 struct overload_substitution_traits : inapplicable_traits {
@@ -406,16 +370,23 @@ consteval void diagnose_proxiable_required_convention_not_implemented() {
                 "not proxiable due to a required convention not implemented");
 }
 
-template <class F, bool IsDirect, class D, class O>
-struct invocation_meta {
-  invocation_meta() = default;
-  template <class P>
-  constexpr explicit invocation_meta(std::in_place_type_t<P>)
-      : dispatcher(overload_traits<O>::template dispatcher<P, F, IsDirect, D>) {
+template <class ProP, class D, class O>
+struct conv_meta;
+#define PROD_DEF_CONV_META(oq, pq, ne, ...)                                    \
+  template <class ProP, class D, class R, class... Args>                       \
+  struct conv_meta<ProP, D, R(Args...) oq ne> {                                \
+    conv_meta() = default;                                                     \
+    template <class P>                                                         \
+    constexpr explicit conv_meta(std::in_place_type_t<P>)                      \
+        : invoke([](ProP pq self, Args... args) ne -> R {                      \
+            return reinterpret_invoke<P, D, R>(static_cast<ProP pq>(self),     \
+                                               std::forward<Args>(args)...);   \
+          }) {}                                                                \
+                                                                               \
+    R (*invoke)(ProP pq, Args...) ne;                                          \
   }
-
-  typename overload_traits<O>::template dispatcher_type<F> dispatcher;
-};
+PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PROD_DEF_CONV_META)
+#undef PROD_DEF_CONV_META
 
 template <class... Ms>
 struct PRO4D_ENFORCE_EBO composite_meta : Ms... {
@@ -472,9 +443,9 @@ template <class C, class F, class... Os>
 struct conv_traits_impl {
   static_assert((overload_traits<substituted_overload_t<Os, F>>::applicable &&
                  ...));
-  using meta =
-      composite_meta<invocation_meta<F, C::is_direct, typename C::dispatch_type,
-                                     substituted_overload_t<Os, F>>...>;
+  using meta = composite_meta<conv_meta<
+      std::conditional_t<C::is_direct, proxy<F>, proxy_indirect_accessor<F>>,
+      typename C::dispatch_type, substituted_overload_t<Os, F>>...>;
   template <class T>
   using accessor =
       accessor_t<typename C::dispatch_type, T, typename C::dispatch_type,
@@ -565,10 +536,10 @@ template <class F, class D, class ONE, class OE, constraint_level C>
 struct lifetime_meta_traits : std::type_identity<void> {};
 template <class F, class D, class ONE, class OE>
 struct lifetime_meta_traits<F, D, ONE, OE, constraint_level::nothrow>
-    : std::type_identity<invocation_meta<F, true, D, ONE>> {};
+    : std::type_identity<conv_meta<proxy<F>, D, ONE>> {};
 template <class F, class D, class ONE, class OE>
 struct lifetime_meta_traits<F, D, ONE, OE, constraint_level::nontrivial>
-    : std::type_identity<invocation_meta<F, true, D, OE>> {};
+    : std::type_identity<conv_meta<proxy<F>, D, OE>> {};
 template <class F, class D, class ONE, class OE, constraint_level C>
 using lifetime_meta_t = typename lifetime_meta_traits<F, D, ONE, OE, C>::type;
 
@@ -799,18 +770,17 @@ private:
 template <class M, class DM>
 struct meta_ptr_direct_impl : private M {
   using M::M;
-  bool has_value() const noexcept { return this->DM::dispatcher != nullptr; }
-  void reset() noexcept { this->DM::dispatcher = nullptr; }
+  bool has_value() const noexcept { return this->DM::invoke != nullptr; }
+  void reset() noexcept { this->DM::invoke = nullptr; }
   const M* operator->() const noexcept { return this; }
 };
 template <class M>
 struct meta_ptr_traits_impl : std::type_identity<meta_ptr_indirect_impl<M>> {};
-template <class F, bool IsDirect, class D, class O, class... Ms>
-struct meta_ptr_traits_impl<
-    composite_meta<invocation_meta<F, IsDirect, D, O>, Ms...>>
-    : std::type_identity<meta_ptr_direct_impl<
-          composite_meta<invocation_meta<F, IsDirect, D, O>, Ms...>,
-          invocation_meta<F, IsDirect, D, O>>> {};
+template <class ProP, class D, class O, class... Ms>
+struct meta_ptr_traits_impl<composite_meta<conv_meta<ProP, D, O>, Ms...>>
+    : std::type_identity<
+          meta_ptr_direct_impl<composite_meta<conv_meta<ProP, D, O>, Ms...>,
+                               conv_meta<ProP, D, O>>> {};
 template <class M>
 struct meta_ptr_traits : std::type_identity<meta_ptr_indirect_impl<M>> {};
 template <class M>
@@ -846,12 +816,10 @@ private:
   T value_;
 };
 
-template <class F, bool IsDirect, class D, class O, class P, class... Args>
-decltype(auto) invoke_impl(P&& p, Args&&... args) {
-  auto dispatcher =
-      proxy_helper::get_meta(p)
-          .template invocation_meta<F, IsDirect, D, O>::dispatcher;
-  return dispatcher(std::forward<P>(p), std::forward<Args>(args)...);
+template <class D, class O, class P, class... Args>
+ret_t<O> invoke_impl(P&& p, Args&&... args) {
+  return proxy_helper::get_meta<conv_meta<std::remove_cvref_t<P>, D, O>>(p)
+      .invoke(std::forward<P>(p), std::forward<Args>(args)...);
 }
 template <class F, qualifier_type Q>
 add_qualifier_t<proxy<F>, Q>
@@ -860,6 +828,49 @@ add_qualifier_t<proxy<F>, Q>
       *reinterpret_cast<
           add_qualifier_ptr_t<inplace_ptr<proxy_indirect_accessor<F>>, Q>>(
           std::addressof(p)));
+}
+template <class P, class F, bool IsDirect, qualifier_type Q>
+operand_t<P, IsDirect, Q> get_operand(proxy_accessor<F, IsDirect, Q> p) {
+  if constexpr (IsDirect) {
+    return proxy_helper::get_ptr<P, F, Q>(
+        std::forward<proxy_accessor<F, IsDirect, Q>>(p));
+  } else {
+    add_qualifier_t<P, Q> ptr = proxy_helper::get_ptr<P, F, Q>(
+        as_proxy<F, Q>(std::forward<proxy_accessor<F, IsDirect, Q>>(p)));
+    if constexpr (std::is_constructible_v<bool, P&>) {
+      assert(ptr);
+    }
+    return *std::forward<add_qualifier_t<P, Q>>(ptr);
+  }
+}
+template <class D, class R, class... Args>
+R invoke_dispatch(Args&&... args) {
+  if constexpr (std::is_void_v<R>) {
+    D()(std::forward<Args>(args)...);
+  } else {
+    return D()(std::forward<Args>(args)...);
+  }
+}
+template <class P, class F, bool IsDirect, qualifier_type Q, class D, class R,
+          class... Args>
+R reinterpret_invoke(proxy_accessor<F, IsDirect, Q> self, Args&&... args) {
+  if constexpr (Q == qualifier_type::rv) {
+    if constexpr (std::is_base_of_v<internal_dispatch, D> &&
+                  is_bitwise_trivially_relocatable_v<P>) {
+      return D()(std::in_place_type<P>, std::move(self),
+                 std::forward<Args>(args)...);
+    } else {
+      proxy_helper::resetting_guard<P, F> guard{self};
+      return invoke_dispatch<D, R>(
+          get_operand<P, F, IsDirect, Q>(std::move(self)),
+          std::forward<Args>(args)...);
+    }
+  } else {
+    return invoke_dispatch<D, R>(
+        get_operand<P, F, IsDirect, Q>(
+            std::forward<proxy_accessor<F, IsDirect, Q>>(self)),
+        std::forward<Args>(args)...);
+  }
 }
 
 } // namespace details
@@ -878,38 +889,54 @@ class proxy_indirect_accessor
 
 public:
   template <class D, class O, class... Args>
-  friend auto invoke(proxy_indirect_accessor& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, false, D, O>(
-        details::as_proxy<F, details::qualifier_type::lv>(p),
-        std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(proxy_indirect_accessor& p, Args&&... args) {
+    return details::invoke_impl<D, O>(p, std::forward<Args>(args)...);
   }
   template <class D, class O, class... Args>
-  friend auto invoke(const proxy_indirect_accessor& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, false, D, O>(
-        details::as_proxy<F, details::qualifier_type::const_lv>(p),
-        std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(const proxy_indirect_accessor& p,
+                                  Args&&... args) {
+    return details::invoke_impl<D, O>(p, std::forward<Args>(args)...);
   }
   template <class D, class O, class... Args>
-  friend auto invoke(proxy_indirect_accessor&& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, false, D, O>(
-        details::as_proxy<F, details::qualifier_type::rv>(std::move(p)),
-        std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(proxy_indirect_accessor&& p, Args&&... args) {
+    return details::invoke_impl<D, O>(std::move(p),
+                                      std::forward<Args>(args)...);
   }
   template <class D, class O, class... Args>
-  friend auto invoke(const proxy_indirect_accessor&& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, false, D, O>(
-        details::as_proxy<F, details::qualifier_type::const_rv>(std::move(p)),
-        std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(const proxy_indirect_accessor&& p,
+                                  Args&&... args) {
+    return details::invoke_impl<D, O>(std::move(p),
+                                      std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(proxy_indirect_accessor& p, Args&&... args) {
+    return details::reinterpret_invoke<P, F, false, details::qualifier_type::lv,
+                                       D, R>(p, std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(const proxy_indirect_accessor& p,
+                              Args&&... args) {
+    return details::reinterpret_invoke<P, F, false,
+                                       details::qualifier_type::const_lv, D, R>(
+        p, std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(proxy_indirect_accessor&& p, Args&&... args) {
+    return details::reinterpret_invoke<P, F, false, details::qualifier_type::rv,
+                                       D, R>(std::move(p),
+                                             std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(const proxy_indirect_accessor&& p,
+                              Args&&... args) {
+    return details::reinterpret_invoke<P, F, false,
+                                       details::qualifier_type::const_rv, D, R>(
+        std::move(p), std::forward<Args>(args)...);
   }
   template <class R>
   friend const R& reflect(const proxy_indirect_accessor& p) noexcept {
-    return static_cast<const details::reflection_meta<false, R>&>(
-               details::proxy_helper::get_meta(
-                   details::as_proxy<F, details::qualifier_type::const_lv>(p)))
+    return details::proxy_helper::get_meta<details::reflection_meta<false, R>>(
+               p)
         .reflector;
   }
 };
@@ -1108,31 +1135,49 @@ public:
     return !lhs.has_value();
   }
   template <class D, class O, class... Args>
-  friend auto invoke(proxy& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(proxy& p, Args&&... args) {
+    return details::invoke_impl<D, O>(p, std::forward<Args>(args)...);
   }
   template <class D, class O, class... Args>
-  friend auto invoke(const proxy& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, true, D, O>(p, std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(const proxy& p, Args&&... args) {
+    return details::invoke_impl<D, O>(p, std::forward<Args>(args)...);
   }
   template <class D, class O, class... Args>
-  friend auto invoke(proxy&& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, true, D, O>(std::move(p),
-                                               std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(proxy&& p, Args&&... args) {
+    return details::invoke_impl<D, O>(std::move(p),
+                                      std::forward<Args>(args)...);
   }
   template <class D, class O, class... Args>
-  friend auto invoke(const proxy&& p, Args&&... args) ->
-      typename details::overload_traits<O>::return_type {
-    return details::invoke_impl<F, true, D, O>(std::move(p),
-                                               std::forward<Args>(args)...);
+  friend details::ret_t<O> invoke(const proxy&& p, Args&&... args) {
+    return details::invoke_impl<D, O>(std::move(p),
+                                      std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(proxy& p, Args&&... args) {
+    return details::reinterpret_invoke<P, F, true, details::qualifier_type::lv,
+                                       D, R>(p, std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(const proxy& p, Args&&... args) {
+    return details::reinterpret_invoke<P, F, true,
+                                       details::qualifier_type::const_lv, D, R>(
+        p, std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(proxy&& p, Args&&... args) {
+    return details::reinterpret_invoke<P, F, true, details::qualifier_type::rv,
+                                       D, R>(std::move(p),
+                                             std::forward<Args>(args)...);
+  }
+  template <class P, class D, class R, class... Args>
+  friend R reinterpret_invoke(const proxy&& p, Args&&... args) {
+    return details::reinterpret_invoke<P, F, true,
+                                       details::qualifier_type::const_rv, D, R>(
+        std::move(p), std::forward<Args>(args)...);
   }
   template <class R>
   friend const R& reflect(const proxy& p) noexcept {
-    return static_cast<const details::reflection_meta<true, R>&>(
-               details::proxy_helper::get_meta(p))
+    return details::proxy_helper::get_meta<details::reflection_meta<true, R>>(p)
         .reflector;
   }
 
@@ -1216,51 +1261,43 @@ private:
 };
 
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(proxy_indirect_accessor<F>& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(proxy_indirect_accessor<F>& p, Args&&... args) {
   return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(const proxy_indirect_accessor<F>& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(const proxy_indirect_accessor<F>& p, Args&&... args) {
   return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(proxy_indirect_accessor<F>&& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(proxy_indirect_accessor<F>&& p, Args&&... args) {
   return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(const proxy_indirect_accessor<F>&& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(const proxy_indirect_accessor<F>&& p, Args&&... args) {
   return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(proxy<F>& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(proxy<F>& p, Args&&... args) {
   return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(const proxy<F>& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(const proxy<F>& p, Args&&... args) {
   return invoke<D, O>(p, std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(proxy<F>&& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(proxy<F>&& p, Args&&... args) {
   return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 template <class D, class O, facade F, class... Args>
-[[deprecated("Use unqualified invoke instead")]] auto
-    proxy_invoke(const proxy<F>&& p, Args&&... args) ->
-    typename details::overload_traits<O>::return_type {
+[[deprecated("Use unqualified invoke instead")]] details::ret_t<O>
+    proxy_invoke(const proxy<F>&& p, Args&&... args) {
   return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
 }
 
@@ -1392,8 +1429,7 @@ using instantiated_conv_t =
 
 template <class O>
 using observer_substitution_overload =
-    proxy_view<typename overload_traits<O>::return_type::facade_type>()
-        const noexcept;
+    proxy_view<typename ret_t<O>::facade_type>() const noexcept;
 template <class... Os>
 using observer_substitution_conv = instantiated_conv_t<
     true, substitution_dispatch,
