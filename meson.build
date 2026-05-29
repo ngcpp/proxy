@@ -12,30 +12,19 @@ project(
 )
 
 cxx = meson.get_compiler('cpp')
-if cxx.compute_int('__has_cpp_attribute(msvc::no_unique_address)') != 0 and not cxx.compiles(
-  '''
-  struct A {};
-
-  struct B {
-    [[msvc::no_unique_address]] A val;
-  };
-
-  struct C : B {
-    char x;
-  };
-
-  static_assert(sizeof(C) == 1);
-  ''',
-  name: 'msvc::no_unique_address behaves correctly',
-)
-  error(
-    'unsupported compiler:',
-    'https://github.com/llvm/llvm-project/issues/143245',
-  )
-endif
 if cxx.get_argument_syntax() == 'msvc'
   add_project_arguments(
-    '/bigobj',
+    '/utf-8',
+    language: 'cpp',
+  )
+elif cxx.get_id() == 'clang'
+  add_project_arguments(
+    '-Wno-c++2b-extensions',
+    language: 'cpp',
+  )
+elif cxx.get_id() == 'nvidia_hpc'
+  add_project_arguments(
+    '-Minform=warn', '-Wall', '-Wextra', '-Wpedantic',
     language: 'cpp',
   )
 endif
@@ -90,12 +79,15 @@ gtest_dep = dependency(
   'gtest_main',
   main: true,
   required: tests,
+  default_options: ['warning_level=0'],
 )
 fmt_dep = dependency(
   'fmt',
   version: '>=6.1.0',
-  required: false,
+  required: tests,
   disabler: true,
+  default_options: ['warning_level=0'],
+  include_type: 'system',
 )
 subdir(
   'tests',
@@ -106,13 +98,13 @@ benchmarks = get_option('benchmarks').disable_auto_if(meson.is_subproject())
 benchmark_dep = dependency(
   'benchmark_main',
   required: benchmarks,
+  default_options: ['warning_level=0'],
 )
 subdir(
   'benchmarks',
   if_found: benchmark_dep,
 )
 
-examples = get_option('examples').disable_auto_if(meson.is_subproject())
-if examples.allowed()
+if tests.allowed() and get_option('doc_tests')
   subdir('docs')
 endif

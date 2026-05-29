@@ -13,6 +13,9 @@ else()
   option(BUILD_TESTING "Build tests" OFF)
 endif()
 
+# Doc tests are built and run only when BUILD_TESTING is also ON.
+option(BUILD_DOC_TESTING "Build and run tests extracted from docs" ON)
+
 if(PROJECT_IS_TOP_LEVEL)
   option(
     PROXY_BUILD_MODULES
@@ -111,14 +114,17 @@ if (BUILD_TESTING)
   FetchContent_MakeAvailable(fmt)
 
   if(MSVC)
-    set(PROXY_WARNING_FLAGS /W4)
-    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_WARNING_FLAGS} /WX)
+    set(PROXY_BUILD_FLAGS /utf-8 /W4)
+    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_BUILD_FLAGS} /WX)
   else()
-    set(PROXY_WARNING_FLAGS -Wall -Wextra -Wpedantic $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2b-extensions>)
-    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_WARNING_FLAGS} -Werror)
+    set(PROXY_BUILD_FLAGS -Wall -Wextra -Wpedantic $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2b-extensions>)
+    set(PROXY_STRICT_WARNING_FLAGS ${PROXY_BUILD_FLAGS} -Werror)
   endif()
 
   add_subdirectory(tests)
   add_subdirectory(benchmarks)
-  add_subdirectory(docs)
+
+  if(BUILD_DOC_TESTING)
+    add_subdirectory(docs)
+  endif()
 endif()

@@ -1,5 +1,6 @@
 on:
   workflow_call:
+  workflow_dispatch:
 
 env:
   NVHPC_VERSION: 26.3
@@ -10,14 +11,13 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: free disk space
+    - name: Free disk space
       uses: jlumbroso/free-disk-space@v1.3.1
 
-    # - name: install meson
-    #   # FIXME: install from upstream once https://github.com/mesonbuild/meson/pull/15353 is released
-    #   run: pipx install git+https://github.com/mesonbuild/meson@02b85a846629090a0c7f18e860bab0a10ea4349b
+    - name: Install meson
+      run: pipx install meson
 
-    - name: install NVHPC ${{ env.NVHPC_VERSION }}
+    - name: Install NVHPC ${{ env.NVHPC_VERSION }}
       run: |
         curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
@@ -28,7 +28,14 @@ jobs:
           echo "CXX=/opt/nvidia/hpc_sdk/Linux_x86_64/$NVHPC_VERSION/compilers/bin/nvc++"
         } >> "$GITHUB_ENV"
 
-    - name: build and run test with NVHPC ${{ env.NVHPC_VERSION }} on cmake
+    - name: Check toolchain versions
+      run: |
+        "$CXX" --version
+        cmake --version
+        ninja --version
+        meson --version
+
+    - name: Build and run test with NVHPC ${{ env.NVHPC_VERSION }} on cmake
       run: |
         cmake -B build-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DPROXY_BUILD_MODULES=FALSE
         cmake --build build-cmake -j
@@ -37,16 +44,16 @@ jobs:
         chmod +x tools/dump_build_env.sh
         ./tools/dump_build_env.sh "$CXX" build-cmake/drop/env-info.json
 
-    # - name: build and run test with NVHPC ${{ env.NVHPC_VERSION }} on meson
-    #   run: |
-    #     meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled --force-fallback-for=fmt
-    #     meson test -C build-meson
-    #     meson test -C build-meson --benchmark --test-args=--benchmark_list_tests=true
+    - name: Build and run test with NVHPC ${{ env.NVHPC_VERSION }} on meson
+      run: |
+        meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled
+        meson test -C build-meson
+        meson test -C build-meson --benchmark --test-args=--benchmark_list_tests=true
 
-    - name: run benchmarks
+    - name: Run benchmarks
       run: build-cmake/benchmarks/msft_proxy_benchmarks --benchmark_min_warmup_time=0.1 --benchmark_min_time=0.1s --benchmark_repetitions=30 --benchmark_enable_random_interleaving=true --benchmark_report_aggregates_only=true --benchmark_format=json > build-cmake/drop/benchmarking-results.json
 
-    - name: archive benchmarking results
+    - name: Archive benchmarking results
       uses: actions/upload-artifact@v7
       with:
         name: drop-nvhpc

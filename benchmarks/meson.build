@@ -9,5 +9,6 @@ benchmark(
     ),
     implicit_include_directories: false,
     dependencies: [msft_proxy4_dep, benchmark_dep],
+    cpp_args: cxx.get_argument_syntax() == 'msvc' ? ['/bigobj'] : [],
   ),
 )

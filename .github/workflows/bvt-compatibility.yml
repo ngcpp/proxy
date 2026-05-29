@@ -1,26 +1,28 @@
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   bvt-compatibility:
+    name: ${{ matrix.compiler.family }}-${{ matrix.compiler.version }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         compiler:
-          - {family: gcc, version: 13, modules: false}
-          - {family: gcc, version: 14, modules: true}
-          - {family: clang, version: 16, modules: false}
-          - {family: clang, version: 17, modules: false}
-          - {family: clang, version: 18, modules: false}
-          - {family: clang, version: 19, modules: false}
-          - {family: clang, version: 20, modules: true}
-          - {family: clang, version: 21, modules: true}
+          - {family: gcc, version: 13, modules: false, doc_tests: true}
+          - {family: gcc, version: 14, modules: true, doc_tests: true}
+          - {family: clang, version: 16, modules: false, doc_tests: false}
+          - {family: clang, version: 17, modules: false, doc_tests: true}
+          - {family: clang, version: 18, modules: false, doc_tests: true}
+          - {family: clang, version: 19, modules: false, doc_tests: true}
+          - {family: clang, version: 20, modules: true, doc_tests: true}
+          - {family: clang, version: 21, modules: true, doc_tests: true}
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: install gcc
+    - name: Install gcc
       if: ${{ matrix.compiler.family == 'gcc' }}
       run: |
         sudo apt install -y 'g++-${{ matrix.compiler.version }}'
@@ -29,7 +31,7 @@ jobs:
         CXX=g++-${{ matrix.compiler.version }}
         EOF
 
-    - name: install clang
+    - name: Install clang
       if: ${{ matrix.compiler.family == 'clang' }}
       run: |
         if [ '${{ matrix.compiler.version }}' -ge 21 ]; then
@@ -42,12 +44,14 @@ jobs:
         CXXFLAGS=-stdlib=libc++
         EOF
 
-    - name: check compiler version
+    - name: Check toolchain versions
       run: |
         "$CXX" --version
+        cmake --version
+        ninja --version
 
-    - name: build and run test with cmake
+    - name: Build and run test with cmake
       run: |
-        cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release '-DPROXY_BUILD_MODULES=${{ matrix.compiler.modules }}'
+        cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release '-DPROXY_BUILD_MODULES=${{ matrix.compiler.modules }}' '-DBUILD_DOC_TESTING=${{ matrix.compiler.doc_tests }}'
         cmake --build build -j
         ctest --test-dir build -j

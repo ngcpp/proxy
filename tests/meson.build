@@ -1,5 +1,6 @@
 test_srcs = files(
   'proxy_creation_tests.cpp',
+  'proxy_details_tests.cpp',
   'proxy_dispatch_tests.cpp',
   'proxy_format_tests.cpp',
   'proxy_integration_tests.cpp',
@@ -16,6 +17,7 @@ test_deps = [msft_proxy4_dep, gtest_dep]
 
 if fmt_dep.found()
   test_srcs += files(
+    'proxy_fmt_format_no_wchar_tests.cpp',
     'proxy_fmt_format_tests.cpp',
   )
   test_deps += fmt_dep
@@ -28,6 +30,9 @@ test(
     test_srcs,
     implicit_include_directories: false,
     dependencies: test_deps,
+    override_options: {
+      'werror': true,
+    },
     build_by_default: false,
   ),
   protocol: 'gtest',
@@ -54,11 +59,12 @@ if cxx.has_multi_arguments(
         files('freestanding/proxy_freestanding_tests.cpp'),
         implicit_include_directories: false,
         dependencies: [msft_proxy4_dep, libc_dep],
-        cpp_args: freestanding_cflags + freestanding_ldflags,
+        cpp_args: freestanding_cflags,
         link_args: get_option('b_sanitize') == 'none' ? freestanding_ldflags : [],
         override_options: {
           'cpp_eh': 'none',
           'cpp_rtti': false,
+          'werror': true,
         },
         build_by_default: false,
       ),

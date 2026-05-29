@@ -1,5 +1,6 @@
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   bvt-msvc:
@@ -7,30 +8,35 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: install meson
+    - name: Install meson
       run: pipx install meson
 
-    - name: add cl.exe to PATH
+    - name: Add cl.exe to PATH
       uses: ilammy/msvc-dev-cmd@v1
 
-    - name: build and run test with MSVC on cmake
+    - name: Check toolchain versions
+      run: |
+        cmake --version
+        meson --version
+
+    - name: Build and run test with MSVC on cmake
       run: |
         cmake -B build-cmake -DCMAKE_CXX_STANDARD=23 -DPROXY_BUILD_MODULES=TRUE `
           && cmake --build build-cmake --config Release -j `
-          && ctest --test-dir build-cmake -j `
+          && ctest --test-dir build-cmake -C Release -j `
           && mkdir build-cmake\drop > $null `
           && .\tools\dump_build_env_msvc.ps1 -OutputPath build-cmake\drop\env-info.json
 
-    - name: build and run test with MSVC on meson
+    - name: Build and run test with MSVC on meson
       run: |
-        meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled --force-fallback-for=fmt --vsenv
+        meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled --vsenv
         meson test -C build-meson
         meson test -C build-meson --benchmark --test-args=--benchmark_list_tests=true
 
-    - name: run benchmarks
+    - name: Run benchmarks
       run: build-cmake\benchmarks\Release\msft_proxy_benchmarks.exe --benchmark_min_warmup_time=0.1 --benchmark_min_time=0.1s --benchmark_repetitions=30 --benchmark_enable_random_interleaving=true --benchmark_report_aggregates_only=true --benchmark_format=json > build-cmake\drop\benchmarking-results.json
 
-    - name: archive benchmarking results
+    - name: Archive benchmarking results
       uses: actions/upload-artifact@v7
       with:
         name: drop-msvc

@@ -11,8 +11,8 @@ option(
   description: 'Build benchmarks',
 )
 option(
-  'examples',
-  type: 'feature',
-  value: 'auto',
-  description: 'Extract and build examples from docs',
+  'doc_tests',
+  type: 'boolean',
+  value: true,
+  description: 'Build and run tests extracted from docs (requires tests)',
 )

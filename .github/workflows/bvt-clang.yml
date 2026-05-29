@@ -1,5 +1,6 @@
 on:
   workflow_call:
+  workflow_dispatch:
 
 env:
   CLANG_VERSION: 22
@@ -10,10 +11,10 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: install meson
+    - name: Install meson
       run: pipx install meson
 
-    - name: install clang
+    - name: Install clang
       run: |
         curl https://apt.llvm.org/llvm.sh | sudo bash -s -- "$CLANG_VERSION"
         sudo apt install -y "clang-$CLANG_VERSION" "libc++-$CLANG_VERSION-dev" "clang-format-$CLANG_VERSION"
@@ -23,11 +24,15 @@ jobs:
           echo "CXXFLAGS=-stdlib=libc++"
         } >> "$GITHUB_ENV"
 
-    - name: check compiler version
+    - name: Check toolchain versions
       run: |
         "$CXX" --version
+        "clang-format-$CLANG_VERSION" --version
+        cmake --version
+        ninja --version
+        meson --version
 
-    - name: build and run test with clang ${{ env.CLANG_VERSION }} on cmake
+    - name: Build and run test with clang ${{ env.CLANG_VERSION }} on cmake
       run: |
         cmake -B build-cmake -GNinja -DCMAKE_CXX_STANDARD=23 -DCMAKE_BUILD_TYPE=Release -DPROXY_BUILD_MODULES=TRUE
         mapfile -t FILES < <(find include tests benchmarks build-cmake/examples_from_docs tools -type f \( -name '*.h' -o -name '*.ixx' -o -name '*.cpp' \))
@@ -38,16 +43,16 @@ jobs:
         mkdir build-cmake/drop
         bash ./tools/dump_build_env.sh "$CXX" build-cmake/drop/env-info.json
 
-    - name: build and run test with clang ${{ env.CLANG_VERSION }} on meson
+    - name: Build and run test with clang ${{ env.CLANG_VERSION }} on meson
       run: |
-        meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled --force-fallback-for=fmt
+        meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled
         meson test -C build-meson
         meson test -C build-meson --benchmark --test-args=--benchmark_list_tests=true
 
-    - name: run benchmarks
+    - name: Run benchmarks
       run: build-cmake/benchmarks/msft_proxy_benchmarks --benchmark_min_warmup_time=0.1 --benchmark_min_time=0.1s --benchmark_repetitions=30 --benchmark_enable_random_interleaving=true --benchmark_report_aggregates_only=true --benchmark_format=json > build-cmake/drop/benchmarking-results.json
 
-    - name: archive benchmarking results
+    - name: Archive benchmarking results
       uses: actions/upload-artifact@v7
       with:
         name: drop-clang

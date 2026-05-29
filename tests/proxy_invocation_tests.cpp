@@ -208,7 +208,7 @@ TEST(ProxyInvocationTests, TestThrow) {
 TEST(ProxyInvocationTests, TestMultipleDispatches_Unique) {
   std::list<int> l = {1, 2, 3};
   pro::proxy<details::Iterable<int>> p = &l;
-  ASSERT_EQ(Size(*p), 3);
+  ASSERT_EQ(Size(*p), std::size_t{3});
   int sum = 0;
   auto accumulate_sum = [&](int x) { sum += x; };
   ForEach(*p, accumulate_sum);
@@ -229,7 +229,7 @@ TEST(ProxyInvocationTests, TestMultipleDispatches_Duplicated) {
       sizeof(pro::details::facade_traits<details::Iterable<int>>::meta));
   std::list<int> l = {1, 2, 3};
   pro::proxy<DuplicatedIterable> p = &l;
-  ASSERT_EQ(Size(*p), 3);
+  ASSERT_EQ(Size(*p), std::size_t{3});
   int sum = 0;
   auto accumulate_sum = [&](int x) { sum += x; };
   ForEach(*p, accumulate_sum);
@@ -239,13 +239,13 @@ TEST(ProxyInvocationTests, TestMultipleDispatches_Duplicated) {
 TEST(ProxyInvocationTests, TestRecursiveDefinition) {
   std::list<int> l = {1, 2, 3};
   pro::proxy<details::Container<int>> p = &l;
-  ASSERT_EQ(Size(*p), 3);
+  ASSERT_EQ(Size(*p), std::size_t{3});
   int sum = 0;
   auto accumulate_sum = [&](int x) { sum += x; };
   ForEach(*p, accumulate_sum);
   ASSERT_EQ(sum, 6);
   Append(*Append(*Append(*p, 4), 5), 6);
-  ASSERT_EQ(Size(*p), 6);
+  ASSERT_EQ(Size(*p), std::size_t{6});
   sum = 0;
   ForEach(*p, accumulate_sum);
   ASSERT_EQ(sum, 21);

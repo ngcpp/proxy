@@ -7,18 +7,18 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: download all workflow run artifacts
+    - name: Download all workflow run artifacts
       uses: actions/download-artifact@v8
       with:
         path: artifacts
 
-    - name: build report generator
+    - name: Build report generator
       run: |
         cd tools/report_generator
         cmake -B build -DCMAKE_BUILD_TYPE=Release
         cmake --build build -j
 
-    - name: generate report
+    - name: Generate report
       run: |
         cat <<EOF > benchmarking-report.md
         # Benchmarking Report
@@ -30,7 +30,7 @@ jobs:
         EOF
         tools/report_generator/build/report_generator tools/report_generator/report-config.json
 
-    - name: archive benchmarking report
+    - name: Archive benchmarking report
       uses: actions/upload-artifact@v7
       with:
         name: benchmarking-report
