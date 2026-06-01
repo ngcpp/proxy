@@ -35,7 +35,7 @@ jobs:
         meson test -C build-meson --benchmark --test-args=--benchmark_list_tests=true
 
     - name: Build and Run test with AppleClang on bazel
-      run: bazel test //tests:proxy_tests //benchmarks:proxy_benchmarks //docs/...
+      run: bazel test --lockfile_mode=error //tests:proxy_tests //benchmarks:proxy_benchmarks //docs/...
 
     - name: Run benchmarks
       run: build-cmake/benchmarks/msft_proxy_benchmarks --benchmark_min_warmup_time=0.1 --benchmark_min_time=0.1s --benchmark_repetitions=30 --benchmark_enable_random_interleaving=true --benchmark_report_aggregates_only=true --benchmark_format=json > build-cmake/drop/benchmarking-results.json
