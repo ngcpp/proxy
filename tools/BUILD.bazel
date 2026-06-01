@@ -1,4 +1,12 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
 exports_files([
     "extract_example_code.py",
     "gen_doc_examples.py",
 ])
+
+py_binary(
+    name = "extract_example_code",
+    srcs = ["extract_example_code.py"],
+    visibility = ["//docs:__pkg__"],
+)

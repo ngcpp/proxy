@@ -11,9 +11,8 @@ package(default_visibility = ["//visibility:private"])
         name = "extract_example_" + md[:-3].replace("/", "_"),
         srcs = [md],
         outs = ["example_" + md[:-3].replace("/", "_") + ".cpp"],
-        cmd = "python3 $(location //tools:extract_example_code.py) $(SRCS) $(OUTS)",
-        cmd_bat = "py $(location //tools:extract_example_code.py) $(SRCS) $(OUTS)",
-        tools = ["//tools:extract_example_code.py"],
+        cmd = "$(execpath //tools:extract_example_code) $(SRCS) $(OUTS)",
+        tools = ["//tools:extract_example_code"],
     )
     for md in DOC_EXAMPLES
 ]
