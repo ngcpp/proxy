@@ -1,0 +1,77 @@
+name: Bump-Cpp-Deps
+
+# Weekly bump of the C++ library pins that Renovate has no manager for.
+
+on:
+  schedule:
+    - cron: "0 0 * * 1" # Mondays at 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bump-cpp-dependencies:
+    runs-on: ubuntu-24.04
+    # The weekly cron only runs on the canonical repo. Forks can still trigger it manually.
+    if: github.event_name != 'schedule' || github.repository == 'ngcpp/proxy'
+    steps:
+      - name: Mint a GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DEPENDENCY_MANAGER_APP_ID }}
+          private-key: ${{ secrets.DEPENDENCY_MANAGER_APP_PRIVATE_KEY }}
+
+      - name: Resolve the bot's commit identity
+        id: bot
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          slug='${{ steps.app-token.outputs.app-slug }}'
+          uid=$(gh api "/users/${slug}[bot]" --jq '.id')
+          echo "name=${slug}[bot]" >> "$GITHUB_OUTPUT"
+          echo "email=${uid}+${slug}[bot]@users.noreply.github.com" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install Meson
+        run: python3 -m pip install --upgrade pip meson
+
+      - name: Bump CMake and Meson dependencies
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: python3 tools/bump_cmake_meson_deps.py
+
+      - name: Open or update the pull request
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GIT_NAME: ${{ steps.bot.outputs.name }}
+          GIT_EMAIL: ${{ steps.bot.outputs.email }}
+          BASE: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No dependency changes; nothing to do."
+            exit 0
+          fi
+          branch=auto/bump-cpp-deps
+          git config user.name "$GIT_NAME"
+          git config user.email "$GIT_EMAIL"
+          git checkout -B "$branch"
+          git add -A
+          git commit -m "Bump CMake and Meson dependencies"
+          git push --force origin "$branch"
+          if [ -n "$(gh pr list --head "$branch" --base "$BASE" --state open --json number --jq '.[0].number // empty')" ]; then
+            echo "Updated the existing pull request."
+          else
+            gh pr create --base "$BASE" --head "$branch" \
+              --title "Bump CMake and Meson dependencies" \
+              --body 'Automated bump of the CMake FetchContent registries and the Meson wraps (`tools/bump_cmake_meson_deps.py`). The Renovate pipeline handles everything else.'
+          fi

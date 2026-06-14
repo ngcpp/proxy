@@ -106,6 +106,9 @@ install(
 if(BUILD_TESTING)
   include(CTest)
 
+  include(cmake/read_dependencies.cmake)
+  proxy_read_dependencies("${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies.json")
+
   include(FetchContent)
   # The policy uses the download time for timestamp, instead of the timestamp in the archive. This
   # allows for proper rebuilds when a projects URL changes.
@@ -115,9 +118,8 @@ if(BUILD_TESTING)
 
   FetchContent_Declare(
     fmt
-    URL https://github.com/fmtlib/fmt/archive/refs/tags/12.1.0.tar.gz
-    URL_HASH
-      SHA256=ea7de4299689e12b6dddd392f9896f08fb0777ac7168897a244a6d6085043fea
+    URL ${PROXY_FMT_URL}
+    URL_HASH SHA256=${PROXY_FMT_SHA256}
     SYSTEM
   )
   FetchContent_MakeAvailable(fmt)

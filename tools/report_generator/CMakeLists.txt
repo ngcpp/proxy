@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.5)
 
 project(report_generator)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/read_dependencies.cmake)
+proxy_read_dependencies("${CMAKE_CURRENT_SOURCE_DIR}/dependencies.json")
+
 include(FetchContent)
 # The policy uses the download time for timestamp, instead of the timestamp in the archive. This
 # allows for proper rebuilds when a projects URL changes.
@@ -11,9 +14,8 @@ endif()
 
 FetchContent_Declare(
   nlohmann_json
-  URL https://github.com/nlohmann/json/archive/refs/tags/v3.12.0.tar.gz
-  URL_HASH
-    SHA256=4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187
+  URL ${PROXY_NLOHMANN_JSON_URL}
+  URL_HASH SHA256=${PROXY_NLOHMANN_JSON_SHA256}
 )
 FetchContent_MakeAvailable(nlohmann_json)
 

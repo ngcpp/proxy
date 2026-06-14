@@ -1,0 +1,17 @@
+[
+  {
+    "name": "fmt",
+    "url": "https://github.com/fmtlib/fmt/archive/refs/tags/12.1.0.tar.gz",
+    "sha256": "ea7de4299689e12b6dddd392f9896f08fb0777ac7168897a244a6d6085043fea"
+  },
+  {
+    "name": "googletest",
+    "url": "https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz",
+    "sha256": "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c"
+  },
+  {
+    "name": "benchmark",
+    "url": "https://github.com/google/benchmark/archive/refs/tags/v1.9.5.tar.gz",
+    "sha256": "9631341c82bac4a288bef951f8b26b41f69021794184ece969f8473977eaa340"
+  }
+]

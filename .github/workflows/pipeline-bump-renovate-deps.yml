@@ -1,0 +1,53 @@
+name: Bump-Renovate-Deps
+
+# Weekly Renovate run that bumps every dependency it has a manager for, all in one pull request.
+
+on:
+  schedule:
+    - cron: "0 0 * * 1" # Mondays at 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    runs-on: ubuntu-24.04
+    # The weekly cron only runs on the canonical repo. Forks can still trigger it manually.
+    if: github.event_name != 'schedule' || github.repository == 'ngcpp/proxy'
+    steps:
+      - name: Mint a GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DEPENDENCY_MANAGER_APP_ID }}
+          private-key: ${{ secrets.DEPENDENCY_MANAGER_APP_PRIVATE_KEY }}
+
+      - name: Resolve the bot's commit identity
+        id: bot
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          slug='${{ steps.app-token.outputs.app-slug }}'
+          uid=$(gh api "/users/${slug}[bot]" --jq '.id')
+          echo "git-author=${slug}[bot] <${uid}+${slug}[bot]@users.noreply.github.com>" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Run Renovate
+        env:
+          RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
+          RENOVATE_USERNAME: ${{ steps.app-token.outputs.app-slug }}[bot]
+          RENOVATE_GIT_AUTHOR: ${{ steps.bot.outputs.git-author }}
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_AUTODISCOVER: "false"
+          RENOVATE_ONBOARDING: "false"
+          RENOVATE_BASE_BRANCHES: ${{ github.ref_name }}
+          RENOVATE_ALLOWED_POST_UPGRADE_COMMANDS: '["^bazel mod graph --lockfile_mode=update$"]'
+          LOG_LEVEL: info
+        run: npx --yes renovate

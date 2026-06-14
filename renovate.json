@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": [
+    "github-actions",
+    "pre-commit",
+    "pip_requirements",
+    "bazel-module",
+    "bazelisk"
+  ],
+  "pre-commit": {
+    "enabled": true
+  },
+  "separateMajorMinor": false,
+  "updateLockFiles": false,
+  "prHourlyLimit": 0,
+  "branchPrefix": "auto/bump-renovate-",
+  "packageRules": [
+    {
+      "description": "One weekly PR on auto/bump-renovate-deps.",
+      "matchManagers": [
+        "github-actions",
+        "pre-commit",
+        "pip_requirements",
+        "bazel-module",
+        "bazelisk"
+      ],
+      "groupName": "dependencies",
+      "groupSlug": "deps"
+    }
+  ],
+  "postUpgradeTasks": {
+    "description": "Refresh MODULE.bazel.lock to track the bazel_dep versions Renovate bumped.",
+    "commands": ["bazel mod graph --lockfile_mode=update"],
+    "fileFilters": ["MODULE.bazel.lock"],
+    "executionMode": "branch"
+  }
+}
