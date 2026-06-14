@@ -73,5 +73,5 @@ jobs:
           else
             gh pr create --base "$BASE" --head "$branch" \
               --title "Bump CMake and Meson dependencies" \
-              --body 'Automated bump of the CMake FetchContent registries and the Meson wraps (`tools/bump_cmake_meson_deps.py`). The Renovate pipeline handles everything else.'
+              --body 'Automated bump of the CMake FetchContent registries and the Meson wraps (tools/bump_cmake_meson_deps.py). The Renovate pipeline handles everything else.'
           fi
