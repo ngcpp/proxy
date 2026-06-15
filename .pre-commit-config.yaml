@@ -14,7 +14,7 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.15
+    rev: v0.15.17
     hooks:
       - id: ruff-format
 
@@ -26,13 +26,13 @@ repos:
         exclude: '^(subprojects|build|bazel-.*)/'
 
   - repo: https://github.com/keith/pre-commit-buildifier
-    rev: 8.2.1
+    rev: 8.5.1
     hooks:
       - id: buildifier
         exclude: '^(subprojects|build|bazel-.*)/'
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.8
+    rev: v1.7.12
     hooks:
       - id: actionlint
 
@@ -41,7 +41,7 @@ repos:
       - id: meson-format
         name: meson format
         language: python
-        additional_dependencies: ["meson==1.10.1"]
+        additional_dependencies: ["meson==1.11.1"]
         entry: meson
         args: ["format", "--check-only", "--recursive", "meson.build"]
         pass_filenames: false

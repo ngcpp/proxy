@@ -20,7 +20,7 @@ jobs:
           - {family: clang, version: 21, modules: true, doc_tests: true}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install gcc
       if: ${{ matrix.compiler.family == 'gcc' }}

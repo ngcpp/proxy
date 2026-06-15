@@ -10,7 +10,7 @@ jobs:
       contents: write
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Pack source
       id: run-pack
       run: |
@@ -22,7 +22,7 @@ jobs:
       shell: bash
 
     - name: Create release draft
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         draft: true
         tag_name: ${{ steps.run-pack.outputs.PRO_VER }}
