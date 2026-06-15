@@ -12,7 +12,7 @@
     "enabled": true
   },
   "separateMajorMinor": false,
-  "updateLockFiles": false,
+  "skipArtifactsUpdate": true,
   "prHourlyLimit": 0,
   "branchPrefix": "auto/bump-renovate-",
   "packageRules": [
