@@ -11,34 +11,42 @@ jobs:
   run-bvt-lint:
     uses: ./.github/workflows/bvt-lint.yml
     name: Run BVT for lint
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-gcc:
     uses: ./.github/workflows/bvt-gcc.yml
     name: Run BVT with GCC
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-clang:
     uses: ./.github/workflows/bvt-clang.yml
     name: Run BVT with Clang
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-msvc:
     uses: ./.github/workflows/bvt-msvc.yml
     name: Run BVT with MSVC
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-appleclang:
     uses: ./.github/workflows/bvt-appleclang.yml
     name: Run BVT with AppleClang
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-nvhpc:
     uses: ./.github/workflows/bvt-nvhpc.yml
     name: Run BVT with NVHPC
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-oneapi:
     uses: ./.github/workflows/bvt-oneapi.yml
     name: Run BVT with Intel oneAPI
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-compatibility:
     uses: ./.github/workflows/bvt-compatibility.yml
     name: Run BVT for compatibility
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   report:
     uses: ./.github/workflows/bvt-report.yml
