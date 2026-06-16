@@ -12,7 +12,6 @@
     "enabled": true
   },
   "separateMajorMinor": false,
-  "skipArtifactsUpdate": true,
   "prHourlyLimit": 0,
   "branchPrefix": "auto/bump-renovate-",
   "packageRules": [
@@ -28,11 +27,5 @@
       "groupName": "dependencies",
       "groupSlug": "deps"
     }
-  ],
-  "postUpgradeTasks": {
-    "description": "Refresh MODULE.bazel.lock to track the bazel_dep versions Renovate bumped.",
-    "commands": ["bazel mod graph --lockfile_mode=update"],
-    "fileFilters": ["MODULE.bazel.lock"],
-    "executionMode": "branch"
-  }
+  ]
 }

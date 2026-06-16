@@ -48,6 +48,6 @@ jobs:
           RENOVATE_AUTODISCOVER: "false"
           RENOVATE_ONBOARDING: "false"
           RENOVATE_BASE_BRANCHES: ${{ github.ref_name }}
-          RENOVATE_ALLOWED_POST_UPGRADE_COMMANDS: '["^bazel mod graph --lockfile_mode=update$"]'
+          RENOVATE_ALLOWED_UNSAFE_EXECUTIONS: '["bazelModDeps"]'
           LOG_LEVEL: info
         run: npx --yes renovate
