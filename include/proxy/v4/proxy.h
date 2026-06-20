@@ -5,10 +5,11 @@
 #ifndef MSFT_PROXY_V4_PROXY_H_
 #define MSFT_PROXY_V4_PROXY_H_
 
-#include "detail/core.h"            // IWYU pragma: export
-#include "detail/dispatch.h"        // IWYU pragma: export
-#include "detail/facade_creation.h" // IWYU pragma: export
-#include "detail/proxy_creation.h"  // IWYU pragma: export
-#include "detail/skills.h"          // IWYU pragma: export
+#include "detail/compatibility_check.h" // IWYU pragma: keep
+#include "detail/core.h"                // IWYU pragma: export
+#include "detail/dispatch.h"            // IWYU pragma: export
+#include "detail/facade_creation.h"     // IWYU pragma: export
+#include "detail/proxy_creation.h"      // IWYU pragma: export
+#include "detail/skills.h"              // IWYU pragma: export
 
 #endif // MSFT_PROXY_V4_PROXY_H_
