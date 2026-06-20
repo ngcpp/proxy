@@ -41,15 +41,7 @@ cc_test(
 cc_test(
     name = "proxy_freestanding_tests",
     srcs = ["freestanding/proxy_freestanding_tests.cpp"],
-    copts = PROXY_STRICT_BUILD_COPTS + [
-        "-ffreestanding",
-        "-fno-exceptions",
-        "-fno-rtti",
-    ],
-    linkopts = [
-        "-nodefaultlibs",
-        "-lc",
-    ],
+    copts = PROXY_STRICT_BUILD_COPTS,
     target_compatible_with = ["@platforms//os:linux"],
     deps = ["//:proxy"],
 )

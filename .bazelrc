@@ -5,6 +5,10 @@ common --enable_platform_specific_config
 # Default Build Options
 build --features=external_include_paths
 
+# Freestanding Configuration
+build:freestanding --cxxopt=-ffreestanding --cxxopt=-fno-exceptions --cxxopt=-fno-rtti
+build:freestanding --linkopt=-nodefaultlibs --linkopt=-lc
+
 # Platform-Specific Toolchain Overrides
 build:linux --repo_env=BAZEL_CXXOPTS=-std=c++20
 build:macos --repo_env=BAZEL_CXXOPTS=-std=c++20

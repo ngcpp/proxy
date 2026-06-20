@@ -32,6 +32,21 @@ elif cxx.get_id() == 'nvidia_hpc'
   )
 endif
 
+freestanding = get_option('freestanding')
+if freestanding
+  add_project_arguments(
+    '-ffreestanding',
+    '-fno-exceptions',
+    '-fno-rtti',
+    language: 'cpp',
+  )
+  add_project_link_arguments(
+    '-nodefaultlibs',
+    '-lc',
+    language: 'cpp',
+  )
+endif
+
 inc = include_directories('include')
 
 msft_proxy4_dep = declare_dependency(
@@ -57,36 +72,41 @@ endif
 meson.override_dependency(meson.project_name(), msft_proxy4_dep)
 
 tests = get_option('tests').disable_auto_if(meson.is_subproject())
-gtest_dep = dependency(
-  'gtest_main',
-  main: true,
-  required: tests,
-  default_options: ['warning_level=0'],
-)
-fmt_dep = dependency(
-  'fmt',
-  version: '>=6.1.0',
-  required: tests,
-  disabler: true,
-  default_options: ['warning_level=0'],
-  include_type: 'system',
-)
-subdir(
-  'tests',
-  if_found: gtest_dep,
-)
 
-benchmarks = get_option('benchmarks').disable_auto_if(meson.is_subproject())
-benchmark_dep = dependency(
-  'benchmark_main',
-  required: benchmarks,
-  default_options: ['warning_level=0'],
-)
-subdir(
-  'benchmarks',
-  if_found: benchmark_dep,
-)
+if freestanding
+  subdir('tests/freestanding')
+else
+  gtest_dep = dependency(
+    'gtest_main',
+    main: true,
+    required: tests,
+    default_options: ['warning_level=0'],
+  )
+  fmt_dep = dependency(
+    'fmt',
+    version: '>=6.1.0',
+    required: tests,
+    disabler: true,
+    default_options: ['warning_level=0'],
+    include_type: 'system',
+  )
+  subdir(
+    'tests',
+    if_found: gtest_dep,
+  )
 
-if tests.allowed() and get_option('doc_tests')
-  subdir('docs')
+  benchmarks = get_option('benchmarks').disable_auto_if(meson.is_subproject())
+  benchmark_dep = dependency(
+    'benchmark_main',
+    required: benchmarks,
+    default_options: ['warning_level=0'],
+  )
+  subdir(
+    'benchmarks',
+    if_found: benchmark_dep,
+  )
+
+  if tests.allowed() and get_option('doc_tests')
+    subdir('docs')
+  endif
 endif

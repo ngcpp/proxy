@@ -16,3 +16,9 @@ option(
   value: true,
   description: 'Build and run tests extracted from docs (requires tests)',
 )
+option(
+  'freestanding',
+  type: 'boolean',
+  value: false,
+  description: 'Configure proxy and its tests for a freestanding environment.',
+)

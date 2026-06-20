@@ -37,37 +37,3 @@ test(
   ),
   protocol: 'gtest',
 )
-
-freestanding_cflags = ['-ffreestanding']
-freestanding_ldflags = ['-nodefaultlibs']
-
-if cxx.has_multi_arguments(
-  freestanding_cflags,
-  freestanding_ldflags,
-  required: false,
-)
-  libc_dep = cxx.find_library(
-    'c',
-    required: false,
-  )
-
-  if libc_dep.found()
-    test(
-      'ProxyFreestandingSupportTests',
-      executable(
-        'msft_proxy_freestanding_tests',
-        files('freestanding/proxy_freestanding_tests.cpp'),
-        implicit_include_directories: false,
-        dependencies: [msft_proxy4_dep, libc_dep],
-        cpp_args: freestanding_cflags,
-        link_args: get_option('b_sanitize') == 'none' ? freestanding_ldflags : [],
-        override_options: {
-          'cpp_eh': 'none',
-          'cpp_rtti': false,
-          'werror': true,
-        },
-        build_by_default: false,
-      ),
-    )
-  endif
-endif

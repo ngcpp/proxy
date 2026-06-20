@@ -6,9 +6,17 @@ export module proxy.v4;
 
 export namespace pro::inline v4 {
 
+#if __STDC_HOSTED__
 using v4::allocate_proxy;
 using v4::allocate_proxy_shared;
+using v4::make_proxy;
+using v4::make_proxy_shared;
+#endif // __STDC_HOSTED__
+
+#if __cpp_rtti >= 199711L
 using v4::bad_proxy_cast;
+#endif // __cpp_rtti >= 199711L
+
 using v4::basic_facade_builder;
 using v4::constraint_level;
 using v4::conversion_dispatch;
@@ -20,9 +28,7 @@ using v4::implicit_conversion_dispatch;
 using v4::inplace_proxiable_target;
 using v4::is_bitwise_trivially_relocatable;
 using v4::is_bitwise_trivially_relocatable_v;
-using v4::make_proxy;
 using v4::make_proxy_inplace;
-using v4::make_proxy_shared;
 using v4::make_proxy_view;
 using v4::not_implemented;
 using v4::observer_facade;

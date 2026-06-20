@@ -316,9 +316,9 @@ Then drive the tests through any of the supported build systems:
 ### CMake
 
 ```
-cmake -B build
-cmake --build build -j
-ctest --test-dir build -j
+cmake --preset default
+cmake --build --preset default -j
+ctest --preset default -j
 ```
 
 ### Meson

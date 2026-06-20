@@ -22,6 +22,16 @@ if(PROJECT_IS_TOP_LEVEL)
     "When this project is top level, build the docs and tests with C++ module support."
     OFF
   )
+  option(
+    PROXY_FREESTANDING
+    "When this project is top level, configure proxy and its tests for a freestanding environment. GCC/Clang only."
+    OFF
+  )
+endif()
+
+if(PROXY_FREESTANDING)
+  add_compile_options(-ffreestanding -fno-exceptions -fno-rtti)
+  add_link_options(-nodefaultlibs -lc)
 endif()
 
 file(GLOB_RECURSE proxy_public_headers CONFIGURE_DEPENDS
@@ -101,24 +111,6 @@ install(
 if(BUILD_TESTING)
   include(CTest)
 
-  include(cmake/read_dependencies.cmake)
-  proxy_read_dependencies("${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies.json")
-
-  include(FetchContent)
-  # The policy uses the download time for timestamp, instead of the timestamp in the archive. This
-  # allows for proper rebuilds when a projects URL changes.
-  if(POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW)
-  endif()
-
-  FetchContent_Declare(
-    fmt
-    URL ${PROXY_FMT_URL}
-    URL_HASH SHA256=${PROXY_FMT_SHA256}
-    SYSTEM
-  )
-  FetchContent_MakeAvailable(fmt)
-
   if(MSVC)
     set(PROXY_BUILD_FLAGS /utf-8 /W4)
     set(PROXY_STRICT_WARNING_FLAGS ${PROXY_BUILD_FLAGS} /WX)
@@ -133,10 +125,32 @@ if(BUILD_TESTING)
     set(PROXY_STRICT_WARNING_FLAGS ${PROXY_BUILD_FLAGS} -Werror)
   endif()
 
-  add_subdirectory(tests)
-  add_subdirectory(benchmarks)
+  if(PROXY_FREESTANDING)
+    add_subdirectory(tests/freestanding)
+  else()
+    include(cmake/read_dependencies.cmake)
+    proxy_read_dependencies("${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies.json")
 
-  if(BUILD_DOC_TESTING)
-    add_subdirectory(docs)
+    include(FetchContent)
+    # The policy uses the download time for timestamp, instead of the timestamp in the archive. This
+    # allows for proper rebuilds when a projects URL changes.
+    if(POLICY CMP0135)
+      cmake_policy(SET CMP0135 NEW)
+    endif()
+
+    FetchContent_Declare(
+      fmt
+      URL ${PROXY_FMT_URL}
+      URL_HASH SHA256=${PROXY_FMT_SHA256}
+      SYSTEM
+    )
+    FetchContent_MakeAvailable(fmt)
+
+    add_subdirectory(tests)
+    add_subdirectory(benchmarks)
+
+    if(BUILD_DOC_TESTING)
+      add_subdirectory(docs)
+    endif()
   endif()
 endif()

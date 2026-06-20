@@ -34,26 +34,40 @@ jobs:
 
     - name: Build and run test with clang ${{ env.CLANG_VERSION }} on cmake
       run: |
-        cmake -B build-cmake -GNinja -DCMAKE_CXX_STANDARD=23 -DCMAKE_BUILD_TYPE=Release -DPROXY_BUILD_MODULES=TRUE
-        cmake --build build-cmake -j
-        ctest --test-dir build-cmake -j
-        mkdir build-cmake/drop
-        bash ./tools/dump_build_env.sh "$CXX" build-cmake/drop/env-info.json
+        cmake --preset default -DCMAKE_CXX_STANDARD=23 -DPROXY_BUILD_MODULES=TRUE
+        cmake --build --preset default -j
+        ctest --preset default -j
+        mkdir build/cmake/drop
+        bash ./tools/dump_build_env.sh "$CXX" build/cmake/drop/env-info.json
+
+    - name: Build and run freestanding test with clang ${{ env.CLANG_VERSION }} on cmake
+      run: |
+        cmake --preset freestanding -DCMAKE_CXX_STANDARD=23 -DPROXY_BUILD_MODULES=TRUE
+        cmake --build --preset freestanding -j
+        ctest --preset freestanding -j
 
     - name: Build and run test with clang ${{ env.CLANG_VERSION }} on meson
       run: |
-        meson setup build-meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled
-        meson test -C build-meson
-        meson test -C build-meson --benchmark --test-args=--benchmark_list_tests=true
+        meson setup build/meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled
+        meson test -C build/meson
+        meson test -C build/meson --benchmark --test-args=--benchmark_list_tests=true
+
+    - name: Build and run freestanding test with clang ${{ env.CLANG_VERSION }} on meson
+      run: |
+        meson setup build/meson-freestanding --buildtype=release -Dfreestanding=true
+        meson test -C build/meson-freestanding
 
     - name: Build and Run test with clang ${{ env.CLANG_VERSION }} on bazel
-      run: bazel test --lockfile_mode=error //tests:proxy_tests //tests:proxy_freestanding_tests //benchmarks:proxy_benchmarks //docs/...
+      run: bazel test --lockfile_mode=error //tests:proxy_tests //benchmarks:proxy_benchmarks //docs/...
+
+    - name: Build and run freestanding test with clang ${{ env.CLANG_VERSION }} on bazel
+      run: bazel test --config=freestanding --lockfile_mode=error //tests:proxy_freestanding_tests
 
     - name: Run benchmarks
-      run: build-cmake/benchmarks/msft_proxy_benchmarks --benchmark_min_warmup_time=0.1 --benchmark_min_time=0.1s --benchmark_repetitions=30 --benchmark_enable_random_interleaving=true --benchmark_report_aggregates_only=true --benchmark_format=json > build-cmake/drop/benchmarking-results.json
+      run: build/cmake/benchmarks/msft_proxy_benchmarks --benchmark_min_warmup_time=0.1 --benchmark_min_time=0.1s --benchmark_repetitions=30 --benchmark_enable_random_interleaving=true --benchmark_report_aggregates_only=true --benchmark_format=json > build/cmake/drop/benchmarking-results.json
 
     - name: Archive benchmarking results
       uses: actions/upload-artifact@v7
       with:
         name: drop-clang
-        path: build-cmake/drop/
+        path: build/cmake/drop/

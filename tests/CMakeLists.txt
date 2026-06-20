@@ -35,28 +35,4 @@ target_link_libraries(
 target_compile_options(msft_proxy_tests PRIVATE ${PROXY_STRICT_WARNING_FLAGS})
 gtest_discover_tests(msft_proxy_tests)
 
-if(
-  CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-  OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-)
-  add_executable(
-    msft_proxy_freestanding_tests
-    freestanding/proxy_freestanding_tests.cpp
-  )
-  target_compile_options(
-    msft_proxy_freestanding_tests
-    PRIVATE
-      -ffreestanding
-      -fno-exceptions
-      -fno-rtti
-      ${PROXY_STRICT_WARNING_FLAGS}
-  )
-  target_link_options(msft_proxy_freestanding_tests PRIVATE -nodefaultlibs -lc)
-  target_link_libraries(
-    msft_proxy_freestanding_tests
-    PRIVATE msft_proxy4::proxy
-  )
-  add_test(NAME ProxyFreestandingTests COMMAND msft_proxy_freestanding_tests)
-endif()
-
 add_subdirectory(modules)

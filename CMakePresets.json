@@ -1,0 +1,55 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default hosted build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_STANDARD": "20"
+      }
+    },
+    {
+      "name": "freestanding",
+      "displayName": "Freestanding build",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build/cmake-freestanding",
+      "cacheVariables": {
+        "PROXY_FREESTANDING": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "freestanding",
+      "configurePreset": "freestanding"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "freestanding",
+      "configurePreset": "freestanding",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
