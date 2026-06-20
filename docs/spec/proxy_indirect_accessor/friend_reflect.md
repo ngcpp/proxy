@@ -20,13 +20,13 @@ The reference obtained from `reflect()` may be invalidated if the associated `pr
 
 This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy_indirect_accessor<F>` is an associated class of the arguments.
 
-A `proxy_indirect_accessor<F>` is obtained by dereferencing a [`proxy<F>`](../proxy/README.md) (i.e., `*p`). To acquire a *direct* reflection (deduced from the pointer type), use [`reflect`](../proxy/reflect.md) on the [`proxy<F>`](../proxy/README.md) itself.
+A `proxy_indirect_accessor<F>` is obtained by dereferencing a [`proxy<F>`](../proxy/README.md) (i.e., `*p`). To acquire a *direct* reflection (deduced from the pointer type), use [`reflect`](../proxy/friend_reflect.md) on the [`proxy<F>`](../proxy/README.md) itself.
 
 ## Notes
 
 `reflect` was introduced in `4.1.0` as a replacement for the deprecated [`proxy_reflect`](../proxy_reflect.md). `proxy_reflect` is a namespace-scope function, while `reflect` is a non-member function of `proxy_indirect_accessor` found only via argument-dependent lookup.
 
-This function is useful when only metadata deduced from a type is needed. While [`invoke`](invoke.md) can also retrieve type metadata, `reflect` can generate more efficient code in this context.
+This function is useful when only metadata deduced from a type is needed. While [`invoke`](friend_invoke.md) can also retrieve type metadata, `reflect` can generate more efficient code in this context.
 
 ## Example
 
@@ -65,5 +65,5 @@ int main() {
 
 ## See Also
 
-- [function template `invoke` (`proxy_indirect_accessor<F>`)](invoke.md)
+- [function template `invoke` (`proxy_indirect_accessor<F>`)](friend_invoke.md)
 - [alias template `basic_facade_builder::add_reflection`](../basic_facade_builder/add_reflection.md)

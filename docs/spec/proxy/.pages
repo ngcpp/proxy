@@ -3,13 +3,13 @@ nav:
   - (constructor): constructor.md
   - (destructor): destructor.md
   - emplace: emplace.md
-  - invoke (non-member): invoke.md
+  - invoke (non-member): friend_invoke.md
   - operator bool<br />has_value: operator_bool.md
   - operator-><br />operator*: indirection.md
   - operator= (non-member): friend_operator_equality.md
   - operator=: assignment.md
-  - reflect (non-member): reflect.md
-  - reinterpret_invoke (non-member): reinterpret_invoke.md
+  - reflect (non-member): friend_reflect.md
+  - reinterpret_invoke (non-member): friend_reinterpret_invoke.md
   - reset: reset.md
   - swap (non-member): friend_swap.md
   - swap: swap.md

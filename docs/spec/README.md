@@ -55,18 +55,8 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`make_proxy_shared`](make_proxy_shared.md)         | Creates a `proxy` object with shared ownership               |
 | [`make_proxy_view`](make_proxy_view.md)             | Creates a `proxy_view` object                                |
 | [`make_proxy`](make_proxy.md)                       | Creates a `proxy` object potentially with heap allocation    |
-| [`proxy_invoke`](proxy_invoke.md)                   | (Deprecated since 4.1.0; use [`invoke`](proxy_indirect_accessor/invoke.md)) Invokes a `proxy` with a specified convention |
-| [`proxy_reflect`](proxy_reflect.md)                 | (Deprecated since 4.1.0; use [`reflect`](proxy_indirect_accessor/reflect.md)) Acquires reflection information of a contained type |
-
-### Non-Member Functions
-
-The following are not namespace-scope functions; each is a non-member function of [`proxy`](proxy/README.md) and [`proxy_indirect_accessor`](proxy_indirect_accessor/README.md), found only via [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl). Each is documented separately for the two classes.
-
-| Name                 | For `proxy<F>`                                  | For `proxy_indirect_accessor<F>`                                  |
-| -------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
-| `invoke`             | [direct](proxy/invoke.md)                       | [indirect](proxy_indirect_accessor/invoke.md)                     |
-| `reflect`            | [direct](proxy/reflect.md)                      | [indirect](proxy_indirect_accessor/reflect.md)                    |
-| `reinterpret_invoke` | [direct](proxy/reinterpret_invoke.md)           | [indirect](proxy_indirect_accessor/reinterpret_invoke.md)         |
+| [`proxy_invoke`](proxy_invoke.md) [deprecated]      | Invokes a `proxy` with a specified convention                |
+| [`proxy_reflect`](proxy_reflect.md) [deprecated]    | Acquires reflection information of a contained type          |
 
 ## Header `<proxy_macros.h>`
 

@@ -25,7 +25,7 @@ There shall be a convention type `Conv` defined in `typename F::convention_types
 
 This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy_indirect_accessor<F>` is an associated class of the arguments.
 
-A `proxy_indirect_accessor<F>` is obtained by dereferencing a [`proxy<F>`](../proxy/README.md) (i.e., `*p`). To invoke a *direct* convention, use [`invoke`](../proxy/invoke.md) on the [`proxy<F>`](../proxy/README.md) itself.
+A `proxy_indirect_accessor<F>` is obtained by dereferencing a [`proxy<F>`](../proxy/README.md) (i.e., `*p`). To invoke a *direct* convention, use [`invoke`](../proxy/friend_invoke.md) on the [`proxy<F>`](../proxy/README.md) itself.
 
 ## Notes
 
@@ -58,5 +58,5 @@ int main() {
 
 ## See Also
 
-- [function template `reflect` (`proxy_indirect_accessor<F>`)](reflect.md)
-- [function template `reinterpret_invoke` (`proxy_indirect_accessor<F>`)](reinterpret_invoke.md)
+- [function template `reflect` (`proxy_indirect_accessor<F>`)](friend_reflect.md)
+- [function template `reinterpret_invoke` (`proxy_indirect_accessor<F>`)](friend_reinterpret_invoke.md)
