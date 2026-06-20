@@ -52,8 +52,8 @@ public:
   std::size_t Size, Align;
 };
 
-struct LayoutAware : pro::facade_builder                          //
-                     ::add_indirect_reflection<LayoutReflector>   //
+struct LayoutAware : pro::facade_builder                        //
+                     ::add_indirect_reflection<LayoutReflector> //
                      ::build {};
 
 int main() {

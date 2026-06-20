@@ -31,7 +31,7 @@ struct Container : pro::facade_builder                            //
                    ::build {};
 
 // A proxy<ClearableContainer> can be substituted with a proxy<Container>.
-struct ClearableContainer : pro::facade_builder                      //
+struct ClearableContainer : pro::facade_builder                       //
                             ::add_facade_with_substitution<Container> //
                             ::add_convention<MemClear, void()>        //
                             ::build {};

@@ -45,8 +45,8 @@ PRO_DEF_MEM_DISPATCH(MemUseCount, use_count);
 
 // A direct convention operates on the contained pointer itself.
 struct SharedAware
-    : pro::facade_builder                                          //
-      ::add_direct_convention<MemUseCount, long() const noexcept>  //
+    : pro::facade_builder                                         //
+      ::add_direct_convention<MemUseCount, long() const noexcept> //
       ::build {};
 
 int main() {

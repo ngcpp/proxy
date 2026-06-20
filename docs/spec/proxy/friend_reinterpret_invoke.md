@@ -36,8 +36,8 @@ For ordinary use, prefer an [`accessor`](../ProAccessible.md) or [`invoke`](frie
 PRO_DEF_MEM_DISPATCH(MemUseCount, use_count);
 
 struct SharedAware
-    : pro::facade_builder                                          //
-      ::add_direct_convention<MemUseCount, long() const noexcept>  //
+    : pro::facade_builder                                         //
+      ::add_direct_convention<MemUseCount, long() const noexcept> //
       ::build {};
 
 int main() {
