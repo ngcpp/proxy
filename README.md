@@ -216,7 +216,7 @@ The "Proxy" library is a self-contained solution for runtime polymorphism in C++
 - **Concepts**: To facilitate template programming with "Proxy", 3 concepts are exported from a facade type. Namely, [`proxiable`](https://ngcpp.github.io/proxy/spec/proxiable), [`proxiable_target`](https://ngcpp.github.io/proxy/spec/proxiable_target) and [`inplace_proxiable_target`](https://ngcpp.github.io/proxy/spec/inplace_proxiable_target).
 - **Allocator awareness**: [function template `allocate_proxy`](https://ngcpp.github.io/proxy/spec/allocate_proxy) is able to create a `proxy` from a value with any custom allocator. In C++11, [`std::function`](https://en.cppreference.com/w/cpp/utility/functional/function) and [`std::packaged_task`](https://en.cppreference.com/w/cpp/thread/packaged_task) had constructors that accepted custom allocators for performance tuning, but these were [removed in C++17](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0302r1.html) because "the semantics are unclear, and there are technical issues with storing an allocator in a type-erased context and then recovering that allocator later for any allocations needed during copy assignment". These issues do not apply to `allocate_proxy`.
 - **Configurable constraints**: [`facade_builder`](https://ngcpp.github.io/proxy/spec/basic_facade_builder) provides full support for constraints configuration, including memory layout (by [`restrict_layout`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/restrict_layout)), copyability (by [`support_copy`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/support_copy)), relocatability (by [`support_relocation`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/support_relocation)), and destructibility (by [`support_destruction`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/support_destruction)).
-- **Reflection**: `proxy` supports type-based compile-time reflection for runtime queries. Please refer to [`facade_builder::add_reflection`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/add_reflection) and [function template `proxy_reflect`](https://ngcpp.github.io/proxy/spec/proxy_reflect) for more details.
+- **Reflection**: `proxy` supports type-based compile-time reflection for runtime queries. Please refer to [`facade_builder::add_reflection`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/add_reflection) and [function template `reflect`](https://ngcpp.github.io/proxy/spec/proxy_indirect_accessor/reflect) for more details.
 - **Non-owning proxy**: Although `proxy` can manage the lifetime of an object effectively, similar to a smart pointer, we sometimes want to dereference it before passing to a non-owning context. This has been implemented as an extension since 3.2.0. Please refer to [function template `make_proxy_view`](https://ngcpp.github.io/proxy/spec/make_proxy_view), [alias template `proxy_view`, class template `observer_facade`](https://ngcpp.github.io/proxy/spec/proxy_view) and [`skills::as_view`](https://ngcpp.github.io/proxy/spec/skills_as_view) for more details.
 - **RTTI**: [RTTI (run-time type information)](https://en.wikipedia.org/wiki/Run-time_type_information) provides "weak" reflection capability in C++ since the last century. Although it is not as powerful as reflection in some other languages (like `Object.GetType()` in C# or `Object.getClass()` in Java), it offers the basic infrastructure for type-safe casting at runtime. Since 4.0.0, "RTTI for `proxy`" has been implemented as an extension and allows users to opt-in for each facade definition. Please refer to [`skills::rtti`](https://ngcpp.github.io/proxy/spec/skills_rtti) for more details.
 - **Shared and weak ownership**: Although `proxy` can be created from a [`std::shared_ptr`](https://en.cppreference.com/w/cpp/memory/shared_ptr), extensions are available to create `proxy` objects with shared and weak ownership in a more efficient way since 3.3.0. Please refer to [function template `make_proxy_shared`](https://ngcpp.github.io/proxy/spec/make_proxy_shared), [`allocate_proxy_shared`](https://ngcpp.github.io/proxy/spec/allocate_proxy_shared), [alias template `weak_proxy`, class template `weak_facade`](https://ngcpp.github.io/proxy/spec/weak_proxy) and [`skills::as_weak`](https://ngcpp.github.io/proxy/spec/skills_as_weak) for more details.
@@ -243,7 +243,7 @@ Fetch via [CPM](https://github.com/cpm-cmake/CPM.cmake) (a thin wrapper over CMa
 ```cmake
 CPMAddPackage(
   NAME msft_proxy4
-  GIT_TAG 4.0.2
+  GIT_TAG 4.1.0
   GIT_REPOSITORY https://github.com/ngcpp/proxy.git
 )
 
@@ -259,7 +259,7 @@ Place a wrap file at `subprojects/proxy.wrap` and Meson will fetch the source au
 ```ini
 [wrap-git]
 url = https://github.com/ngcpp/proxy.git
-revision = 4.0.2
+revision = 4.1.0
 
 [provide]
 dependency_names = msft_proxy4

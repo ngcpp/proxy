@@ -14,11 +14,13 @@ The alias template `add_facade` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAli
 - sets `Copyability` to `std::max(Copyability, F::copyability)`, and
 - sets `Relocatability` to `std::max(Relocatability, F::relocatability)`, and
 - sets `Destructibility` to `std::max(Destructibility, F::destructibility)`, and
-- optionally, merges a direct convention of [`substitution_dispatch`](../substitution_dispatch/README.md) into `Cs` when `WithSubstitution` is `true`.
+- optionally, merges a direct convention of [`substitution_dispatch`](../substitution_dispatch/README.md) into `Cs` when `WithSubstitution` is `true` *(deprecated since 4.1.0: use [`add_facade_with_substitution`](add_facade_with_substitution.md) instead)*.
 
 ## Notes
 
-Adding a facade type that contains duplicated convention or reflection types already defined in `Cs` or `Rs` is well-defined and does not have side effects on [`build`](build.md) at either compile-time or runtime. By default, `WithSubstitution` is `false`, which guarantees minimal binary size in code generation. However, substitution is helpful when an API requires backward compatibility. Users can opt-in to this feature by specifying `true` as the second parameter of `add_facade`, at the cost of potentially a slightly larger binary size.
+Adding a facade type that contains duplicated convention or reflection types already defined in `Cs` or `Rs` is well-defined and does not have side effects on [`build`](build.md) at either compile-time or runtime. By default, `WithSubstitution` is `false`, which guarantees minimal binary size in code generation. However, substitution is helpful when an API requires backward compatibility. Users can opt-in to this feature via [`add_facade_with_substitution`](add_facade_with_substitution.md), at the cost of potentially a slightly larger binary size.
+
+**Deprecated since 4.1.0**: Specifying the `WithSubstitution` parameter as `true` (i.e., `add_facade<F, true>`) is deprecated. Use [`add_facade_with_substitution`](add_facade_with_substitution.md)`<F>` instead. The single-argument form `add_facade<F>` is not affected.
 
 ## Example
 
@@ -50,7 +52,7 @@ struct StringDictionary
 
 struct MutableStringDictionary
     : pro::facade_builder                                                    //
-      ::add_facade<StringDictionary, true>                                   //
+      ::add_facade_with_substitution<StringDictionary>                       //
       ::add_convention<MemEmplace, void(std::size_t key, std::string value)> //
       ::build {};
 
@@ -83,4 +85,5 @@ int main() {
 
 ## See Also
 
+- [`add_facade_with_substitution`](add_facade_with_substitution.md)
 - [`build`](build.md)

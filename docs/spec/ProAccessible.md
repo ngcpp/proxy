@@ -9,4 +9,4 @@ A type `T` meets the *ProAccessible* requirements of types `Args...` if the foll
 ## See Also
 
 - [class template `proxy`](proxy/README.md)
-- [class template `proxy_indirect_accessor`](proxy_indirect_accessor.md)
+- [class template `proxy_indirect_accessor`](proxy_indirect_accessor/README.md)

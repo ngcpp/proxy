@@ -4,6 +4,8 @@
 > Module: `proxy`  
 > Namespace: `pro::inline v4`
 
+> **Deprecated since 4.1.0**: Use the non-member `invoke` of [`proxy`](proxy/invoke.md) (for `(2)`) or [`proxy_indirect_accessor`](proxy_indirect_accessor/invoke.md) (for `(1)`) instead. Each overload of `proxy_invoke` is marked `[[deprecated]]` and forwards to the corresponding overload of `invoke`. `proxy_invoke` is retained for backward compatibility and may be removed in a future major release.
+
 ```cpp
 // (1)
 template <class D, class O, facade F, class... Args>
@@ -69,4 +71,6 @@ int main() {
 
 ## See Also
 
+- [function template `invoke` (`proxy<F>`)](proxy/invoke.md)
+- [function template `invoke` (`proxy_indirect_accessor<F>`)](proxy_indirect_accessor/invoke.md)
 - [function template `proxy_reflect`](proxy_reflect.md)

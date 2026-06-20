@@ -46,12 +46,12 @@ public:
   template <class P, class R>
   struct accessor {
     friend std::size_t SizeOf(const P& self) noexcept {
-      const LayoutReflector& refl = pro::proxy_reflect<R>(self);
+      const LayoutReflector& refl = reflect<R>(self);
       return refl.Size;
     }
 
     friend std::size_t AlignOf(const P& self) noexcept {
-      const LayoutReflector& refl = pro::proxy_reflect<R>(self);
+      const LayoutReflector& refl = reflect<R>(self);
       return refl.Align;
     }
   };

@@ -43,6 +43,9 @@ As per `facade<F>`, `typename F::convention_types` shall be a [tuple-like](https
 | ------------------------------------------- | ------------------------------------------------------------ |
 | [`operator==`](friend_operator_equality.md) | compares a `proxy` with `nullptr`                            |
 | [`swap`](friend_swap.md)                    | overload the [`std::swap`](https://en.cppreference.com/w/cpp/algorithm/swap) algorithm |
+| [`invoke`](invoke.md)                       | invokes a `proxy` with a specified convention                |
+| [`reflect`](reflect.md)                     | acquires reflection information of a contained type          |
+| [`reinterpret_invoke`](reinterpret_invoke.md) | invokes a dispatch on a `proxy` whose contained type is known statically |
 
 ## Comparing with Other Standard Polymorphic Wrappers
 

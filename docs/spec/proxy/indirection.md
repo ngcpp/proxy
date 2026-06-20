@@ -58,4 +58,4 @@ int main() {
 
 ## See Also
 
-- [class template `proxy_indirect_accessor`](../proxy_indirect_accessor.md)
+- [class template `proxy_indirect_accessor`](../proxy_indirect_accessor/README.md)

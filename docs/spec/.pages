@@ -15,7 +15,7 @@ nav:
     - is_bitwise_trivially_relocatable: is_bitwise_trivially_relocatable.md
     - not_implemented: not_implemented.md
     - operator_dispatch: operator_dispatch
-    - proxy_indirect_accessor: proxy_indirect_accessor.md
+    - proxy_indirect_accessor: proxy_indirect_accessor
     - proxy_view<br />observer_facade: proxy_view.md
     - proxy: proxy
     - substitution_dispatch: substitution_dispatch

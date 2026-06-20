@@ -39,7 +39,7 @@ struct accessor<P, D, R(Args...) cv ref noex> {
 }
 ```
 
-`(3)` Provides an `operator sop(Args...)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(Args...)` is equivalent to `return proxy_invoke<D, R(Args...) cv ref noex>(static_cast<P cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`.
+`(3)` Provides an `operator sop(Args...)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(Args...)` is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<P cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`.
 
 ### `!` and `~`
 
@@ -53,7 +53,7 @@ struct accessor<P, D, R() cv ref noex> {
 }
 ```
 
-`(4)` Provides an `operator sop()` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop()` is equivalent to `return proxy_invoke<D, R() cv ref noex>(static_cast<P cv <ref ? ref : &>>(*this))`.
+`(4)` Provides an `operator sop()` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop()` is equivalent to `return invoke<D, R() cv ref noex>(static_cast<P cv <ref ? ref : &>>(*this))`.
 
 ### Assignment SOPs
 
@@ -67,7 +67,7 @@ struct accessor<P, D, R(Arg) cv ref noex> {
 }
 ```
 
-`(4)` Provides an `operator sop(Arg)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(Arg)` calls `proxy_invoke<D, R(Arg) cv ref noex>(static_cast<P cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))` and returns `static_cast<P cv <ref ? ref : &>>(*this)`.
+`(4)` Provides an `operator sop(Arg)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(Arg)` calls `invoke<D, R(Arg) cv ref noex>(static_cast<P cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))` and returns `static_cast<P cv <ref ? ref : &>>(*this)`.
 
 ## Right-Hand-Side Operand Specializations
 
@@ -94,7 +94,7 @@ struct accessor<P, D, R(Arg) cv ref noex> {
 }
 ```
 
-`(7)` Provides a `friend operator sop(Arg arg, P cv <ref ? ref : &> self)` with the same *noex* specifiers as of the overload type. `accessor::operator sop(Arg arg, P cv <ref ? ref : &> self)` is equivalent to `return proxy_invoke<D, R(Arg) cv ref noex>(static_cast<P cv <ref ? ref : &>>(self), std::forward<Arg>(arg))`.
+`(7)` Provides a `friend operator sop(Arg arg, P cv <ref ? ref : &> self)` with the same *noex* specifiers as of the overload type. `accessor::operator sop(Arg arg, P cv <ref ? ref : &> self)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<P cv <ref ? ref : &>>(self), std::forward<Arg>(arg))`.
 
 ### Assignment SOPs
 
@@ -108,4 +108,4 @@ struct accessor<P, D, R(Arg) cv ref noex> {
 }
 ```
 
-`(8)` Provides a `friend operator sop(Arg arg, P cv <ref ? ref : &> self)` with the same *noex* specifiers as of the overload type. `accessor::operator sop(Arg arg, P cv <ref ? ref : &> self)` calls `proxy_invoke<D, R(Arg) cv ref noex>(static_cast<P cv <ref ? ref : &>>(self), std::forward<Arg>(arg))` and returns `static_cast<P cv <ref ? ref : &>>(self)`.
+`(8)` Provides a `friend operator sop(Arg arg, P cv <ref ? ref : &> self)` with the same *noex* specifiers as of the overload type. `accessor::operator sop(Arg arg, P cv <ref ? ref : &> self)` calls `invoke<D, R(Arg) cv ref noex>(static_cast<P cv <ref ? ref : &>>(self), std::forward<Arg>(arg))` and returns `static_cast<P cv <ref ? ref : &>>(self)`.

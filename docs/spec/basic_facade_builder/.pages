@@ -1,6 +1,7 @@
 nav:
   - basic_facade_builder: README.md
   - add_convention<br />add_indirect_convention<br />add_direct_convention: add_convention.md
+  - add_facade_with_substitution: add_facade_with_substitution.md
   - add_facade: add_facade.md
   - add_reflection<br />add_indirect_reflection<br />add_direct_reflection: add_reflection.md
   - add_skill: add_skill.md

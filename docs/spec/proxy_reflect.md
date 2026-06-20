@@ -4,6 +4,8 @@
 > Module: `proxy`  
 > Namespace: `pro::inline v4`
 
+> **Deprecated since 4.1.0**: Use the non-member `reflect` of [`proxy`](proxy/reflect.md) (for `(2)`) or [`proxy_indirect_accessor`](proxy_indirect_accessor/reflect.md) (for `(1)`) instead. Each overload of `proxy_reflect` is marked `[[deprecated]]` and forwards to the corresponding overload of `reflect`. `proxy_reflect` is retained for backward compatibility and may be removed in a future major release.
+
 ```cpp
 // (1)
 template <class R, facade F>
@@ -68,5 +70,7 @@ int main() {
 
 ## See Also
 
+- [function template `reflect` (`proxy<F>`)](proxy/reflect.md)
+- [function template `reflect` (`proxy_indirect_accessor<F>`)](proxy_indirect_accessor/reflect.md)
 - [alias template `basic_facade_builder::add_reflection`](basic_facade_builder/add_reflection.md)
 - [named requirements *ProReflection*](ProReflection.md)
