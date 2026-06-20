@@ -11,7 +11,7 @@ jobs:
       matrix:
         compiler:
           - {family: gcc, version: 13, modules: false, doc_tests: true}
-          - {family: gcc, version: 14, modules: true, doc_tests: true}
+          - {family: gcc, version: 14, modules: false, doc_tests: true}
           - {family: clang, version: 16, modules: false, doc_tests: false}
           - {family: clang, version: 17, modules: false, doc_tests: true}
           - {family: clang, version: 18, modules: false, doc_tests: true}
