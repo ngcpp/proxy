@@ -5,7 +5,7 @@ jobs:
   bvt-report:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v8

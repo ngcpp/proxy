@@ -6,7 +6,7 @@ jobs:
   bvt-appleclang:
     runs-on: macos-26
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Install meson
       run: pipx install meson

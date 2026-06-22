@@ -33,7 +33,7 @@ jobs:
           echo "name=${slug}[bot]" >> "$GITHUB_OUTPUT"
           echo "email=${uid}+${slug}[bot]@users.noreply.github.com" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           token: ${{ steps.app-token.outputs.token }}
 

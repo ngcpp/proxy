@@ -32,7 +32,7 @@ jobs:
           uid=$(gh api "/users/${slug}[bot]" --jq '.id')
           echo "git-author=${slug}[bot] <${uid}+${slug}[bot]@users.noreply.github.com>" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
