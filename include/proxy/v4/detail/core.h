@@ -470,9 +470,7 @@ template <class T, bool IsDirect, class R>
 consteval bool is_reflector_well_formed() {
   if constexpr (IsDirect) {
     if constexpr (std::is_constructible_v<R, std::in_place_type_t<T>>) {
-      if constexpr (is_consteval([] { return R(std::in_place_type<T>); })) {
-        return true;
-      }
+      return true;
     }
   } else {
     return is_reflector_well_formed<
@@ -745,7 +743,7 @@ struct meta_ptr_indirect_impl {
 private:
   const M* ptr_;
   template <class P>
-  static constexpr M storage{std::in_place_type<P>};
+  static inline const M storage{std::in_place_type<P>};
 };
 template <class M, class DM>
 struct meta_ptr_direct_impl : private M {

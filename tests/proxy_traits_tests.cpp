@@ -274,7 +274,7 @@ struct RuntimeReflection {
 struct FacadeWithRuntimeReflection : pro::facade_builder                 //
                                      ::add_reflection<RuntimeReflection> //
                                      ::build {};
-static_assert(!pro::proxiable<MockTrivialPtr, FacadeWithRuntimeReflection>);
+static_assert(pro::proxiable<MockTrivialPtr, FacadeWithRuntimeReflection>);
 
 struct FacadeWithTupleLikeConventions {
   struct ToStringConvention {
