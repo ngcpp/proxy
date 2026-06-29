@@ -14,7 +14,7 @@ jobs:
         python-version: "3.14"
 
     - name: Cache pre-commit envs
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ~/.cache/pre-commit
         key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
