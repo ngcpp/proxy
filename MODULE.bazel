@@ -4,13 +4,13 @@ module(
 )
 
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "rules_cc", version = "0.2.19")
+bazel_dep(name = "rules_cc", version = "0.2.20")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 
 bazel_dep(name = "googletest", version = "1.17.0.bcr.2", dev_dependency = True)
 bazel_dep(name = "google_benchmark", version = "1.9.5", dev_dependency = True)
-bazel_dep(name = "fmt", version = "12.1.0", dev_dependency = True)
-bazel_dep(name = "rules_python", version = "2.0.3", dev_dependency = True)
+bazel_dep(name = "fmt", version = "12.2.0", dev_dependency = True)
+bazel_dep(name = "rules_python", version = "2.1.0", dev_dependency = True)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
 python.toolchain(
