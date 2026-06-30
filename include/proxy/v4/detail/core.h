@@ -823,6 +823,13 @@ operand_t<P, IsDirect, Q> get_operand(proxy_accessor<F, IsDirect, Q> p) {
     return *std::forward<add_qualifier_t<P, Q>>(ptr);
   }
 }
+
+// When a dispatch always throws, MSVC may incorrectly warn about unreachable
+// code (C4702). Disable the warning for invoke_dispatch().
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif // defined(_MSC_VER) && !defined(__clang__)
 template <class D, class R, class... Args>
 R invoke_dispatch(Args&&... args) {
   if constexpr (std::is_void_v<R>) {
@@ -831,6 +838,9 @@ R invoke_dispatch(Args&&... args) {
     return D()(std::forward<Args>(args)...);
   }
 }
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma warning(pop)
+#endif // defined(_MSC_VER) && !defined(__clang__)
 template <class P, class F, bool IsDirect, qualifier_type Q, class D, class R,
           class... Args>
 R reinterpret_invoke(proxy_accessor<F, IsDirect, Q> self, Args&&... args) {

@@ -3,15 +3,7 @@
 // Licensed under the MIT License.
 
 #include <gtest/gtest.h>
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma warning(push)
-#pragma warning(                                                               \
-    disable : 4702) // False alarm from MSVC: warning C4702: unreachable code
-#endif              // defined(_MSC_VER) && !defined(__clang__)
 #include <proxy/proxy.h>
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma warning(pop)
-#endif // defined(_MSC_VER) && !defined(__clang__)
 #include <vector>
 
 namespace proxy_regression_tests_detail {
