@@ -59,10 +59,8 @@ int main() {
   static_assert(std::is_nothrow_move_constructible_v<pro::proxy<CopyableBase>>);
   static_assert(std::is_nothrow_destructible_v<pro::proxy<CopyableBase>>);
 
-  static_assert(
-      std::is_trivially_copy_constructible_v<pro::proxy<TrivialBase>>);
-  static_assert(
-      std::is_trivially_move_constructible_v<pro::proxy<TrivialBase>>);
+  static_assert(std::is_nothrow_copy_constructible_v<pro::proxy<TrivialBase>>);
+  static_assert(std::is_nothrow_move_constructible_v<pro::proxy<TrivialBase>>);
   static_assert(std::is_trivially_destructible_v<pro::proxy<TrivialBase>>);
 }
 ```

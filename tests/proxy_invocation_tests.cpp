@@ -218,9 +218,8 @@ TEST(ProxyInvocationTests, TestMultipleDispatches_Duplicated) {
         ::add_convention<detail::FreeForEach,
                          void(std::function<void(int&)>)> //
         ::build {};
-  static_assert(
-      sizeof(pro::detail::facade_traits<DuplicatedIterable>::meta) ==
-      sizeof(pro::detail::facade_traits<detail::Iterable<int>>::meta));
+  static_assert(sizeof(pro::detail::meta_storage<DuplicatedIterable>) ==
+                sizeof(pro::detail::meta_storage<detail::Iterable<int>>));
   std::list<int> l = {1, 2, 3};
   pro::proxy<DuplicatedIterable> p = &l;
   ASSERT_EQ(Size(*p), std::size_t{3});

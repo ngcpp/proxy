@@ -29,6 +29,8 @@ consteval std::size_t max_align_of(std::size_t value) {
   return value < alignof(std::max_align_t) ? value : alignof(std::max_align_t);
 }
 
+using ptr_prototype = void* [2];
+
 template <class T, class U>
 using merge_tuple_t = specialization_t<add_tuple_t, U, T>;
 template <class C1, class C2>

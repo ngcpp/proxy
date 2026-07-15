@@ -1,0 +1,39 @@
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  bvt-appleclang-arm64e:
+    runs-on: macos-26
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Check toolchain versions
+      run: |
+        cc --version
+        xcodebuild -version
+        cmake --version
+        ninja --version
+
+    - name: Build and run test with AppleClang (arm64e with PAC) on cmake
+      run: |
+        cmake --preset default -DCMAKE_CXX_STANDARD=23 -DPROXY_BUILD_MODULES=FALSE -DCMAKE_OSX_ARCHITECTURES=arm64e
+        cmake --build --preset default -j
+        ctest --preset default -j
+        mkdir build/cmake/drop
+        bash ./tools/dump_build_env.sh c++ build/cmake/drop/env-info.json
+
+    - name: Build and run freestanding test with AppleClang (arm64e with PAC) on cmake
+      run: |
+        cmake --preset freestanding -DCMAKE_CXX_STANDARD=23 -DPROXY_BUILD_MODULES=FALSE -DCMAKE_OSX_ARCHITECTURES=arm64e
+        cmake --build --preset freestanding -j
+        ctest --preset freestanding -j
+
+    - name: Run benchmarks
+      run: build/cmake/benchmarks/msft_proxy_benchmarks --benchmark_min_warmup_time=0.1 --benchmark_min_time=0.1s --benchmark_repetitions=30 --benchmark_enable_random_interleaving=true --benchmark_report_aggregates_only=true --benchmark_format=json > build/cmake/drop/benchmarking-results.json
+
+    - name: Archive benchmarking results
+      uses: actions/upload-artifact@v7
+      with:
+        name: drop-apple-pac
+        path: build/cmake/drop/

@@ -24,6 +24,11 @@
       "BenchmarkingResultsPath": "artifacts/drop-appleclang/benchmarking-results.json"
     },
     {
+      "Description": "AppleClang on macOS (arm64e with PAC)",
+      "InfoPath": "artifacts/drop-apple-pac/env-info.json",
+      "BenchmarkingResultsPath": "artifacts/drop-apple-pac/benchmarking-results.json"
+    },
+    {
       "Description": "NVIDIA HPC on Ubuntu",
       "InfoPath": "artifacts/drop-nvhpc/env-info.json",
       "BenchmarkingResultsPath": "artifacts/drop-nvhpc/benchmarking-results.json"

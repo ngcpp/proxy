@@ -33,6 +33,10 @@ jobs:
     name: Run BVT with AppleClang
     if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
+  run-bvt-appleclang-arm64e:
+    uses: ./.github/workflows/bvt-appleclang-arm64e.yml
+    name: Run BVT with AppleClang (arm64e with PAC)
+
   run-bvt-nvhpc:
     uses: ./.github/workflows/bvt-nvhpc.yml
     name: Run BVT with NVHPC
@@ -56,4 +60,4 @@ jobs:
   report:
     uses: ./.github/workflows/bvt-report.yml
     name: Generate report
-    needs: [run-bvt-gcc, run-bvt-clang, run-bvt-msvc, run-bvt-appleclang, run-bvt-nvhpc, run-bvt-oneapi]
+    needs: [run-bvt-gcc, run-bvt-clang, run-bvt-msvc, run-bvt-appleclang, run-bvt-appleclang-arm64e, run-bvt-nvhpc, run-bvt-oneapi]

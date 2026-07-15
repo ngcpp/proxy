@@ -1,5 +1,5 @@
 # Ignore build directories
-build/
+/build*
 Testing/
 
 # Python bytecode cache

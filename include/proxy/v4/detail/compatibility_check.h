@@ -25,4 +25,12 @@ static_assert(sizeof(derived) == sizeof(char),
 } // namespace pro::inline v4::detail::compatibility_check
 #endif
 
+#ifdef __has_feature
+#if __has_feature(ptrauth_calls) &&                                            \
+    (!defined(__PTRAUTH__) || !__has_include(<ptrauth.h>))
+#error "The Pointer Authentication feature is incomplete"
+#endif // __has_feature(ptrauth_calls) && (!defined(__PTRAUTH__) ||
+       // !__has_include(<ptrauth.h>))
+#endif // __has_feature
+
 #endif // MSFT_PROXY_V4_DETAIL_COMPATIBILITY_CHECK_H_

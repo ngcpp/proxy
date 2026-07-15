@@ -89,8 +89,7 @@ static_assert(
 static_assert(std::is_nothrow_constructible_v<
               pro::proxy<DefaultFacade>, std::in_place_type_t<MockFunctionPtr>,
               MockFunctionPtr>);
-static_assert(sizeof(pro::proxy<DefaultFacade>) ==
-              3 * sizeof(void*)); // VTABLE should be embeded
+static_assert(sizeof(pro::proxy<DefaultFacade>) == 3 * sizeof(void*));
 
 static_assert(!std::is_copy_constructible_v<pro::proxy<DefaultFacade>>);
 static_assert(!std::is_copy_assignable_v<pro::proxy<DefaultFacade>>);
@@ -170,8 +169,7 @@ static_assert(std::is_nothrow_constructible_v<pro::proxy<CopyableFacade>,
                                               MockFunctionPtr>);
 static_assert(
     std::is_nothrow_assignable_v<pro::proxy<CopyableFacade>, MockFunctionPtr>);
-static_assert(sizeof(pro::proxy<CopyableFacade>) ==
-              4 * sizeof(void*)); // VTABLE should be embeded
+static_assert(sizeof(pro::proxy<CopyableFacade>) == 3 * sizeof(void*));
 
 struct CopyableSmallFacade
     : pro::facade_builder                               //
@@ -203,8 +201,7 @@ static_assert(
     std::is_constructible_v<pro::proxy<CopyableSmallFacade>, MockFunctionPtr>);
 static_assert(
     std::is_assignable_v<pro::proxy<CopyableSmallFacade>, MockFunctionPtr>);
-static_assert(sizeof(pro::proxy<CopyableSmallFacade>) ==
-              3 * sizeof(void*)); // VTABLE should be embeded
+static_assert(sizeof(pro::proxy<CopyableSmallFacade>) == 2 * sizeof(void*));
 
 struct TrivialFacade : pro::facade_builder                                   //
                        ::restrict_layout<sizeof(void*), alignof(void*)>      //
@@ -212,14 +209,19 @@ struct TrivialFacade : pro::facade_builder                                   //
                        ::support_relocation<pro::constraint_level::trivial>  //
                        ::support_destruction<pro::constraint_level::trivial> //
                        ::build {};
+#ifdef PRO4D_HAS_PAC
+static_assert(std::is_nothrow_copy_constructible_v<pro::proxy<TrivialFacade>>);
+static_assert(std::is_nothrow_copy_assignable_v<pro::proxy<TrivialFacade>>);
+static_assert(std::is_nothrow_move_constructible_v<pro::proxy<TrivialFacade>>);
+static_assert(std::is_nothrow_move_assignable_v<pro::proxy<TrivialFacade>>);
+#else
 static_assert(
     std::is_trivially_copy_constructible_v<pro::proxy<TrivialFacade>>);
 static_assert(std::is_trivially_copy_assignable_v<pro::proxy<TrivialFacade>>);
-static_assert(std::is_nothrow_move_constructible_v<pro::proxy<TrivialFacade>>);
 static_assert(
     std::is_trivially_move_constructible_v<pro::proxy<TrivialFacade>>);
-static_assert(std::is_nothrow_move_assignable_v<pro::proxy<TrivialFacade>>);
 static_assert(std::is_trivially_move_assignable_v<pro::proxy<TrivialFacade>>);
+#endif // PRO4D_HAS_PAC
 static_assert(std::is_trivially_destructible_v<pro::proxy<TrivialFacade>>);
 static_assert(!pro::proxiable<MockMovablePtr, TrivialFacade>);
 static_assert(!pro::proxiable<MockCopyablePtr, TrivialFacade>);
@@ -244,9 +246,7 @@ static_assert(std::is_nothrow_constructible_v<pro::proxy<TrivialFacade>,
                                               MockFunctionPtr>);
 static_assert(
     std::is_nothrow_assignable_v<pro::proxy<TrivialFacade>, MockFunctionPtr>);
-static_assert(sizeof(pro::proxy<TrivialFacade>) ==
-              2 * sizeof(void*)); // VTABLE should be eliminated, but a
-                                  // placeholder is required
+static_assert(sizeof(pro::proxy<TrivialFacade>) == 2 * sizeof(void*));
 
 struct ReflectionOfSmallPtr {
   template <class P>
