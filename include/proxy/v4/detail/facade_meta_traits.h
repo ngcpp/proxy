@@ -163,7 +163,6 @@ struct PRO4D_ENFORCE_EBO inline_meta_storage : First, Rest... {
   constexpr explicit inline_meta_storage(std::in_place_type_t<P>)
       : First(std::in_place_type<P>), Rest(std::in_place_type<P>)... {}
   inline_meta_storage(const inline_meta_storage& rhs) noexcept
-    requires(sizeof...(Rest) > 0u)
       : inline_meta_storage() {
     if (static_cast<const First&>(rhs).has_value()) {
       static_cast<First&>(*this) = static_cast<const First&>(rhs);
@@ -172,12 +171,7 @@ struct PRO4D_ENFORCE_EBO inline_meta_storage : First, Rest... {
       static_cast<First&>(*this).reset();
     }
   }
-  inline_meta_storage(const inline_meta_storage&)
-    requires(sizeof...(Rest) == 0u)
-  = default;
-  inline_meta_storage& operator=(const inline_meta_storage& rhs) noexcept
-    requires(sizeof...(Rest) > 0u)
-  {
+  inline_meta_storage& operator=(const inline_meta_storage& rhs) noexcept {
     if (static_cast<const First&>(rhs).has_value()) {
       static_cast<First&>(*this) = static_cast<const First&>(rhs);
       ((static_cast<Rest&>(*this) = static_cast<const Rest&>(rhs)), ...);
@@ -186,9 +180,15 @@ struct PRO4D_ENFORCE_EBO inline_meta_storage : First, Rest... {
     }
     return *this;
   }
-  inline_meta_storage& operator=(const inline_meta_storage&)
-    requires(sizeof...(Rest) == 0u)
-  = default;
+  template <class M>
+  const M& get() const noexcept {
+    return static_cast<const M&>(*this);
+  }
+};
+template <nullable First>
+struct inline_meta_storage<First> : First {
+  using First::First;
+
   template <class M>
   const M& get() const noexcept {
     return static_cast<const M&>(*this);
