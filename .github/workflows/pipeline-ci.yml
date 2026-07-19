@@ -2,9 +2,9 @@ name: Proxy-CI
 
 on:
   push:
-    branches: [ main, release/** ]
+    branches: [ main, release/**, feature/** ]
   pull_request:
-    branches: [ main, release/** ]
+    branches: [ main, release/**, feature/** ]
   workflow_dispatch:
 
 jobs:
