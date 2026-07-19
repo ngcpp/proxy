@@ -239,7 +239,7 @@ struct compact_facade_meta_traits {
   using invoker = detail::invoker<ProP, D, O>;
 
   template <class... Ms>
-  using storage = typename detail::compact_meta_storage_traits<Ms...>::type;
+  using storage = detail::compact_meta_storage_traits<Ms...>::type;
 };
 
 struct flat_facade_meta_traits {
@@ -247,7 +247,7 @@ struct flat_facade_meta_traits {
   using invoker = detail::invoker<ProP, D, O>;
 
   template <class... Ms>
-  using storage = typename detail::flat_meta_storage_traits<Ms...>::type;
+  using storage = detail::flat_meta_storage_traits<Ms...>::type;
 };
 
 } // namespace pro::inline v4

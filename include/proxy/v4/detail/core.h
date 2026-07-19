@@ -712,7 +712,7 @@ struct facade_traits : specialization_t<facade_conv_traits_impl,
 
 template <class F>
 struct meta_storage : facade_traits<F>::meta_storage_base {
-  using base = typename facade_traits<F>::meta_storage_base;
+  using base = facade_traits<F>::meta_storage_base;
   using base::base;
 };
 
