@@ -14,7 +14,7 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.18
+    rev: v0.15.22
     hooks:
       - id: ruff-format
 
@@ -41,7 +41,7 @@ repos:
       - id: meson-format
         name: meson format
         language: python
-        additional_dependencies: ["meson==1.11.1"]
+        additional_dependencies: ["meson==1.11.2"]
         entry: meson
         args: ["format", "--check-only", "--recursive", "meson.build"]
         pass_filenames: false
@@ -50,7 +50,7 @@ repos:
       - id: clang-format
         name: clang-format
         language: python
-        additional_dependencies: ["clang-format==22.1.5"]
+        additional_dependencies: ["clang-format==22.1.8"]
         entry: python3 tools/format_cpp.py
         pass_filenames: false
         files: '\.(h|ixx|cpp|md)$'
