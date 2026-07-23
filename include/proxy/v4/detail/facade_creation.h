@@ -56,7 +56,7 @@ struct add_conv_reduction<std::tuple<Cs...>, std::tuple<>, C>
                      conv_impl<C::is_direct, typename C::dispatch_type>, C>>> {
 };
 template <class Cs, class C>
-using add_conv_t = typename add_conv_reduction<std::tuple<>, Cs, C>::type;
+using add_conv_t = add_conv_reduction<std::tuple<>, Cs, C>::type;
 
 template <class F, constraint_level CL>
 using copy_conversion_overload =
@@ -84,7 +84,7 @@ struct add_substitution_conv<Cs, F, constraint_level::none,
 template <class Cs1, class... Cs2>
 using merge_conv_tuple_t = recursive_reduction_t<add_conv_t, Cs1, Cs2...>;
 template <class Cs, class F, bool WithSubstitution>
-using merge_facade_conv_t = typename add_substitution_conv<
+using merge_facade_conv_t = add_substitution_conv<
     specialization_t<merge_conv_tuple_t, typename F::convention_types, Cs>, F,
     WithSubstitution ? F::copyability : constraint_level::none,
     (WithSubstitution && F::copyability != constraint_level::trivial)

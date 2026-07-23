@@ -117,8 +117,8 @@ struct format_traits {
     }
 
     template <class P, class CompatibleFormatContext>
-    auto format(const P& p, CompatibleFormatContext& fc) const ->
-        typename CompatibleFormatContext::iterator {
+    auto format(const P& p, CompatibleFormatContext& fc) const
+        -> CompatibleFormatContext::iterator {
       return invoke<dispatch, overload<CharT>>(p, spec_, fc);
     }
 
@@ -137,7 +137,7 @@ template <>
 struct std_format_context_traits<wchar_t>
     : std::type_identity<std::wformat_context> {};
 template <class CharT>
-using std_format_context = typename std_format_context_traits<CharT>::type;
+using std_format_context = std_format_context_traits<CharT>::type;
 struct std_format_traits
     : format_traits<std::formatter, std::basic_string_view,
                     std::basic_format_parse_context, std_format_context> {};
@@ -250,46 +250,46 @@ namespace skills {
 
 #ifdef PRO4D_HAS_FORMAT
 template <class FB>
-using format = typename FB::template add_convention<
-    detail::std_format_traits::dispatch,
-    detail::std_format_traits::overload<char>>;
+using format =
+    FB::template add_convention<detail::std_format_traits::dispatch,
+                                detail::std_format_traits::overload<char>>;
 
 template <class FB>
-using wformat = typename FB::template add_convention<
-    detail::std_format_traits::dispatch,
-    detail::std_format_traits::overload<wchar_t>>;
+using wformat =
+    FB::template add_convention<detail::std_format_traits::dispatch,
+                                detail::std_format_traits::overload<wchar_t>>;
 #endif // PRO4D_HAS_FORMAT
 
 #if __cpp_rtti >= 199711L
 template <class FB>
-using indirect_rtti = typename FB::template add_indirect_convention<
+using indirect_rtti = FB::template add_indirect_convention<
     detail::proxy_cast_dispatch, void(detail::proxy_cast_context) &,
     void(detail::proxy_cast_context) const&,
     void(detail::proxy_cast_context) &&>::
     template add_indirect_reflection<detail::proxy_typeid_reflector>;
 
 template <class FB>
-using direct_rtti = typename FB::template add_direct_convention<
-    detail::proxy_cast_dispatch, void(detail::proxy_cast_context) &,
-    void(detail::proxy_cast_context) const&,
-    void(detail::proxy_cast_context) &&>::
-    template add_direct_reflection<detail::proxy_typeid_reflector>;
+using direct_rtti =
+    FB::template add_direct_convention<detail::proxy_cast_dispatch,
+                                       void(detail::proxy_cast_context) &,
+                                       void(detail::proxy_cast_context) const&,
+                                       void(detail::proxy_cast_context) &&>::
+        template add_direct_reflection<detail::proxy_typeid_reflector>;
 
 template <class FB>
 using rtti = indirect_rtti<FB>;
 #endif // __cpp_rtti >= 199711L
 
 template <class FB>
-using slim =
-    typename FB::template restrict_layout<sizeof(void*), alignof(void*)>;
+using slim = FB::template restrict_layout<sizeof(void*), alignof(void*)>;
 
 template <class FB>
-using as_view = typename FB::template add_direct_convention<
+using as_view = FB::template add_direct_convention<
     detail::view_conversion_dispatch,
     facade_aware_overload_t<detail::view_conversion_overload>>;
 
 template <class FB>
-using as_weak = typename FB::template add_direct_convention<
+using as_weak = FB::template add_direct_convention<
     detail::weak_conversion_dispatch,
     facade_aware_overload_t<detail::weak_conversion_overload>>;
 

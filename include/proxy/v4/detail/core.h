@@ -83,12 +83,12 @@ template <template <class, class> class R, class O, class I, class... Is>
 struct recursive_reduction<R, O, I, Is...>
     : recursive_reduction<R, R<O, I>, Is...> {};
 template <template <class, class> class R, class O, class... Is>
-using recursive_reduction_t = typename recursive_reduction<R, O, Is...>::type;
+using recursive_reduction_t = recursive_reduction<R, O, Is...>::type;
 
 template <template <class...> class R, class... Args>
 struct reduction_traits {
   template <class O, class I>
-  using type = typename R<Args..., O, I>::type;
+  using type = R<Args..., O, I>::type;
 };
 
 template <class O, class I>
@@ -141,8 +141,7 @@ template <template <class...> class T, class... Ts, class... Args>
 struct specialization_type_traits<T, std::tuple<Ts...>, Args...>
     : std::type_identity<T<Args..., Ts...>> {};
 template <template <class...> class T, class TL, class... Args>
-using specialization_t =
-    typename specialization_type_traits<T, TL, Args...>::type;
+using specialization_t = specialization_type_traits<T, TL, Args...>::type;
 
 enum class qualifier_type { lv, const_lv, rv, const_rv };
 template <class T, qualifier_type Q>
@@ -158,9 +157,7 @@ template <class T>
 struct add_qualifier_traits<T, qualifier_type::const_rv>
     : std::type_identity<const T&&> {};
 template <class T, qualifier_type Q>
-using add_qualifier_t = typename add_qualifier_traits<T, Q>::type;
-template <class T, qualifier_type Q>
-using add_qualifier_ptr_t = std::remove_reference_t<add_qualifier_t<T, Q>>*;
+using add_qualifier_t = add_qualifier_traits<T, Q>::type;
 
 template <class T, constraint_level CL>
 struct copyability_traits : inapplicable_traits {};
@@ -249,7 +246,7 @@ struct proxy_helper {
   template <class P, class F, qualifier_type Q>
   static add_qualifier_t<P, Q> get_ptr(add_qualifier_t<proxy<F>, Q> p) {
     return static_cast<add_qualifier_t<P, Q>>(
-        *std::launder(reinterpret_cast<add_qualifier_ptr_t<P, Q>>(p.ptr_)));
+        reinterpret_cast<add_qualifier_t<P, Q>>(*std::launder(p.ptr_)));
   }
   template <class P, class F1, class F2>
   static void trivially_relocate(proxy<F1>& from, proxy<F2>& to) noexcept {
@@ -265,7 +262,7 @@ template <class P, qualifier_type Q>
 struct operand_traits<P, false, Q>
     : std::type_identity<decltype(*std::declval<add_qualifier_t<P, Q>>())> {};
 template <class P, bool IsDirect, qualifier_type Q>
-using operand_t = typename operand_traits<P, IsDirect, Q>::type;
+using operand_t = operand_traits<P, IsDirect, Q>::type;
 template <class P, bool IsDirect, class D, qualifier_type Q, bool NE, class R,
           class... Args>
 concept invocable_dispatch =
@@ -327,7 +324,7 @@ template <class R, class... Args>
 struct overload_traits<R(Args...) const && noexcept>
     : overload_traits_impl<qualifier_type::const_rv, true, R, Args...> {};
 template <class O>
-using ret_t = typename overload_traits<O>::return_type;
+using ret_t = overload_traits<O>::return_type;
 
 template <class O>
 struct overload_substitution_traits : inapplicable_traits {
@@ -342,7 +339,7 @@ struct overload_substitution_traits<facade_aware_overload_t<O>>
 };
 template <class O, class F>
 using substituted_overload_t =
-    typename overload_substitution_traits<O>::template type<F>;
+    overload_substitution_traits<O>::template type<F>;
 template <class O>
 concept extended_overload = overload_traits<O>::applicable ||
                             overload_substitution_traits<O>::applicable;
@@ -395,7 +392,7 @@ struct a11y_traits<std::void_t<typename T::template accessor<Args...>>, T,
                    Args...>
     : a11y_traits_impl<typename T::template accessor<Args...>> {};
 template <class T, class... Args>
-using accessor_t = typename a11y_traits<void, T, Args...>::type;
+using accessor_t = a11y_traits<void, T, Args...>::type;
 
 template <class C, class F, class... Os>
 struct conv_traits_impl {
@@ -497,7 +494,7 @@ template <class F, class D, class ONE, class OE>
 struct lifetime_meta_traits<F, D, ONE, OE, constraint_level::nontrivial>
     : std::type_identity<invoker<proxy<F>, D, OE>> {};
 template <class F, class D, class ONE, class OE, constraint_level C>
-using lifetime_meta_t = typename lifetime_meta_traits<F, D, ONE, OE, C>::type;
+using lifetime_meta_t = lifetime_meta_traits<F, D, ONE, OE, C>::type;
 
 template <class... As>
 struct PRO4D_ENFORCE_EBO composite_accessor : As... {};
@@ -515,7 +512,7 @@ struct conv_accessor_traits<C, F, true>
     : std::type_identity<
           typename conv_traits<C, F>::template accessor<proxy<F>>> {};
 template <class C, class F, bool IsDirect>
-using conv_accessor_t = typename conv_accessor_traits<C, F, IsDirect>::type;
+using conv_accessor_t = conv_accessor_traits<C, F, IsDirect>::type;
 
 template <class R, class F, bool IsDirect>
 struct refl_accessor_traits : std::type_identity<void> {};
@@ -531,7 +528,7 @@ struct refl_accessor_traits<R, F, true>
     : std::type_identity<accessor_t<typename R::reflector_type, proxy<F>,
                                     typename R::reflector_type>> {};
 template <class R, class F, bool IsDirect>
-using refl_accessor_t = typename refl_accessor_traits<R, F, IsDirect>::type;
+using refl_accessor_t = refl_accessor_traits<R, F, IsDirect>::type;
 
 template <class T>
 concept pointer_like = (std::is_pointer_v<T> ||
@@ -750,9 +747,8 @@ template <class F, qualifier_type Q>
 add_qualifier_t<proxy<F>, Q>
     as_proxy(add_qualifier_t<proxy_indirect_accessor<F>, Q> p) {
   return static_cast<add_qualifier_t<proxy<F>, Q>>(
-      *reinterpret_cast<
-          add_qualifier_ptr_t<inplace_ptr<proxy_indirect_accessor<F>>, Q>>(
-          std::addressof(p)));
+      reinterpret_cast<
+          add_qualifier_t<inplace_ptr<proxy_indirect_accessor<F>>, Q>>(p));
 }
 template <class P, class F, bool IsDirect, qualifier_type Q>
 operand_t<P, IsDirect, Q> get_operand(proxy_accessor<F, IsDirect, Q> p) {
