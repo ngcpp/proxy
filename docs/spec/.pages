@@ -46,9 +46,11 @@ nav:
     - ProAccessible: ProAccessible.md
     - ProBasicConvention: ProBasicConvention.md
     - ProBasicFacade: ProBasicFacade.md
+    - ProBasicMeta: ProBasicMeta.md
     - ProBasicReflection: ProBasicReflection.md
     - ProConvention: ProConvention.md
     - ProDispatch: ProDispatch.md
     - ProFacade: ProFacade.md
+    - ProMeta: ProMeta.md
     - ProOverload: ProOverload.md
     - ProReflection: ProReflection.md

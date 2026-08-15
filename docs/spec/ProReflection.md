@@ -6,8 +6,9 @@ A type `R` meets the *ProReflection* requirements of a type `P` if `R` meets the
 
 | Expressions                                         | Semantics                                                    |
 | --------------------------------------------------- | ------------------------------------------------------------ |
-| `typename R::reflector_type(std::in_place_type<T>)` | Constructs a value of type `typename R::reflector_type`, reflecting implementation-defined metadata of type `T`. |
+| `typename R::reflector_type(std::in_place_type<T>)` | Constructs a value of type `typename R::reflector_type`, reflecting implementation-defined metadata of type `T`. `typename R::reflector_type` shall meet the [*ProMeta* requirements](ProMeta.md) of `T` *(since 5.0.0)*. |
 
 ## See Also
 
 - [*ProFacade* requirements](ProFacade.md)
+- [*ProMeta* requirements](ProMeta.md)

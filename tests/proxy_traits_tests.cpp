@@ -249,9 +249,10 @@ static_assert(
 static_assert(sizeof(pro::proxy<TrivialFacade>) == 2 * sizeof(void*));
 
 struct ReflectionOfSmallPtr {
+  ReflectionOfSmallPtr() = default;
   template <class P>
     requires(sizeof(P) <= sizeof(void*))
-  constexpr ReflectionOfSmallPtr(std::in_place_type_t<P>) {}
+  constexpr ReflectionOfSmallPtr(std::in_place_type_t<P>) noexcept {}
 };
 struct RelocatableFacadeWithReflection
     : pro::facade_builder                           //
@@ -265,16 +266,17 @@ static_assert(
 static_assert(pro::proxiable<MockTrivialPtr, RelocatableFacadeWithReflection>);
 static_assert(pro::proxiable<MockFunctionPtr, RelocatableFacadeWithReflection>);
 
-struct RuntimeReflection {
+struct ThrowingReflection {
+  ThrowingReflection() = default;
   template <class P>
-  explicit RuntimeReflection(std::in_place_type_t<P>) {
+  explicit ThrowingReflection(std::in_place_type_t<P>) {
     throw std::runtime_error{"Not supported"};
   }
 };
-struct FacadeWithRuntimeReflection : pro::facade_builder                 //
-                                     ::add_reflection<RuntimeReflection> //
-                                     ::build {};
-static_assert(pro::proxiable<MockTrivialPtr, FacadeWithRuntimeReflection>);
+struct FacadeWithThrowingReflection : pro::facade_builder                  //
+                                      ::add_reflection<ThrowingReflection> //
+                                      ::build {};
+static_assert(!pro::proxiable<MockTrivialPtr, FacadeWithThrowingReflection>);
 
 struct FacadeWithTupleLikeConventions {
   struct ToStringConvention {

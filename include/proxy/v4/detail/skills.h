@@ -224,7 +224,7 @@ struct proxy_cast_dispatch {
 struct proxy_typeid_reflector {
   proxy_typeid_reflector() = default;
   template <class T>
-  constexpr explicit proxy_typeid_reflector(std::in_place_type_t<T>)
+  constexpr explicit proxy_typeid_reflector(std::in_place_type_t<T>) noexcept
       : info(&typeid(T)) {}
 
   template <class Self, class R>

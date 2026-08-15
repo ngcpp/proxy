@@ -12,8 +12,9 @@ namespace proxy_reflection_tests_detail {
 
 struct TraitsReflector {
 public:
+  TraitsReflector() = default;
   template <class T>
-  constexpr explicit TraitsReflector(std::in_place_type_t<T>)
+  constexpr explicit TraitsReflector(std::in_place_type_t<T>) noexcept
       : is_default_constructible_(std::is_default_constructible_v<T>),
         is_copy_constructible_(std::is_copy_constructible_v<T>),
         is_nothrow_move_constructible_(std::is_nothrow_move_constructible_v<T>),

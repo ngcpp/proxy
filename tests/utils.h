@@ -105,20 +105,21 @@ struct Stringable : pro::facade_builder                           //
 
 class RttiReflector {
 public:
+  RttiReflector() = default;
   template <class T>
-  constexpr explicit RttiReflector(std::in_place_type_t<T>)
-      : type_(typeid(T)) {}
+  constexpr explicit RttiReflector(std::in_place_type_t<T>) noexcept
+      : type_(&typeid(T)) {}
 
   template <class P, class R>
   struct accessor {
     const char* GetTypeName() const noexcept {
       const RttiReflector& self = reflect<R>(static_cast<const P&>(*this));
-      return self.type_.name();
+      return self.type_->name();
     }
   };
 
 private:
-  const std::type_info& type_;
+  const std::type_info* type_;
 };
 
 } // namespace utils

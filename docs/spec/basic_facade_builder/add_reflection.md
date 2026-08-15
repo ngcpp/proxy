@@ -39,8 +39,9 @@ Adding duplicate reflection types is well-defined, whether done directly via `ad
 
 struct LayoutReflector {
 public:
+  LayoutReflector() = default;
   template <class T>
-  constexpr explicit LayoutReflector(std::in_place_type_t<T>)
+  constexpr explicit LayoutReflector(std::in_place_type_t<T>) noexcept
       : Size(sizeof(T)), Align(alignof(T)) {}
 
   template <class P, class R>

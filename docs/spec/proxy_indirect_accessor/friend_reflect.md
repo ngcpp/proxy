@@ -37,8 +37,9 @@ This function is useful when only metadata deduced from a type is needed. While 
 
 class LayoutReflector {
 public:
+  LayoutReflector() = default;
   template <class T>
-  constexpr explicit LayoutReflector(std::in_place_type_t<T>)
+  constexpr explicit LayoutReflector(std::in_place_type_t<T>) noexcept
       : Size(sizeof(T)), Align(alignof(T)) {}
 
   template <class P, class R>

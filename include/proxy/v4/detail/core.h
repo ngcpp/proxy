@@ -379,6 +379,20 @@ struct basic_conv_traits<C>
     : specialization_t<basic_conv_traits_impl, typename C::overload_types, C> {
 };
 
+template <class M>
+concept basic_meta =
+    std::is_nothrow_default_constructible_v<M> &&
+    std::is_nothrow_copy_constructible_v<M> &&
+    std::is_nothrow_copy_assignable_v<M> && std::is_nothrow_destructible_v<M>;
+template <class M, class T>
+concept meta = basic_meta<M> &&
+               std::is_nothrow_constructible_v<M, std::in_place_type_t<T>>;
+
+template <class R>
+concept basic_reflection = requires {
+  typename R::reflector_type;
+} && is_is_direct_well_formed<R>() && basic_meta<typename R::reflector_type>;
+
 template <class T>
 struct a11y_traits_impl
     : std::conditional<std::is_nothrow_default_constructible_v<T> &&
@@ -445,7 +459,7 @@ struct reflection_meta {
 template <class T, bool IsDirect, class R>
 consteval bool is_reflector_well_formed() {
   if constexpr (IsDirect) {
-    if constexpr (std::is_constructible_v<R, std::in_place_type_t<T>>) {
+    if constexpr (meta<R, T>) {
       return true;
     }
   } else {
@@ -602,9 +616,7 @@ struct basic_facade_conv_traits_impl<Cs...> : applicable_traits {};
 template <class... Rs>
 struct basic_facade_refl_traits_impl : inapplicable_traits {};
 template <class... Rs>
-  requires((requires {
-             typename Rs::reflector_type;
-           } && is_is_direct_well_formed<Rs>()) && ...)
+  requires(basic_reflection<Rs> && ...)
 struct basic_facade_refl_traits_impl<Rs...> : applicable_traits {};
 template <class F>
 struct basic_facade_traits : inapplicable_traits {};

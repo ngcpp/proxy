@@ -39,8 +39,9 @@ This function is useful when only metadata deduced from a type is needed. While 
 
 class CopyabilityReflector {
 public:
+  CopyabilityReflector() = default;
   template <class T>
-  constexpr explicit CopyabilityReflector(std::in_place_type_t<T>)
+  constexpr explicit CopyabilityReflector(std::in_place_type_t<T>) noexcept
       : copyable_(std::is_copy_constructible_v<T>) {}
 
   template <class P, class R>

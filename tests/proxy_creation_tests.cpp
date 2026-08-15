@@ -19,36 +19,37 @@ enum LifetimeModelType {
 };
 
 struct LifetimeModelReflector {
+  LifetimeModelReflector() = default;
   template <class T>
   constexpr explicit LifetimeModelReflector(
-      std::in_place_type_t<pro::detail::inplace_ptr<T>>)
+      std::in_place_type_t<pro::detail::inplace_ptr<T>>) noexcept
       : Type(LifetimeModelType::kInplace) {}
   template <class T, class Alloc>
   constexpr explicit LifetimeModelReflector(
-      std::in_place_type_t<pro::detail::allocated_ptr<T, Alloc>>)
+      std::in_place_type_t<pro::detail::allocated_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kAllocated) {}
   template <class T, class Alloc>
   constexpr explicit LifetimeModelReflector(
-      std::in_place_type_t<pro::detail::compact_ptr<T, Alloc>>)
+      std::in_place_type_t<pro::detail::compact_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kCompact) {
     static_assert(sizeof(pro::detail::compact_ptr<T, Alloc>) == sizeof(void*));
   }
   template <class T, class Alloc>
   constexpr explicit LifetimeModelReflector(
-      std::in_place_type_t<pro::detail::shared_compact_ptr<T, Alloc>>)
+      std::in_place_type_t<pro::detail::shared_compact_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kSharedCompact) {
     static_assert(sizeof(pro::detail::shared_compact_ptr<T, Alloc>) ==
                   sizeof(void*));
   }
   template <class T, class Alloc>
   constexpr explicit LifetimeModelReflector(
-      std::in_place_type_t<pro::detail::strong_compact_ptr<T, Alloc>>)
+      std::in_place_type_t<pro::detail::strong_compact_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kStrongCompact) {
     static_assert(sizeof(pro::detail::strong_compact_ptr<T, Alloc>) ==
                   sizeof(void*));
   }
   template <class T>
-  constexpr explicit LifetimeModelReflector(std::in_place_type_t<T>)
+  constexpr explicit LifetimeModelReflector(std::in_place_type_t<T>) noexcept
       : Type(LifetimeModelType::kNone) {}
 
   template <class Self, class R>
