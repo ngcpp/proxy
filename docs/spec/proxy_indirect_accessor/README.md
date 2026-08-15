@@ -29,7 +29,6 @@ Class template `proxy_indirect_accessor` provides indirection accessibility for 
 | ---------------------------------------------------- | ------------------------------------------------------------ |
 | [`invoke`](friend_invoke.md)                         | invokes a `proxy` with a specified convention                |
 | [`reflect`](friend_reflect.md)                       | acquires reflection information of a contained type          |
-| [`reinterpret_invoke`](friend_reinterpret_invoke.md) | invokes a dispatch on a `proxy` whose contained type is known statically |
 
 ## See also
 

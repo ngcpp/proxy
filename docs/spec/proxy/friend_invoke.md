@@ -60,4 +60,3 @@ int main() {
 ## See Also
 
 - [function template `reflect` (`proxy<F>`)](friend_reflect.md)
-- [function template `reinterpret_invoke` (`proxy<F>`)](friend_reinterpret_invoke.md)

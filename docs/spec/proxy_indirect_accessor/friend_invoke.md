@@ -59,4 +59,3 @@ int main() {
 ## See Also
 
 - [function template `reflect` (`proxy_indirect_accessor<F>`)](friend_reflect.md)
-- [function template `reinterpret_invoke` (`proxy_indirect_accessor<F>`)](friend_reinterpret_invoke.md)

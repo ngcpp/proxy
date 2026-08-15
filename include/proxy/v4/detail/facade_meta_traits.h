@@ -124,19 +124,18 @@ private:
   code_ptr<O, Disc> p_;
 };
 
-template <class ProP, class D, class O>
+template <class Ctx, class O>
 struct invoker;
 #define PRO4D_DEF_INVOKER(oq, pq, ne, ...)                                     \
-  template <class ProP, class D, class R, class... Args>                       \
-  struct invoker<ProP, D, R(Args...) oq ne>                                    \
-      : invoker_base<R(ProP pq, Args...) ne, R (*)(ProP pq, D, Args...) ne> {  \
+  template <class Ctx, class R, class... Args>                                 \
+  struct invoker<Ctx, R(Args...) oq ne>                                        \
+      : invoker_base<R(Ctx, Args...) ne, R (*)(Ctx, Args...) ne> {             \
     invoker() = default;                                                       \
     template <class P>                                                         \
     constexpr explicit invoker(std::in_place_type_t<P>)                        \
-        : invoker_base<R(ProP pq, Args...) ne, R (*)(ProP pq, D, Args...) ne>( \
-              [](ProP pq self, Args... args) ne -> R {                         \
-                return reinterpret_invoke<P, D, R>(                            \
-                    static_cast<ProP pq>(self), std::forward<Args>(args)...);  \
+        : invoker_base<R(Ctx, Args...) ne, R (*)(Ctx, Args...) ne>(            \
+              [](Ctx ctx, Args... args) ne -> R {                              \
+                return invoke<P>(ctx, std::forward<Args>(args)...);            \
               }) {}                                                            \
   }
 PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_INVOKER)
@@ -235,16 +234,16 @@ struct flat_meta_storage_traits<M, Ms...>
 } // namespace detail
 
 struct compact_facade_meta_traits {
-  template <class ProP, class D, class O>
-  using invoker = detail::invoker<ProP, D, O>;
+  template <class Ctx, class O>
+  using invoker = detail::invoker<Ctx, O>;
 
   template <class... Ms>
   using storage = detail::compact_meta_storage_traits<Ms...>::type;
 };
 
 struct flat_facade_meta_traits {
-  template <class ProP, class D, class O>
-  using invoker = detail::invoker<ProP, D, O>;
+  template <class Ctx, class O>
+  using invoker = detail::invoker<Ctx, O>;
 
   template <class... Ms>
   using storage = detail::flat_meta_storage_traits<Ms...>::type;

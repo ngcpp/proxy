@@ -2,4 +2,3 @@ nav:
   - proxy_indirect_accessor: README.md
   - invoke: friend_invoke.md
   - reflect: friend_reflect.md
-  - reinterpret_invoke: friend_reinterpret_invoke.md

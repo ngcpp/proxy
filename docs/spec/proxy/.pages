@@ -9,7 +9,6 @@ nav:
   - operator= (non-member): friend_operator_equality.md
   - operator=: assignment.md
   - reflect (non-member): friend_reflect.md
-  - reinterpret_invoke (non-member): friend_reinterpret_invoke.md
   - reset: reset.md
   - swap (non-member): friend_swap.md
   - swap: swap.md
