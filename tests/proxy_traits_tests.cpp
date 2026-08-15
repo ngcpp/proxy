@@ -280,7 +280,7 @@ struct FacadeWithTupleLikeConventions {
   struct ToStringConvention {
     static constexpr bool is_direct = false;
     using dispatch_type = utils::spec::FreeToString;
-    using overload_types = std::tuple<std::string()>;
+    using overload_type = std::string();
   };
   using convention_types = std::array<ToStringConvention, 1>;
   using reflection_types = std::tuple<>;

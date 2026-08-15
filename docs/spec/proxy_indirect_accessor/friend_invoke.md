@@ -21,7 +21,7 @@ There shall be a convention type `Conv` defined in `typename F::convention_types
 
 - `Conv::is_direct` is `false`, and
 - `typename Conv::dispatch_type` is `D`, and
-- there shall be an overload type `O1` defined in `typename Conv::overload_types` where [`substituted-overload`](../ProOverload.md)`<O1, F>` is `O`.
+- [`substituted-overload`](../ProOverload.md)`<typename Conv::overload_type, F>` is `O`.
 
 This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy_indirect_accessor<F>` is an associated class of the arguments.
 

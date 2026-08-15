@@ -77,19 +77,44 @@ struct inapplicable_traits {
   static constexpr bool applicable = false;
 };
 
-template <template <class, class> class R, class O, class... Is>
+template <template <class...> class T, class TL, class Is, class... Args>
+struct specialization_type_traits_impl;
+template <template <class...> class T, class TL, std::size_t... Is,
+          class... Args>
+struct specialization_type_traits_impl<T, TL, std::index_sequence<Is...>,
+                                       Args...>
+    : std::type_identity<T<Args..., std::tuple_element_t<Is, TL>...>> {};
+template <template <class...> class T, class TL, class... Args>
+struct specialization_type_traits
+    : specialization_type_traits_impl<
+          T, TL, std::make_index_sequence<std::tuple_size_v<TL>>, Args...> {};
+template <template <class...> class T, class... Ts, class... Args>
+struct specialization_type_traits<T, std::tuple<Ts...>, Args...>
+    : std::type_identity<T<Args..., Ts...>> {};
+template <template <class...> class T, class TL, class... Args>
+using specialization_t = specialization_type_traits<T, TL, Args...>::type;
+
+template <template <class, class, class...> class R, class... Args>
+struct reduction_t;
+template <class R, class O, class... Is>
 struct recursive_reduction : std::type_identity<O> {};
-template <template <class, class> class R, class O, class I, class... Is>
-struct recursive_reduction<R, O, I, Is...>
-    : recursive_reduction<R, R<O, I>, Is...> {};
-template <template <class, class> class R, class O, class... Is>
+template <template <class, class, class...> class R, class... Args, class O,
+          class I, class... Is>
+struct recursive_reduction<reduction_t<R, Args...>, O, I, Is...>
+    : recursive_reduction<reduction_t<R, Args...>,
+                          typename R<O, I, Args...>::type, Is...> {};
+template <class R, class O, class... Is>
 using recursive_reduction_t = recursive_reduction<R, O, Is...>::type;
 
-template <template <class...> class R, class... Args>
-struct reduction_traits {
-  template <class O, class I>
-  using type = R<Args..., O, I>::type;
-};
+template <class O, class I, class R>
+struct flattening_reduction : specialization_t<recursive_reduction, I, R, O> {};
+template <class R, class... Tss>
+struct flattening_merge : std::type_identity<std::tuple<>> {};
+template <class R, class Ts, class... Tss>
+struct flattening_merge<R, Ts, Tss...>
+    : recursive_reduction<reduction_t<flattening_reduction, R>, Ts, Tss...> {};
+template <class R, class... Tss>
+using flattening_merge_t = flattening_merge<R, Tss...>::type;
 
 template <class O, class I>
 struct composition_reduction : std::type_identity<O> {};
@@ -100,8 +125,18 @@ template <template <class...> class T, class... Os, class... Is>
 struct composition_reduction<T<Os...>, T<Is...>>
     : std::type_identity<T<Os..., Is...>> {};
 template <class T, class... Us>
-using composite_t = recursive_reduction_t<
-    reduction_traits<composition_reduction>::template type, T, Us...>;
+using composite_t =
+    recursive_reduction_t<reduction_t<composition_reduction>, T, Us...>;
+
+template <class O, class I>
+struct add_tuple_reduction : std::type_identity<O> {};
+template <class... Os, class I>
+  requires(!std::is_same_v<I, Os> && ...)
+struct add_tuple_reduction<std::tuple<Os...>, I>
+    : std::type_identity<std::tuple<Os..., I>> {};
+template <class... Tss>
+using merge_tuples_t =
+    flattening_merge_t<reduction_t<add_tuple_reduction>, Tss...>;
 
 template <class Expr>
 consteval bool is_consteval(Expr) {
@@ -125,23 +160,6 @@ consteval bool is_tuple_like_well_formed() {
   }
   return false;
 }
-
-template <template <class...> class T, class TL, class Is, class... Args>
-struct specialization_type_traits_impl;
-template <template <class...> class T, class TL, std::size_t... Is,
-          class... Args>
-struct specialization_type_traits_impl<T, TL, std::index_sequence<Is...>,
-                                       Args...>
-    : std::type_identity<T<Args..., std::tuple_element_t<Is, TL>...>> {};
-template <template <class...> class T, class TL, class... Args>
-struct specialization_type_traits
-    : specialization_type_traits_impl<
-          T, TL, std::make_index_sequence<std::tuple_size_v<TL>>, Args...> {};
-template <template <class...> class T, class... Ts, class... Args>
-struct specialization_type_traits<T, std::tuple<Ts...>, Args...>
-    : std::type_identity<T<Args..., Ts...>> {};
-template <template <class...> class T, class TL, class... Args>
-using specialization_t = specialization_type_traits<T, TL, Args...>::type;
 
 enum class qualifier_type { lv, const_lv, rv, const_rv };
 template <class T, qualifier_type Q>
@@ -362,22 +380,13 @@ consteval bool is_is_direct_well_formed() {
   return false;
 }
 
-template <class C, class... Os>
-struct basic_conv_traits_impl : inapplicable_traits {};
-template <class C, extended_overload... Os>
-  requires(sizeof...(Os) > 0u)
-struct basic_conv_traits_impl<C, Os...> : applicable_traits {};
 template <class C>
-struct basic_conv_traits : inapplicable_traits {};
-template <class C>
-  requires(requires {
-    { typename C::dispatch_type() } noexcept;
-    typename C::overload_types;
-  } && is_is_direct_well_formed<C>() &&
-           is_tuple_like_well_formed<typename C::overload_types>())
-struct basic_conv_traits<C>
-    : specialization_t<basic_conv_traits_impl, typename C::overload_types, C> {
-};
+concept basic_convention =
+    requires {
+      { typename C::dispatch_type() } noexcept;
+      typename C::overload_type;
+    } && is_is_direct_well_formed<C>() &&
+    extended_overload<typename C::overload_type>;
 
 template <class T>
 struct a11y_traits_impl
@@ -391,38 +400,43 @@ template <class T, class... Args>
 struct a11y_traits<std::void_t<typename T::template accessor<Args...>>, T,
                    Args...>
     : a11y_traits_impl<typename T::template accessor<Args...>> {};
-template <class T, class... Args>
-using accessor_t = a11y_traits<void, T, Args...>::type;
+template <class ProP, class T, class... Args>
+using accessor_t = a11y_traits<void, T, ProP, T, Args...>::type;
 
-template <class C, class F, class... Os>
-struct conv_traits_impl {
-  static_assert((overload_traits<substituted_overload_t<Os, F>>::applicable &&
-                 ...));
-  using meta = std::tuple<invoker<
-      std::conditional_t<C::is_direct, proxy<F>, proxy_indirect_accessor<F>>,
-      typename C::dispatch_type, substituted_overload_t<Os, F>>...>;
-  template <class T>
-  using accessor =
-      accessor_t<typename C::dispatch_type, T, typename C::dispatch_type,
-                 substituted_overload_t<Os, F>...>;
+template <class D, class... Os>
+struct conv_group;
+template <class G, class P, class F>
+struct conv_accessor_traits;
+template <class D, class... Os, class P, class F>
+struct conv_accessor_traits<conv_group<D, Os...>, P, F>
+    : std::type_identity<accessor_t<P, D, substituted_overload_t<Os, F>...>> {};
 
-  template <class P>
-  static consteval void diagnose_proxiable() {
-    ((diagnose_proxiable_required_convention_not_implemented<
-         P, F, C::is_direct, typename C::dispatch_type,
-         substituted_overload_t<Os, F>>()),
-     ...);
-  }
+template <class G, class D>
+struct conv_group_match_traits : inapplicable_traits {};
+template <class D, class... Os>
+struct conv_group_match_traits<conv_group<D, Os...>, D> : applicable_traits {};
 
-  template <class P>
-  static constexpr bool applicable_ptr =
-      (overload_traits<substituted_overload_t<Os, F>>::template applicable_ptr<
-           P, C::is_direct, typename C::dispatch_type> &&
-       ...);
-};
-template <class C, class F>
-struct conv_traits
-    : specialization_t<conv_traits_impl, typename C::overload_types, C, F> {};
+template <class G1, class G2>
+struct conv_group_merge_traits : std::type_identity<G1> {};
+template <class D, class... Os1, class... Os2>
+struct conv_group_merge_traits<conv_group<D, Os1...>, conv_group<D, Os2...>>
+    : specialization_type_traits<
+          conv_group, merge_tuples_t<std::tuple<Os1...>, std::tuple<Os2...>>,
+          D> {};
+
+template <class O, class I>
+struct conv_groups_reduction;
+template <class... Gs, class D, class... Os>
+  requires(conv_group_match_traits<Gs, D>::applicable || ...)
+struct conv_groups_reduction<std::tuple<Gs...>, conv_group<D, Os...>>
+    : std::type_identity<std::tuple<typename conv_group_merge_traits<
+          Gs, conv_group<D, Os...>>::type...>> {};
+template <class... Gs, class I>
+struct conv_groups_reduction<std::tuple<Gs...>, I>
+    : std::type_identity<std::tuple<Gs..., I>> {};
+template <class... Gss>
+using conv_groups_merge_t =
+    flattening_merge_t<reduction_t<conv_groups_reduction>, Gss...>;
 
 template <bool IsDirect, class R>
 struct reflection_meta {
@@ -499,36 +513,15 @@ using lifetime_meta_t = lifetime_meta_traits<F, D, ONE, OE, C>::type;
 template <class... As>
 struct PRO4D_ENFORCE_EBO composite_accessor : As... {};
 
-template <class C, class F, bool IsDirect>
-struct conv_accessor_traits : std::type_identity<void> {};
-template <class C, class F>
-  requires(!C::is_direct)
-struct conv_accessor_traits<C, F, false>
-    : std::type_identity<typename conv_traits<C, F>::template accessor<
-          proxy_indirect_accessor<F>>> {};
-template <class C, class F>
-  requires(C::is_direct)
-struct conv_accessor_traits<C, F, true>
-    : std::type_identity<
-          typename conv_traits<C, F>::template accessor<proxy<F>>> {};
-template <class C, class F, bool IsDirect>
-using conv_accessor_t = conv_accessor_traits<C, F, IsDirect>::type;
+template <class P, class F, class... Gs>
+using conv_accessors_t =
+    composite_t<composite_accessor<>,
+                typename conv_accessor_traits<Gs, P, F>::type...>;
 
-template <class R, class F, bool IsDirect>
-struct refl_accessor_traits : std::type_identity<void> {};
-template <class R, class F>
-  requires(!R::is_direct)
-struct refl_accessor_traits<R, F, false>
-    : std::type_identity<
-          accessor_t<typename R::reflector_type, proxy_indirect_accessor<F>,
-                     typename R::reflector_type>> {};
-template <class R, class F>
-  requires(R::is_direct)
-struct refl_accessor_traits<R, F, true>
-    : std::type_identity<accessor_t<typename R::reflector_type, proxy<F>,
-                                    typename R::reflector_type>> {};
-template <class R, class F, bool IsDirect>
-using refl_accessor_t = refl_accessor_traits<R, F, IsDirect>::type;
+template <class P, class... Rs>
+using refl_accessors_t =
+    composite_t<composite_accessor<>,
+                accessor_t<P, typename Rs::reflector_type>...>;
 
 template <class T>
 concept pointer_like = (std::is_pointer_v<T> ||
@@ -597,7 +590,7 @@ consteval bool is_facade_constraints_well_formed() {
 template <class... Cs>
 struct basic_facade_conv_traits_impl : inapplicable_traits {};
 template <class... Cs>
-  requires(basic_conv_traits<Cs>::applicable && ...)
+  requires(basic_convention<Cs> && ...)
 struct basic_facade_conv_traits_impl<Cs...> : applicable_traits {};
 template <class... Rs>
 struct basic_facade_refl_traits_impl : inapplicable_traits {};
@@ -623,30 +616,53 @@ struct basic_facade_traits<F> : applicable_traits {};
 
 template <class F, class... Cs>
 struct facade_conv_traits_impl {
-  using conv_meta =
-      composite_t<std::tuple<>, typename conv_traits<Cs, F>::meta...>;
-  using conv_indirect_accessor =
-      composite_t<composite_accessor<>, conv_accessor_t<Cs, F, false>...>;
-  using conv_direct_accessor =
-      composite_t<composite_accessor<>, conv_accessor_t<Cs, F, true>...>;
+  static_assert(
+      (overload_traits<
+           substituted_overload_t<typename Cs::overload_type, F>>::applicable &&
+       ...),
+      "a facade-aware overload did not substitute into a valid overload");
+  using conv_meta = std::tuple<invoker<
+      std::conditional_t<Cs::is_direct, proxy<F>, proxy_indirect_accessor<F>>,
+      typename Cs::dispatch_type,
+      substituted_overload_t<typename Cs::overload_type, F>>...>;
+  using indirect_conv_groups = conv_groups_merge_t<
+      std::tuple<>,
+      composite_t<
+          std::tuple<>,
+          std::conditional_t<Cs::is_direct, void,
+                             conv_group<typename Cs::dispatch_type,
+                                        typename Cs::overload_type>>...>>;
+  using direct_conv_groups = conv_groups_merge_t<
+      std::tuple<>,
+      composite_t<std::tuple<>,
+                  std::conditional_t<Cs::is_direct,
+                                     conv_group<typename Cs::dispatch_type,
+                                                typename Cs::overload_type>,
+                                     void>...>>;
 
   template <class P>
   static consteval void diagnose_proxiable_conv() {
-    (conv_traits<Cs, F>::template diagnose_proxiable<P>(), ...);
+    (diagnose_proxiable_required_convention_not_implemented<
+         P, F, Cs::is_direct, typename Cs::dispatch_type,
+         substituted_overload_t<typename Cs::overload_type, F>>(),
+     ...);
   }
 
   template <class P>
   static constexpr bool conv_applicable_ptr =
-      (conv_traits<Cs, F>::template applicable_ptr<P> && ...);
+      (overload_traits<substituted_overload_t<typename Cs::overload_type, F>>::
+           template applicable_ptr<P, Cs::is_direct,
+                                   typename Cs::dispatch_type> &&
+       ...);
 };
 template <class F, class... Rs>
 struct facade_refl_traits_impl {
   using refl_meta = std::tuple<
       reflection_meta<Rs::is_direct, typename Rs::reflector_type>...>;
-  using refl_indirect_accessor =
-      composite_t<composite_accessor<>, refl_accessor_t<Rs, F, false>...>;
-  using refl_direct_accessor =
-      composite_t<composite_accessor<>, refl_accessor_t<Rs, F, true>...>;
+  using indirect_refls =
+      composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void, Rs>...>;
+  using direct_refls =
+      composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, Rs, void>...>;
 
   template <class P>
   static consteval void diagnose_proxiable_refl() {
@@ -678,12 +694,17 @@ struct facade_traits : specialization_t<facade_conv_traits_impl,
                           F::destructibility>,
           typename facade_traits::conv_meta,
           typename facade_traits::refl_meta>>;
-  using indirect_accessor =
-      composite_t<typename facade_traits::conv_indirect_accessor,
-                  typename facade_traits::refl_indirect_accessor>;
-  using direct_accessor =
-      composite_t<typename facade_traits::conv_direct_accessor,
-                  typename facade_traits::refl_direct_accessor>;
+  using indirect_accessor = composite_t<
+      specialization_t<conv_accessors_t,
+                       typename facade_traits::indirect_conv_groups,
+                       proxy_indirect_accessor<F>, F>,
+      specialization_t<refl_accessors_t, typename facade_traits::indirect_refls,
+                       proxy_indirect_accessor<F>>>;
+  using direct_accessor = composite_t<
+      specialization_t<conv_accessors_t,
+                       typename facade_traits::direct_conv_groups, proxy<F>, F>,
+      specialization_t<refl_accessors_t, typename facade_traits::direct_refls,
+                       proxy<F>>>;
 
   template <class P>
   [[noreturn]] static consteval void diagnose_proxiable_noreturn() {
@@ -1305,11 +1326,11 @@ struct cast_dispatch_base {
 };
 #undef PRO4D_DEF_CAST_ACCESSOR
 
-template <bool IsDirect, class D, class... Os>
+template <bool IsDirect, class D, class O>
 struct conv_impl {
   static constexpr bool is_direct = IsDirect;
   using dispatch_type = D;
-  using overload_types = std::tuple<Os...>;
+  using overload_type = O;
 };
 template <bool IsDirect, class R>
 struct refl_impl {
@@ -1328,27 +1349,6 @@ struct facade_impl {
   static constexpr constraint_level relocatability = Relocatability;
   static constexpr constraint_level destructibility = Destructibility;
 };
-
-template <class O, class I>
-struct add_tuple_reduction : std::type_identity<O> {};
-template <class... Os, class I>
-  requires(!std::is_same_v<I, Os> && ...)
-struct add_tuple_reduction<std::tuple<Os...>, I>
-    : std::type_identity<std::tuple<Os..., I>> {};
-template <class O, class... Is>
-using add_tuple_t =
-    recursive_reduction_t<reduction_traits<add_tuple_reduction>::template type,
-                          O, Is...>;
-
-template <bool IsDirect, class D>
-struct conv_specialization_helper {
-  template <class... Os>
-  using type = conv_impl<IsDirect, D, Os...>;
-};
-template <bool IsDirect, class D, class Os>
-using conv_specialization_t =
-    specialization_t<conv_specialization_helper<IsDirect, D>::template type,
-                     Os>;
 
 template <class LR, class CLR, class RR, class CRR>
 class observer_ptr {
@@ -1371,25 +1371,22 @@ private:
 template <class O>
 using observer_substitution_overload =
     proxy_view<typename ret_t<O>::facade_type>() const noexcept;
-template <class... Os>
-using observer_substitution_conv = conv_specialization_t<
-    true, substitution_dispatch,
-    add_tuple_t<std::tuple<>, observer_substitution_overload<Os>...>>;
-
 template <class C>
 struct observer_conv_traits : std::type_identity<void> {};
 template <class C>
   requires(C::is_direct &&
            std::is_same_v<typename C::dispatch_type, substitution_dispatch>)
 struct observer_conv_traits<C>
-    : std::type_identity<specialization_t<observer_substitution_conv,
-                                          typename C::overload_types>> {};
+    : std::type_identity<conv_impl<
+          true, substitution_dispatch,
+          observer_substitution_overload<typename C::overload_type>>> {};
 template <class C>
   requires(!C::is_direct)
 struct observer_conv_traits<C> : std::type_identity<C> {};
 template <class... Cs>
-using observer_conv_types =
-    composite_t<std::tuple<>, typename observer_conv_traits<Cs>::type...>;
+using observer_conv_types = merge_tuples_t<
+    std::tuple<>,
+    composite_t<std::tuple<>, typename observer_conv_traits<Cs>::type...>>;
 template <class... Rs>
 using observer_refl_types =
     composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void, Rs>...>;
@@ -1418,23 +1415,19 @@ struct weak_substitution_overload_traits;
       : std::type_identity<weak_proxy<F>() oq ne> {};
 PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_WEAK_SUBSTITUTION_OVERLOAD_TRAITS)
 #undef PRO4D_DEF_WEAK_SUBSTITUTION_OVERLOAD_TRAITS
-template <class... Os>
-using weak_substitution_conv =
-    conv_impl<true, substitution_dispatch,
-              typename weak_substitution_overload_traits<Os>::type...>;
-
 template <class C>
 struct weak_conv_traits : std::type_identity<void> {};
 template <class C>
   requires(C::is_direct &&
            std::is_same_v<typename C::dispatch_type, substitution_dispatch>)
 struct weak_conv_traits<C>
-    : std::type_identity<specialization_t<weak_substitution_conv,
-                                          typename C::overload_types>> {};
+    : std::type_identity<conv_impl<true, substitution_dispatch,
+                                   typename weak_substitution_overload_traits<
+                                       typename C::overload_type>::type>> {};
 template <class F, class... Cs>
-using weak_conv_types = composite_t<
+using weak_conv_types = merge_tuples_t<
     std::tuple<conv_impl<true, weak_mem_lock, proxy<F>() const noexcept>>,
-    typename weak_conv_traits<Cs>::type...>;
+    composite_t<std::tuple<>, typename weak_conv_traits<Cs>::type...>>;
 
 } // namespace detail
 
