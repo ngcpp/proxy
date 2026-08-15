@@ -41,7 +41,7 @@ template <class F>
 struct basic_facade_traits;
 
 template <class F>
-struct meta_storage;
+struct proxy_meta;
 
 } // namespace detail
 
@@ -246,15 +246,14 @@ struct proxy_helper {
     proxy<F>& p_;
   };
 
-  template <class F>
-  static const meta_storage<F>& get_meta(const proxy<F>& p) noexcept {
-    assert(p.has_value());
-    return p.meta_;
+  template <class M, class F>
+  static const M& get_meta(const proxy<F>& p) noexcept {
+    assert(p.meta_.has_value());
+    return *p.meta_;
   }
-  template <class F>
-  static const meta_storage<F>&
-      get_meta(const proxy_indirect_accessor<F>& p) noexcept {
-    return get_meta(as_proxy<F, qualifier_type::const_lv>(p));
+  template <class M, class F>
+  static const M& get_meta(const proxy_indirect_accessor<F>& p) noexcept {
+    return get_meta<M>(as_proxy<F, qualifier_type::const_lv>(p));
   }
   template <class F>
   static void* get_ptr(proxy<F>& p) noexcept {
@@ -659,6 +658,122 @@ struct specialization_traits<TT<Args...>, TT> : applicable_traits {};
 template <class T, template <class...> class TT>
 concept specialization_of = specialization_traits<T, TT>::applicable;
 
+template <class O, class I, class T>
+struct first_containing_reduction : std::type_identity<O> {};
+template <class I, class T>
+struct first_containing_reduction<void, I, T>
+    : std::conditional<std::is_nothrow_convertible_v<const I&, const T&>, I,
+                       void> {};
+
+template <class O, class I>
+struct most_containing_reduction
+    : std::conditional<std::is_nothrow_convertible_v<const I&, const O&>, I,
+                       O> {};
+template <class SFINAE, class O, class I>
+struct sfinae_unique_types_traits : std::type_identity<O> {};
+template <class... Ts, class U, class... Us>
+struct sfinae_unique_types_traits<
+    std::enable_if_t<(std::is_nothrow_convertible_v<const Ts&, const U&> ||
+                      ...)>,
+    std::tuple<Ts...>, std::tuple<U, Us...>>
+    : sfinae_unique_types_traits<void, std::tuple<Ts...>, std::tuple<Us...>> {};
+template <class... Ts, class U, class... Us>
+struct sfinae_unique_types_traits<
+    std::enable_if_t<!(std::is_nothrow_convertible_v<const Ts&, const U&> ||
+                       ...)>,
+    std::tuple<Ts...>, std::tuple<U, Us...>>
+    : sfinae_unique_types_traits<
+          void,
+          std::tuple<Ts...,
+                     recursive_reduction_t<
+                         reduction_t<most_containing_reduction>, U, Us...>>,
+          std::tuple<Us...>> {};
+template <class T>
+using unique_types_t = sfinae_unique_types_traits<void, std::tuple<>, T>::type;
+
+template <class T>
+concept nullable = requires(T v, const T cv) {
+  { v.reset() } noexcept;
+  { cv.has_value() } noexcept -> std::same_as<bool>;
+};
+
+struct sentinel_meta {
+  sentinel_meta() = default;
+  template <class P>
+  constexpr explicit sentinel_meta(std::in_place_type_t<P>) noexcept : v_(1) {}
+  void reset() noexcept { v_ = 0; }
+  bool has_value() const noexcept { return v_; }
+
+private:
+  std::ptrdiff_t v_;
+};
+
+template <class... Ms>
+struct PRO4D_ENFORCE_EBO composite_meta : Ms... {
+  composite_meta() = default;
+  template <class P>
+  constexpr explicit composite_meta(std::in_place_type_t<P>)
+      : Ms(std::in_place_type<P>)... {}
+};
+
+template <nullable First, class... Rest>
+struct proxy_meta_base_impl {
+  constexpr proxy_meta_base_impl() noexcept {}
+  template <class P>
+  constexpr explicit proxy_meta_base_impl(std::in_place_type_t<P>)
+      : value_(std::in_place_type<P>) {}
+  proxy_meta_base_impl(const proxy_meta_base_impl& rhs) noexcept
+      : proxy_meta_base_impl() {
+    assign(rhs);
+  }
+  proxy_meta_base_impl& operator=(const proxy_meta_base_impl& rhs) noexcept {
+    assign(rhs);
+    return *this;
+  }
+
+  template <class T>
+    requires(std::is_nothrow_convertible_v<const First&, const T&> ||
+             (std::is_nothrow_convertible_v<const Rest&, const T&> || ...))
+  constexpr operator const T&() const noexcept {
+    return static_cast<const recursive_reduction_t<
+        reduction_t<first_containing_reduction, T>, void, First, Rest...>&>(
+        value_);
+  }
+
+  bool has_value() const noexcept {
+    return static_cast<const First&>(value_).has_value();
+  }
+  void reset() noexcept { static_cast<First&>(value_).reset(); }
+
+private:
+  void assign(const proxy_meta_base_impl& rhs) noexcept {
+    if (rhs.has_value()) {
+      value_ = rhs.value_;
+    } else {
+      reset();
+    }
+  }
+
+  composite_meta<First, Rest...> value_;
+};
+template <nullable First>
+  requires(std::is_trivially_copyable_v<First>)
+struct proxy_meta_base_impl<First> : First {
+  using First::First;
+};
+
+template <class... Ms>
+struct proxy_meta_base_traits
+    : specialization_type_traits<proxy_meta_base_impl,
+                                 unique_types_t<std::tuple<Ms...>>,
+                                 sentinel_meta> {};
+template <nullable M, class... Ms>
+struct proxy_meta_base_traits<M, Ms...>
+    : specialization_type_traits<proxy_meta_base_impl,
+                                 unique_types_t<std::tuple<M, Ms...>>> {};
+template <class... Ms>
+using proxy_meta_base_t = typename proxy_meta_base_traits<Ms...>::type;
+
 template <class P, class F, std::size_t ActualSize, std::size_t MaxSize>
 consteval void diagnose_proxiable_size_too_large() {
   static_assert(ActualSize <= MaxSize, "not proxiable due to size too large");
@@ -803,8 +918,8 @@ struct facade_traits : specialization_t<facade_conv_traits_impl,
                                         typename F::convention_types, F>,
                        specialization_t<facade_refl_traits_impl,
                                         typename F::reflection_types, F> {
-  using meta_storage_base = specialization_t<
-      compact_facade_meta_traits::storage,
+  using meta_base = specialization_t<
+      proxy_meta_base_t,
       composite_t<std::tuple<>,
                   lifetime_meta_t<copy_dispatch, void(void*) const noexcept,
                                   void(void*) const, F::copyability>,
@@ -849,8 +964,8 @@ struct facade_traits : specialization_t<facade_conv_traits_impl,
 };
 
 template <class F>
-struct meta_storage : facade_traits<F>::meta_storage_base {
-  using base = facade_traits<F>::meta_storage_base;
+struct proxy_meta : facade_traits<F>::meta_base {
+  using base = facade_traits<F>::meta_base;
   using base::base;
 };
 
@@ -889,7 +1004,7 @@ template <class F, bool IsDirect, class D, class O, class P, class... Args>
 ret_t<O> invoke_impl(P&& p, Args&&... args) {
   using Ctx = erased_context<IsDirect, D, O>;
   Ctx ctx{proxy_helper::get_ptr(p)};
-  const auto& inv = proxy_helper::get_meta(p).template get<invoker<Ctx, O>>();
+  const auto& inv = proxy_helper::get_meta<invoker<Ctx, O>>(p);
   if constexpr (overload_traits<O>::this_qualifier == qualifier_type::rv) {
     proxy_helper::meta_resetting_guard<F> guard{p};
     return inv(ctx, std::forward<Args>(args)...);
@@ -935,8 +1050,7 @@ public:
   }
   template <class R>
   friend const R& reflect(const proxy_indirect_accessor& p) noexcept {
-    return detail::proxy_helper::get_meta(p)
-        .template get<detail::reflection_meta<false, R>>()
+    return detail::proxy_helper::get_meta<detail::reflection_meta<false, R>>(p)
         .reflector;
   }
 };
@@ -1153,8 +1267,7 @@ public:
   }
   template <class R>
   friend const R& reflect(const proxy& p) noexcept {
-    return detail::proxy_helper::get_meta(p)
-        .template get<detail::reflection_meta<true, R>>()
+    return detail::proxy_helper::get_meta<detail::reflection_meta<true, R>>(p)
         .reflector;
   }
 
@@ -1206,7 +1319,7 @@ private:
     P& result = *std::construct_at(reinterpret_cast<P*>(ptr_),
                                    std::forward<Args>(args)...);
     if constexpr (proxiable<P, F>) {
-      meta_ = detail::meta_storage<F>{std::in_place_type<P>};
+      meta_ = decltype(meta_){std::in_place_type<P>};
     } else {
       detail::facade_traits<F>::template diagnose_proxiable_noreturn<P>();
     }
@@ -1234,7 +1347,8 @@ private:
   })
 
   alignas(F::max_align) std::byte ptr_[F::max_size];
-  detail::meta_storage<F> meta_;
+  typename compact_facade_meta_traits::template storage<detail::proxy_meta<F>>
+      meta_;
 };
 
 template <class D, class O, facade F, class... Args>

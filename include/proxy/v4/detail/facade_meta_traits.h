@@ -78,6 +78,11 @@ public:
                                  schema());
     return *this;
   }
+  meta_ptr& operator=(const T* p) noexcept {
+    p_ = ptrauth_sign_unauthenticated(p, ptrauth_key_cxx_vtable_pointer,
+                                      schema());
+    return *this;
+  }
   meta_ptr& operator=(std::nullptr_t) noexcept {
     p_ = nullptr;
     return *this;
@@ -101,12 +106,6 @@ using code_ptr = O*;
 template <class T, class Disc>
 using meta_ptr = const T*;
 #endif // PRO4D_HAS_PAC
-
-template <class T>
-concept nullable = requires(T v, const T cv) {
-  { v.reset() } noexcept;
-  { cv.has_value() } noexcept -> std::same_as<bool>;
-};
 
 template <class O, class Disc>
 struct invoker_base {
@@ -141,95 +140,54 @@ struct invoker;
 PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_INVOKER)
 #undef PRO4D_DEF_INVOKER
 
-struct sentinel_meta {
-  sentinel_meta() = default;
-  template <class P>
-  explicit sentinel_meta(std::in_place_type_t<P>) noexcept : v_(1) {}
-  void reset() noexcept { v_ = 0; }
-  bool has_value() const noexcept { return v_; }
+template <class M>
+struct PRO4D_ENFORCE_EBO inplace_meta_storage : M {
+  using M::M;
 
-private:
-  std::ptrdiff_t v_;
-};
-
-template <nullable First, class... Rest>
-struct PRO4D_ENFORCE_EBO inline_meta_storage : First, Rest... {
-  using First::has_value;
-  using First::reset;
-
-  constexpr inline_meta_storage() noexcept {}
-  template <class P>
-  constexpr explicit inline_meta_storage(std::in_place_type_t<P>)
-      : First(std::in_place_type<P>), Rest(std::in_place_type<P>)... {}
-  inline_meta_storage(const inline_meta_storage& rhs) noexcept
-      : inline_meta_storage() {
-    if (static_cast<const First&>(rhs).has_value()) {
-      static_cast<First&>(*this) = static_cast<const First&>(rhs);
-      ((static_cast<Rest&>(*this) = static_cast<const Rest&>(rhs)), ...);
-    } else {
-      static_cast<First&>(*this).reset();
-    }
-  }
-  inline_meta_storage& operator=(const inline_meta_storage& rhs) noexcept {
-    if (static_cast<const First&>(rhs).has_value()) {
-      static_cast<First&>(*this) = static_cast<const First&>(rhs);
-      ((static_cast<Rest&>(*this) = static_cast<const Rest&>(rhs)), ...);
-    } else {
-      static_cast<First&>(*this).reset();
-    }
+  inplace_meta_storage() = default;
+  inplace_meta_storage(const inplace_meta_storage&) = default;
+  template <class M2>
+    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
+  inplace_meta_storage(const inplace_meta_storage<M2>& rhs) noexcept
+      : M(static_cast<const M&>(*rhs)) {}
+  inplace_meta_storage& operator=(const inplace_meta_storage&) = default;
+  template <class M2>
+    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
+  inplace_meta_storage&
+      operator=(const inplace_meta_storage<M2>& rhs) noexcept {
+    static_cast<M&>(*this) = static_cast<const M&>(*rhs);
     return *this;
   }
-  template <class M>
-  const M& get() const noexcept {
-    return static_cast<const M&>(*this);
-  }
-};
-template <nullable First>
-struct inline_meta_storage<First> : First {
-  using First::First;
 
-  template <class M>
-  const M& get() const noexcept {
-    return static_cast<const M&>(*this);
-  }
+  const M& operator*() const noexcept { return *this; }
 };
 
-template <class... Ms>
+template <class M>
 struct static_meta_storage {
   static_meta_storage() = default;
+  template <class M2>
+    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
+  static_meta_storage(const static_meta_storage<M2>& rhs) noexcept
+      : ptr_(std::addressof(static_cast<const M&>(*rhs))) {}
+  template <class M2>
+    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
+  static_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
+    ptr_ = std::addressof(static_cast<const M&>(*rhs));
+    return *this;
+  }
   template <class P>
   explicit static_meta_storage(std::in_place_type_t<P>)
       : ptr_(std::addressof(storage<P>)) {}
   bool has_value() const noexcept { return ptr_ != nullptr; }
   void reset() noexcept { ptr_ = nullptr; }
-  template <class M>
-  const M& get() const noexcept {
-    return (*ptr_).template get<M>();
-  }
+  const M& operator*() const noexcept { return *ptr_; }
 
 private:
-  meta_ptr<inline_meta_storage<Ms...>, void (*)(Ms...)> ptr_;
+  meta_ptr<M, void (*)(M)> ptr_;
 
   template <class P>
-  static inline const inline_meta_storage<Ms...> storage{std::in_place_type<P>};
+  static inline const M storage{std::in_place_type<P>};
 };
-
-template <class... Ms>
-struct compact_meta_storage_traits
-    : std::type_identity<static_meta_storage<Ms...>> {};
-template <nullable M>
-struct compact_meta_storage_traits<M>
-    : std::type_identity<inline_meta_storage<M>> {};
-template <>
-struct compact_meta_storage_traits<>
-    : std::type_identity<inline_meta_storage<sentinel_meta>> {};
-
-template <class... Ms>
-struct flat_meta_storage_traits
-    : std::type_identity<inline_meta_storage<sentinel_meta, Ms...>> {};
-template <nullable M, class... Ms>
-struct flat_meta_storage_traits<M, Ms...>
-    : std::type_identity<inline_meta_storage<M, Ms...>> {};
 
 } // namespace detail
 
@@ -237,16 +195,18 @@ struct compact_facade_meta_traits {
   template <class Ctx, class O>
   using invoker = detail::invoker<Ctx, O>;
 
-  template <class... Ms>
-  using storage = detail::compact_meta_storage_traits<Ms...>::type;
+  template <class M>
+  using storage = std::conditional_t<sizeof(M) <= sizeof(void*),
+                                     detail::inplace_meta_storage<M>,
+                                     detail::static_meta_storage<M>>;
 };
 
 struct flat_facade_meta_traits {
   template <class Ctx, class O>
   using invoker = detail::invoker<Ctx, O>;
 
-  template <class... Ms>
-  using storage = detail::flat_meta_storage_traits<Ms...>::type;
+  template <class M>
+  using storage = detail::inplace_meta_storage<M>;
 };
 
 } // namespace pro::inline v4
