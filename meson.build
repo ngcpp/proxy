@@ -6,6 +6,7 @@ project(
   license_files: 'LICENSE',
   meson_version: '>=1.3',
   default_options: {
+    'b_ndebug': 'if-release',
     'cpp_std': ['vc++latest', 'c++26', 'c++23', 'c++20'],
     'warning_level': '3',
   },

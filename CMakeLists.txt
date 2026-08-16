@@ -29,6 +29,8 @@ if(PROJECT_IS_TOP_LEVEL)
   )
 endif()
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if(PROXY_FREESTANDING)
   add_compile_options(-ffreestanding -fno-exceptions -fno-rtti)
   add_link_options(-nodefaultlibs -lc)
@@ -120,7 +122,7 @@ if(BUILD_TESTING)
       -Wall
       -Wextra
       -Wpedantic
-      $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2b-extensions>
+      $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-c++2b-extensions>
     )
     set(PROXY_STRICT_WARNING_FLAGS ${PROXY_BUILD_FLAGS} -Werror)
   endif()

@@ -3,6 +3,7 @@ common --enable_bzlmod
 common --enable_platform_specific_config
 
 # Default Build Options
+build --compilation_mode=opt
 build --features=external_include_paths
 
 # Freestanding Configuration

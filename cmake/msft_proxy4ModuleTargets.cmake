@@ -29,6 +29,6 @@ target_compile_options(
   msft_proxy4_module
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
-    $<$<CXX_COMPILER_ID:Clang>:-Wno-c++2b-extensions>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang>:-Wno-c++2b-extensions>
 )
 target_link_libraries(msft_proxy4_module PUBLIC msft_proxy4::proxy)
