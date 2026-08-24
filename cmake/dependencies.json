@@ -1,13 +1,13 @@
 [
   {
     "name": "fmt",
-    "url": "https://github.com/fmtlib/fmt/archive/refs/tags/12.1.0.tar.gz",
-    "sha256": "ea7de4299689e12b6dddd392f9896f08fb0777ac7168897a244a6d6085043fea"
+    "url": "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz",
+    "sha256": "8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0"
   },
   {
     "name": "googletest",
-    "url": "https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz",
-    "sha256": "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c"
+    "url": "https://github.com/google/googletest/archive/refs/tags/v1.18.0.tar.gz",
+    "sha256": "6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5"
   },
   {
     "name": "benchmark",
