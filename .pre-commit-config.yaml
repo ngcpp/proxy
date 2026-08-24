@@ -14,12 +14,12 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.22
+    rev: v0.16.4
     hooks:
       - id: ruff-format
 
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
-    rev: 0.27.7
+    rev: 0.28.1
     hooks:
       - id: gersemi
         args: ["--indent", "2"]
@@ -41,7 +41,7 @@ repos:
       - id: meson-format
         name: meson format
         language: python
-        additional_dependencies: ["meson==1.11.2"]
+        additional_dependencies: ["meson==1.12.0"]
         entry: meson
         args: ["format", "--check-only", "--recursive", "meson.build"]
         pass_filenames: false
