@@ -12,7 +12,7 @@ namespace proxy_creation_tests_detail {
 enum LifetimeModelType {
   kNone,
   kInplace,
-  kAllocated,
+  kWide,
   kCompact,
   kSharedCompact,
   kStrongCompact
@@ -26,8 +26,8 @@ struct LifetimeModelReflector {
       : Type(LifetimeModelType::kInplace) {}
   template <class T, class Alloc>
   constexpr explicit LifetimeModelReflector(
-      std::in_place_type_t<pro::detail::allocated_ptr<T, Alloc>>) noexcept
-      : Type(LifetimeModelType::kAllocated) {}
+      std::in_place_type_t<pro::detail::wide_ptr<T, Alloc>>) noexcept
+      : Type(LifetimeModelType::kWide) {}
   template <class T, class Alloc>
   constexpr explicit LifetimeModelReflector(
       std::in_place_type_t<pro::detail::compact_ptr<T, Alloc>>) noexcept
@@ -294,7 +294,7 @@ TEST(ProxyCreationTests, TestAllocateProxy_DirectAllocator_FromValue) {
         std::allocator<void>{}, session);
     ASSERT_TRUE(p.has_value());
     ASSERT_EQ(ToString(*p), "Session 2");
-    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(2,
                               utils::LifetimeOperationType::kCopyConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -312,7 +312,7 @@ TEST(ProxyCreationTests, TestAllocateProxy_DirectAllocator_InPlace) {
         std::allocator<void>{}, &tracker);
     ASSERT_TRUE(p.has_value());
     ASSERT_EQ(ToString(*p), "Session 1");
-    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(1,
                               utils::LifetimeOperationType::kValueConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -331,7 +331,7 @@ TEST(ProxyCreationTests,
         std::allocator<void>{}, {1, 2, 3}, &tracker);
     ASSERT_TRUE(p.has_value());
     ASSERT_EQ(ToString(*p), "Session 1");
-    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(
         1, utils::LifetimeOperationType::kInitializerListConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -352,10 +352,10 @@ TEST(ProxyCreationTests, TestAllocateProxy_DirectAllocator_Lifetime_Copy) {
     auto p2 = p1;
     ASSERT_TRUE(p1.has_value());
     ASSERT_EQ(ToString(*p1), "Session 1");
-    ASSERT_EQ(p1.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p1.GetLifetimeType(), detail::LifetimeModelType::kWide);
     ASSERT_TRUE(p2.has_value());
     ASSERT_EQ(ToString(*p2), "Session 2");
-    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(2,
                               utils::LifetimeOperationType::kCopyConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -378,7 +378,7 @@ TEST(ProxyCreationTests, TestAllocateProxy_DirectAllocator_Lifetime_Move) {
     ASSERT_FALSE(p1.has_value());
     ASSERT_TRUE(p2.has_value());
     ASSERT_EQ(ToString(*p2), "Session 1");
-    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kWide);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
   }
   expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
@@ -602,7 +602,7 @@ TEST(ProxyCreationTests, TestMakeProxy_WithoutSBO_FromValue) {
     auto p = pro::make_proxy<detail::TestSmallStringable>(session);
     ASSERT_TRUE(p.has_value());
     ASSERT_EQ(ToString(*p), "Session 2");
-    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(2,
                               utils::LifetimeOperationType::kCopyConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -619,7 +619,7 @@ TEST(ProxyCreationTests, TestMakeProxy_WithoutSBO_InPlace) {
                              utils::LifetimeTracker::Session>(&tracker);
     ASSERT_TRUE(p.has_value());
     ASSERT_EQ(ToString(*p), "Session 1");
-    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(1,
                               utils::LifetimeOperationType::kValueConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -637,7 +637,7 @@ TEST(ProxyCreationTests, TestMakeProxy_WithoutSBO_InPlaceInitializerList) {
                         utils::LifetimeTracker::Session>({1, 2, 3}, &tracker);
     ASSERT_TRUE(p.has_value());
     ASSERT_EQ(ToString(*p), "Session 1");
-    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(
         1, utils::LifetimeOperationType::kInitializerListConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -657,10 +657,10 @@ TEST(ProxyCreationTests, TestMakeProxy_WithoutSBO_Lifetime_Copy) {
     auto p2 = p1;
     ASSERT_TRUE(p1.has_value());
     ASSERT_EQ(ToString(*p1), "Session 1");
-    ASSERT_EQ(p1.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p1.GetLifetimeType(), detail::LifetimeModelType::kWide);
     ASSERT_TRUE(p2.has_value());
     ASSERT_EQ(ToString(*p2), "Session 2");
-    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kWide);
     expected_ops.emplace_back(2,
                               utils::LifetimeOperationType::kCopyConstruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
@@ -682,7 +682,7 @@ TEST(ProxyCreationTests, TestMakeProxy_WithoutSBO_Lifetime_Move) {
     ASSERT_FALSE(p1.has_value());
     ASSERT_TRUE(p2.has_value());
     ASSERT_EQ(ToString(*p2), "Session 1");
-    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kAllocated);
+    ASSERT_EQ(p2.GetLifetimeType(), detail::LifetimeModelType::kWide);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
   }
   expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);

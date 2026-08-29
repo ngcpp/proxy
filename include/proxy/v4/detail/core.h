@@ -728,8 +728,8 @@ struct meta_storage : facade_traits<F>::meta_storage_base {
 template <class T>
 class inplace_ptr {
 public:
-  template <class... Args>
-  explicit inplace_ptr(std::in_place_t, Args&&... args)
+  template <class Ignore, class... Args>
+  explicit inplace_ptr(const Ignore&, Args&&... args)
       : value_(std::forward<Args>(args)...) {}
   inplace_ptr() = default;
   inplace_ptr(const inplace_ptr&) = default;

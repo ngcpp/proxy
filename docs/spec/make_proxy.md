@@ -19,23 +19,23 @@ proxy<F> make-proxy-internal(Args&&... args) {
 
 ```cpp
 // (1)
+template <facade F, class T>
+proxy<F> make_proxy(T&& value);  // freestanding-deleted
+
+// (2)
 template <facade F, class T, class... Args>
 proxy<F> make_proxy(Args&&... args);  // freestanding-deleted
 
-// (2)
+// (3)
 template <facade F, class T, class U, class... Args>
 proxy<F> make_proxy(std::initializer_list<U> il, Args&&... args);  // freestanding-deleted
-
-// (3)
-template <facade F, class T>
-proxy<F> make_proxy(T&& value);  // freestanding-deleted
 ```
 
-`(1)` Equivalent to `return make-proxy-internal<F, T>(std::forward<Args>(args)...)`.
+`(1)` Equivalent to `return make-proxy-internal<F, std::decay_t<T>>(std::forward<T>(value))`.
 
-`(2)` Equivalent to `return make-proxy-internal<F, T>(il, std::forward<Args>(args)...)`.
+`(2)` Equivalent to `return make-proxy-internal<F, T>(std::forward<Args>(args)...)`.
 
-`(3)` Equivalent to `return make-proxy-internal<F, std::decay_t<T>>(std::forward<T>(value))`.
+`(3)` Equivalent to `return make-proxy-internal<F, T>(il, std::forward<Args>(args)...)`.
 
 *Since 3.3.0*: For `(1-3)`, if [`proxiable_target<std::decay_t<T>, F>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
 
