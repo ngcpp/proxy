@@ -14,7 +14,7 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.4
+    rev: v0.16.5
     hooks:
       - id: ruff-format
 
@@ -50,7 +50,7 @@ repos:
       - id: clang-format
         name: clang-format
         language: python
-        additional_dependencies: ["clang-format==22.1.8"]
+        additional_dependencies: ["clang-format==23.1.0"]
         entry: python3 tools/format_cpp.py
         pass_filenames: false
         files: '\.(h|ixx|cpp|md)$'
