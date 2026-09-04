@@ -852,3 +852,34 @@ TEST(ProxyDispatchTests, TestSubstitutionDispatch) {
   GTEST_SKIP() << "std::format not available";
 #endif // PRO4D_HAS_FORMAT
 }
+
+TEST(ProxyDispatchTests, TestSuperConversion) {
+#ifdef PRO4D_HAS_FORMAT
+  struct Base : pro::facade_builder                            //
+                ::add_skill<pro::skills::format>               //
+                ::support_copy<pro::constraint_level::nothrow> //
+                ::build {};
+  struct TestFacade : pro::facade_builder //
+                      ::add_facade<Base>  //
+                      ::build {};
+  pro::proxy<TestFacade> p1 = pro::make_proxy<TestFacade>(123);
+  pro::proxy<Base> p2 = p1;
+  ASSERT_TRUE(p1.has_value());
+  ASSERT_EQ(std::format("{}", *p2), "123");
+  pro::proxy<Base> p3 = std::move(p1);
+  ASSERT_FALSE(p1.has_value());
+  ASSERT_EQ(std::format("{}", *p3), "123");
+
+  pro::proxy<TestFacade> p4 = pro::make_proxy<TestFacade>(456);
+  pro::proxy<Base> p5;
+  p5 = p4;
+  ASSERT_TRUE(p4.has_value());
+  ASSERT_EQ(std::format("{}", *p5), "456");
+  pro::proxy<Base> p6;
+  p6 = std::move(p4);
+  ASSERT_FALSE(p4.has_value());
+  ASSERT_EQ(std::format("{}", *p6), "456");
+#else
+  GTEST_SKIP() << "std::format not available";
+#endif // PRO4D_HAS_FORMAT
+}

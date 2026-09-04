@@ -33,11 +33,11 @@ Invokes a `proxy` with a specified dispatch type, an overload type, and argument
 - `(1)` Let `ptr` be the contained value of the `proxy` object associated to `p` with the same cv ref-qualifiers. Equivalent to [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), *ptr, static_cast<Args2>(args)...)`.
 - `(2)` Let `ptr` be the contained value of `p` with the same cv ref-qualifiers. Equivalent to [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), ptr, static_cast<Args2>(args)...)`.  The behavior is undefined if `p` does not contain a value.
 
-There shall be a convention type `Conv` defined in `typename F::convention_types` where
+There shall be a convention type `Conv` defined in the convention types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
 
 - `Conv::is_direct` is `false` (for `(1)`) or `true` (for `(2)`), and
 - `typename Conv::dispatch_type` is `D`, and
-- there shall be an overload type `O1` defined in `typename Conv::overload_types` where [`substituted-overload`](ProOverload.md)`<O1, F>` is `O`.
+- [`substituted-overload`](ProOverload.md)`<typename Conv::overload_type, F>` is `O`.
 
 ## Notes
 

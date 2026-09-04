@@ -31,11 +31,15 @@ struct TestRttiFacade : pro::facade_builder                           //
                         ::add_facade_with_substitution<TestFacade>    //
                         ::build {};
 
-// Additional static asserts for substitution
-static_assert(!std::is_convertible_v<pro::proxy<TestTrivialFacade>,
-                                     pro::proxy<utils::spec::Stringable>>);
+// Additional static asserts for super conversion
+static_assert(std::is_convertible_v<pro::proxy<TestTrivialFacade>,
+                                    pro::proxy<utils::spec::Stringable>>);
 static_assert(
     std::is_convertible_v<pro::proxy<TestRttiFacade>, pro::proxy<TestFacade>>);
+static_assert(!std::is_convertible_v<pro::proxy<utils::spec::Stringable>,
+                                     pro::proxy<TestTrivialFacade>>);
+static_assert(!std::is_convertible_v<pro::proxy<TestTrivialFacade>,
+                                     pro::proxy<TestFacade>>);
 
 } // namespace proxy_lifetime_tests_detail
 
@@ -1243,4 +1247,97 @@ TEST(ProxyLifetimeTests, Test_MoveSubstitution_FromNull) {
   pro::proxy<detail::TestFacade> p2 = std::move(p1);
   ASSERT_FALSE(p1.has_value());
   ASSERT_FALSE(p2.has_value());
+}
+
+TEST(ProxyLifetimeTests, Test_MoveSubstitution_Trivial) {
+  // A trivially copyable proxy has no move constructor; a conversion from an
+  // rvalue shall fall back to the copy constructor and leave rhs intact, just
+  // like a move between two proxies of the same facade.
+  struct Derived : pro::facade_builder                     //
+                   ::add_facade<detail::TestTrivialFacade> //
+                   ::build {};
+  int v = 123;
+  pro::proxy<Derived> p1 = &v;
+  pro::proxy<detail::TestTrivialFacade> p2 = std::move(p1);
+  ASSERT_TRUE(p1.has_value());
+  ASSERT_EQ(ToString(*p1), "123");
+  ASSERT_EQ(ToString(*p2), "123");
+}
+
+TEST(ProxyLifetimeTests, Test_CopyAssignment_NoRelocation) {
+  // A facade that forbids relocation cannot stage a throwing assignment in a
+  // temporary, because committing the temporary would need a move assignment.
+  // Assignment shall still work, emptying *this up front instead.
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>             //
+                  ::support_copy<pro::constraint_level::nontrivial> //
+                  ::support_relocation<pro::constraint_level::none> //
+                  ::build {};
+  struct PinnedDerived : pro::facade_builder  //
+                         ::add_facade<Pinned> //
+                         ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<Pinned> p1{utils::ThrowingCopyPtr<int>{&v1}};
+  pro::proxy<Pinned> p2{utils::ThrowingCopyPtr<int>{&v2}};
+  p1 = p2; // Same-facade copy assignment
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "222");
+
+  pro::proxy<PinnedDerived> p3{utils::ThrowingCopyPtr<int>{&v1}};
+  p1 = p3; // Converting copy assignment
+  ASSERT_EQ(ToString(*p1), "111");
+  ASSERT_TRUE(p3.has_value());
+
+  p1 = utils::ThrowingCopyPtr<int>{&v2}; // Pointer assignment
+  ASSERT_EQ(ToString(*p1), "222");
+}
+
+TEST(ProxyLifetimeTests, Test_PointerAssignment_NoRelocationNoCopy) {
+  // Same shape, but the facade supports neither relocation nor copy, so there
+  // is no assignment operator a temporary could be committed with at all.
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>             //
+                  ::support_relocation<pro::constraint_level::none> //
+                  ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<Pinned> p{utils::ThrowingCopyPtr<int>{&v1}};
+  p = utils::ThrowingCopyPtr<int>{&v2};
+  ASSERT_EQ(ToString(*p), "222");
+}
+
+TEST(ProxyLifetimeTests, Test_PointerAssignment_ThrowingInitialization) {
+  // When the initialization can throw, it is staged in a temporary that the
+  // move assignment commits, so a failure leaves *this unchanged.
+  struct Movable : pro::facade_builder //
+                   ::add_convention<utils::spec::FreeToString,
+                                    std::string() const>                   //
+                   ::support_copy<pro::constraint_level::nontrivial>       //
+                   ::support_relocation<pro::constraint_level::nontrivial> //
+                   ::build {};
+  // A trivially copyable proxy has no move assignment, and this one forbids
+  // relocation outright, but its trivial copy assignment commits the temporary
+  // just as well.
+  struct TriviallyCopyable
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>             //
+        ::support_copy<pro::constraint_level::trivial>    //
+        ::support_relocation<pro::constraint_level::none> //
+        ::build {};
+  int v1 = 111, v2 = 222;
+
+  pro::proxy<Movable> p1{std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
+  ASSERT_THROW(p1 = utils::ThrowOnMovePtr<int>{&v2},
+               utils::ConstructionFailure);
+  ASSERT_TRUE(p1.has_value());
+  ASSERT_EQ(ToString(*p1), "111");
+
+  pro::proxy<TriviallyCopyable> p2{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
+  ASSERT_THROW(p2 = utils::ThrowOnMovePtr<int>{&v2},
+               utils::ConstructionFailure);
+  ASSERT_TRUE(p2.has_value());
+  ASSERT_EQ(ToString(*p2), "111");
 }

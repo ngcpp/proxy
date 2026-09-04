@@ -173,6 +173,48 @@ TEST(ProxyViewTests, TestSubstitution_FromValue) {
   ASSERT_EQ(ToString(*p3), "123");
 }
 
+TEST(ProxyViewTests, TestSuperConversion_FromRvalue) {
+  // proxy_view is always trivially copyable, so converting one to a view of a
+  // super shall never empty the source.
+  struct TestFacade1
+      : pro::facade_builder                                              //
+        ::add_convention<utils::spec::FreeToString, std::string() const> //
+        ::build {};
+  struct TestFacade2 : pro::facade_builder               //
+                       ::add_facade<TestFacade1>         //
+                       ::add_skill<pro::skills::as_view> //
+                       ::build {};
+  int v = 123;
+  pro::proxy_view<TestFacade2> p1 = &v;
+  pro::proxy_view<TestFacade1> p2 = std::move(p1);
+  ASSERT_TRUE(p1.has_value());
+  ASSERT_EQ(ToString(*p1), "123");
+  ASSERT_EQ(ToString(*p2), "123");
+}
+
+TEST(ProxyViewTests, TestFacadeAware_FromSuper) {
+  // as_view is declared on the super only. The facade-aware overload must be
+  // substituted against the deriving facade, so the view exposes the deriving
+  // facade's conventions rather than the super's.
+  struct TestFacade1
+      : pro::facade_builder                                              //
+        ::add_convention<utils::spec::FreeToString, std::string() const> //
+        ::add_skill<pro::skills::as_view>                                //
+        ::build {};
+  struct TestFacade2
+      : pro::facade_builder                                           //
+        ::add_facade<TestFacade1>                                     //
+        ::add_convention<pro::operator_dispatch<"+">, int(int) const> //
+        ::build {};
+  pro::proxy<TestFacade2> p1 = pro::make_proxy<TestFacade2>(123);
+  pro::proxy_view<TestFacade2> p2 = p1;
+  static_assert(std::is_same_v<decltype(*p1),
+                               pro::proxy_indirect_accessor<TestFacade2>&>);
+  // ToString comes from the super, operator+ from the deriving facade
+  ASSERT_EQ(ToString(*p2), "123");
+  ASSERT_EQ((*p2) + 1, 124);
+}
+
 TEST(ProxyViewTests, TestFacadeAware) {
   detail::Point_2 v1{1, 1};
   detail::Point_2 v2{1, 0};

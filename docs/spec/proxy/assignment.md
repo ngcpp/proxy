@@ -24,7 +24,24 @@ proxy& operator=(proxy&& rhs)
         F::destructibility >= constraint_level::nontrivial &&
         F::copyability != constraint_level::trivial);
 
-// (4)
+// (4) (since 5.0.0)
+template <facade F2>
+proxy& operator=(const proxy<F2>& rhs)
+    noexcept(F::copyability >= constraint_level::nothrow &&
+        F::destructibility >= constraint_level::nothrow)
+    requires(F::copyability >= constraint_level::nontrivial &&
+        F::destructibility >= constraint_level::nontrivial);
+
+// (5) (since 5.0.0)
+template <facade F2>
+proxy& operator=(proxy<F2>&& rhs)
+    noexcept(F::relocatability >= constraint_level::nothrow &&
+        F::destructibility >= constraint_level::nothrow)
+    requires(F::relocatability >= constraint_level::nontrivial &&
+        F::destructibility >= constraint_level::nontrivial &&
+        F::copyability != constraint_level::trivial);
+
+// (6)
 template <class P>
 proxy& operator=(P&& ptr)
     noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P> &&
@@ -38,7 +55,9 @@ Assigns a new value to `proxy` or destroys the contained value.
 - `(1)` Destroys the current contained value if it exists. After the call, `*this` does not contain a value.
 - `(2)` Copy assignment operator copies the contained value of `rhs` to `*this`. If `rhs` does not contain a value, it destroys the contained value of `*this` (if any) as if by `auto(rhs).swap(*this)`. The copy assignment is trivial when `F::copyability == constraint_level::trivial` is `true`.
 - `(3)` Move assignment operator moves the contained value of `rhs` to `*this`. If `rhs` does not contain a value, it destroys the contained value of `*this` (if any). If the move construction throws when `F::relocatability == constraint_level::nontrivial`, `*this` does not contain a value. After move assignment, `rhs` is in a valid state with an unspecified value. The move assignment operator does not participate in overload resolution when `F::copyability == constraint_level::trivial`, falling back to the trivial copy assignment operator.
-- `(4)` Let `VP` be `std::decay_t<P>`. Sets the contained value to an object of type `VP`, direct-non-list-initialized with `std::forward<P>(ptr)`. Participates in overload resolution only if `VP` is not a specialization of `proxy` and is a pointer-like type eligible for `proxy` (see [*ProFacade* requirements](../ProFacade.md)). *Since 3.3.0*: If [`proxiable<VP, F>`](../proxiable.md) is `false`, the program is ill-formed and a diagnostic is generated.
+- `(4)` Converting copy assignment operator copies the contained value of `rhs` to `*this`, as if by constructing a `proxy` from `rhs` and assigning it. If `rhs` does not contain a value, it destroys the contained value of `*this` (if any). Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively.
+- `(5)` Converting move assignment operator moves the contained value of `rhs` to `*this`. If `rhs` does not contain a value, it destroys the contained value of `*this` (if any). After the assignment, `rhs` does not contain a value. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively. The converting move assignment operator does not participate in overload resolution when `F::copyability == constraint_level::trivial`, falling back to `(4)`.
+- `(6)` Let `VP` be `std::decay_t<P>`. Sets the contained value to an object of type `VP`, direct-non-list-initialized with `std::forward<P>(ptr)`. Participates in overload resolution only if `VP` is not a specialization of `proxy` and is a pointer-like type eligible for `proxy` (see [*ProFacade* requirements](../ProFacade.md)). *Since 3.3.0*: If [`proxiable<VP, F>`](../proxiable.md) is `false`, the program is ill-formed and a diagnostic is generated.
 
 ## Return Value
 

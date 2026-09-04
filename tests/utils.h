@@ -92,6 +92,38 @@ private:
   std::vector<LifetimeOperation> ops_;
 };
 
+template <class T>
+class ThrowingCopyPtr {
+public:
+  using element_type = T;
+
+  explicit ThrowingCopyPtr(T* ptr) noexcept : ptr_(ptr) {}
+  ThrowingCopyPtr(const ThrowingCopyPtr& rhs) : ptr_(rhs.ptr_) {}
+  ThrowingCopyPtr& operator=(const ThrowingCopyPtr&) = default;
+  T& operator*() const noexcept { return *ptr_; }
+
+private:
+  T* ptr_;
+};
+
+template <class T>
+class ThrowOnMovePtr {
+public:
+  using element_type = T;
+
+  explicit ThrowOnMovePtr(T* ptr) noexcept : ptr_(ptr) {}
+  ThrowOnMovePtr(const ThrowOnMovePtr&) = default;
+  ThrowOnMovePtr(ThrowOnMovePtr&& rhs) : ptr_(rhs.ptr_) {
+    if (ptr_ != nullptr) {
+      throw ConstructionFailure{LifetimeOperationType::kValueConstruction};
+    }
+  }
+  T& operator*() const noexcept { return *ptr_; }
+
+private:
+  T* ptr_;
+};
+
 namespace spec {
 
 using std::to_string;

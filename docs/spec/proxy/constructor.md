@@ -19,18 +19,31 @@ proxy(proxy&& rhs)
     requires(F::relocatability >= constraint_level::nontrivial &&
         F::copyability != constraint_level::trivial);
 
-// (4)
+// (4) (since 5.0.0)
+template <facade F2>
+proxy(const proxy<F2>& rhs)
+    noexcept(F::copyability >= constraint_level::nothrow)
+    requires(F::copyability >= constraint_level::nontrivial);
+
+// (5) (since 5.0.0)
+template <facade F2>
+proxy(proxy<F2>&& rhs)
+    noexcept(F::relocatability >= constraint_level::nothrow)
+    requires(F::relocatability >= constraint_level::nontrivial &&
+        F::copyability != constraint_level::trivial);
+
+// (6)
 template <class P>
 proxy(P&& ptr) noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>)
     requires(std::is_constructible_v<std::decay_t<P>, P>);
 
-// (5)
+// (7)
 template <class P, class... Args>
 explicit proxy(std::in_place_type_t<P>, Args&&... args)
     noexcept(std::is_nothrow_constructible_v<P, Args...>)
     requires(std::is_constructible_v<P, Args...>);
 
-// (6)
+// (8)
 template <class P, class U, class... Args>
 explicit proxy(std::in_place_type_t<P>, std::initializer_list<U> il,
         Args&&... args)
@@ -44,11 +57,13 @@ Creates a new `proxy`.
 - `(1)` Default constructor and the constructor taking `nullptr` construct a `proxy` that does not contain a value.
 - `(2)` Copy constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. As per the `requires` clause, the copy constructor is trivial when `F::copyability == constraint_level::trivial`.
 - `(3)` Move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` is in a valid but unspecified state after move construction. As per the `requires` clause, the move constructor does not participate in overload resolution when `F::copyability == constraint_level::trivial`, so that a move construction falls back to the trivial copy constructor.
-- `(4)` Let `VP` be `std::decay_t<P>`. Constructs a `proxy` whose contained value is of type `VP`, direct-non-list-initialized with `std::forward<P>(ptr)`. Participates in overload resolution only if `VP` is not a specialization of `proxy` and is a pointer-like type eligible for `proxy` (see [*ProFacade* requirements](../ProFacade.md)).
-- `(5)` Constructs a `proxy` whose contained value is of type `P`, direct-non-list-initialized with `std::forward<Args>(args)...`. Participates in overload resolution only if `P` is a pointer-like type eligible for `proxy`.
-- `(6)` Constructs a `proxy` whose contained value is of type `P`, direct-non-list-initialized with `il, std::forward<Args>(args)...`. Participates in overload resolution only if `P` is a pointer-like type eligible for `proxy`.
+- `(4)` Converting copy constructor constructs a `proxy` whose contained value is a copy of that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively.
+- `(5)` Converting move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` does not contain a value after the conversion. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively. As per the `requires` clause, the converting move constructor does not participate in overload resolution when `F::copyability == constraint_level::trivial`, so that a conversion from an rvalue falls back to `(4)`.
+- `(6)` Let `VP` be `std::decay_t<P>`. Constructs a `proxy` whose contained value is of type `VP`, direct-non-list-initialized with `std::forward<P>(ptr)`. Participates in overload resolution only if `VP` is not a specialization of `proxy` and is a pointer-like type eligible for `proxy` (see [*ProFacade* requirements](../ProFacade.md)).
+- `(7)` Constructs a `proxy` whose contained value is of type `P`, direct-non-list-initialized with `std::forward<Args>(args)...`. Participates in overload resolution only if `P` is a pointer-like type eligible for `proxy`.
+- `(8)` Constructs a `proxy` whose contained value is of type `P`, direct-non-list-initialized with `il, std::forward<Args>(args)...`. Participates in overload resolution only if `P` is a pointer-like type eligible for `proxy`.
 
-*Since 3.3.0*: For `(4-6)`, if [`proxiable<std::decay_t<P>, F>`](../proxiable.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+*Since 3.3.0*: For `(6-8)`, if [`proxiable<std::decay_t<P>, F>`](../proxiable.md) is `false`, the program is ill-formed and diagnostic messages are generated.
 
 ## Comparing with Other Standard Polymorphic Wrappers
 

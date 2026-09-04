@@ -15,17 +15,19 @@ constexpr constraint_level default-cl = static_cast<constraint_level>(
 Given a [facade](../facade.md) type `F`, any meaningful value of `F::max_size` and `F::max_align` is less than *default-size*; any meaningful value of `F::copyability`, `F::relocatability`, and `F::destructibility` is greater than *default-cl*.
 
 ```cpp
-template <class Cs, class Rs, std::size_t MaxSize, std::size_t MaxAlign,
-          constraint_level Copyability, constraint_level Relocatability,
-          constraint_level Destructibility>
+template <class Ss, class Cs, class Rs, std::size_t MaxSize,
+          std::size_t MaxAlign, constraint_level Copyability,
+          constraint_level Relocatability, constraint_level Destructibility>
 class basic_facade_builder;
 
 using facade_builder =
-    basic_facade_builder<std::tuple<>, std::tuple<>, default-size, default-size,
-                         default-cl, default-cl, default-cl>;
+    basic_facade_builder<std::tuple<>, std::tuple<>, std::tuple<>, default-size,
+                         default-size, default-cl, default-cl, default-cl>;
 ```
 
 `basic_facade_builder` provides a member type `build` that compiles the template parameters into a [`facade`](../facade.md) type. The template parameters can be modified via various member alias templates that specify `basic_facade_builder` with the modified template parameters.
+
+*Since 5.0.0*: `Ss` is added to the template parameters, holding the supers accumulated by [`add_facade`](add_facade.md).
 
 ## Member Types
 
@@ -38,8 +40,8 @@ using facade_builder =
 | Name                                                         | Description                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [`add_convention`<br />`add_indirect_convention`<br />`add_direct_convention`](add_convention.md) | Adds a convention to the template parameters                 |
-| [`add_facade_with_substitution`](add_facade_with_substitution.md) | Adds a facade to the template parameters, together with [substitution](../substitution_dispatch/README.md) support |
 | [`add_facade`](add_facade.md)                                | Adds a facade to the template parameters                     |
+| [`add_facade_with_substitution`](add_facade_with_substitution.md) | Adds a facade to the template parameters, together with [substitution](../substitution_dispatch/README.md) support |
 | [`add_reflection`<br />`add_indirect_reflection`<br />`add_direct_reflection`](add_reflection.md) | Adds a reflection to the template parameters                 |
 | [`add_skill`](add_skill.md)                                  | Adds a custom skill                                          |
 | [`restrict_layout`](restrict_layout.md)                      | Specifies maximum `MaxSize` and `MaxAlign` in the template parameters |

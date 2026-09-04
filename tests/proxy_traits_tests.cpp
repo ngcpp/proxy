@@ -6,6 +6,7 @@
 #include <array>
 #include <proxy/proxy.h>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 namespace proxy_traits_tests_detail {
@@ -284,6 +285,7 @@ struct FacadeWithTupleLikeConventions {
     using dispatch_type = utils::spec::FreeToString;
     using overload_type = std::string();
   };
+  using super_types = std::tuple<>;
   using convention_types = std::array<ToStringConvention, 1>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
@@ -295,6 +297,7 @@ struct FacadeWithTupleLikeConventions {
 static_assert(pro::facade<FacadeWithTupleLikeConventions>);
 
 struct BadFacade_MissingConventionTypes {
+  using super_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -305,6 +308,7 @@ struct BadFacade_MissingConventionTypes {
 static_assert(!pro::facade<BadFacade_MissingConventionTypes>);
 
 struct BadFacade_BadConventionTypes {
+  using super_types = std::tuple<>;
   using convention_types = int;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
@@ -315,13 +319,88 @@ struct BadFacade_BadConventionTypes {
 };
 static_assert(!pro::facade<BadFacade_BadConventionTypes>);
 
+struct FacadeWithSuperTypes {
+  using super_types = std::tuple<FacadeWithTupleLikeConventions>;
+  using convention_types = std::tuple<>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::nothrow;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+static_assert(pro::facade<FacadeWithSuperTypes>);
+
+// A facade shall be no less conservative than any of its supers
+struct BadFacade_SuperWithSmallerLayout {
+  using super_types = std::tuple<FacadeWithTupleLikeConventions>;
+  using convention_types = std::tuple<>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 4 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::nothrow;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+static_assert(!pro::facade<BadFacade_SuperWithSmallerLayout>);
+
+struct BadFacade_SuperWithStrongerConstraint {
+  using super_types = std::tuple<FacadeWithTupleLikeConventions>;
+  using convention_types = std::tuple<>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::nontrivial;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+static_assert(!pro::facade<BadFacade_SuperWithStrongerConstraint>);
+
+struct BadFacade_MissingSuperTypes {
+  using convention_types = std::tuple<>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::nothrow;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+static_assert(!pro::facade<BadFacade_MissingSuperTypes>);
+
+struct BadFacade_BadSuperTypes {
+  using super_types = int;
+  using convention_types = std::tuple<>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::nothrow;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+static_assert(!pro::facade<BadFacade_BadSuperTypes>);
+
+// A super that is not itself a facade makes the whole facade ill-formed
+struct BadFacade_BadSuperType {
+  using super_types = std::tuple<BadFacade_BadConventionTypes>;
+  using convention_types = std::tuple<>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::nothrow;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+static_assert(!pro::facade<BadFacade_BadSuperType>);
+
 struct BadFacade_MissingConstraints {
+  using super_types = std::tuple<>;
   using convention_types = std::tuple<>;
   using reflection_types = std::tuple<>;
 };
 static_assert(!pro::facade<BadFacade_MissingConstraints>);
 
 struct BadFacade_BadConstraints_UnexpectedType {
+  using super_types = std::tuple<>;
   using convention_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr auto constraints = 0;
@@ -329,62 +408,67 @@ struct BadFacade_BadConstraints_UnexpectedType {
 static_assert(!pro::facade<BadFacade_BadConstraints_UnexpectedType>);
 
 // Well-formed facade_impl specialization
-static_assert(
-    pro::facade<pro::detail::facade_impl<
-        std::tuple<>, std::tuple<>, 8, 4, pro::constraint_level::none,
-        pro::constraint_level::trivial, pro::constraint_level::nothrow>>);
+static_assert(pro::facade<pro::detail::facade_impl<
+                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+                  pro::constraint_level::none, pro::constraint_level::trivial,
+                  pro::constraint_level::nothrow>>);
 
 // Bad size (max_size should be positive)
-static_assert(
-    !pro::facade<pro::detail::facade_impl<
-        std::tuple<>, std::tuple<>, 0, 4, pro::constraint_level::none,
-        pro::constraint_level::trivial, pro::constraint_level::nothrow>>);
+static_assert(!pro::facade<pro::detail::facade_impl<
+                  std::tuple<>, std::tuple<>, std::tuple<>, 0, 4,
+                  pro::constraint_level::none, pro::constraint_level::trivial,
+                  pro::constraint_level::nothrow>>);
 
 // Bad size (max_size should be a multiple of max_align)
-static_assert(
-    !pro::facade<pro::detail::facade_impl<
-        std::tuple<>, std::tuple<>, 10, 4, pro::constraint_level::none,
-        pro::constraint_level::trivial, pro::constraint_level::nothrow>>);
+static_assert(!pro::facade<pro::detail::facade_impl<
+                  std::tuple<>, std::tuple<>, std::tuple<>, 10, 4,
+                  pro::constraint_level::none, pro::constraint_level::trivial,
+                  pro::constraint_level::nothrow>>);
 
 // Bad alignment (max_align should be a power of 2)
-static_assert(
-    !pro::facade<pro::detail::facade_impl<
-        std::tuple<>, std::tuple<>, 6, 6, pro::constraint_level::none,
-        pro::constraint_level::trivial, pro::constraint_level::nothrow>>);
+static_assert(!pro::facade<pro::detail::facade_impl<
+                  std::tuple<>, std::tuple<>, std::tuple<>, 6, 6,
+                  pro::constraint_level::none, pro::constraint_level::trivial,
+                  pro::constraint_level::nothrow>>);
 
 // Bad copyability (less than constraint_level::none)
-static_assert(
-    !pro::facade<pro::detail::facade_impl<
-        std::tuple<>, std::tuple<>, 8, 4, (pro::constraint_level)-1,
-        pro::constraint_level::trivial, pro::constraint_level::nothrow>>);
+static_assert(!pro::facade<pro::detail::facade_impl<
+                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+                  (pro::constraint_level)-1, pro::constraint_level::trivial,
+                  pro::constraint_level::nothrow>>);
 
 // Bad copyability (greater than constraint_level::trivial)
-static_assert(
-    !pro::facade<pro::detail::facade_impl<
-        std::tuple<>, std::tuple<>, 8, 4, (pro::constraint_level)100,
-        pro::constraint_level::trivial, pro::constraint_level::nothrow>>);
+static_assert(!pro::facade<pro::detail::facade_impl<
+                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+                  (pro::constraint_level)100, pro::constraint_level::trivial,
+                  pro::constraint_level::nothrow>>);
 
 // Bad relocatability (less than constraint_level::none)
 static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, 8, 4, pro::constraint_level::none,
-                  (pro::constraint_level)-1, pro::constraint_level::nothrow>>);
+                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+                  pro::constraint_level::none, (pro::constraint_level)-1,
+                  pro::constraint_level::nothrow>>);
 
 // Bad relocatability (greater than constraint_level::trivial)
 static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, 8, 4, pro::constraint_level::none,
-                  (pro::constraint_level)100, pro::constraint_level::nothrow>>);
+                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+                  pro::constraint_level::none, (pro::constraint_level)100,
+                  pro::constraint_level::nothrow>>);
 
 // Bad destructibility (less than constraint_level::none)
 static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, 8, 4, pro::constraint_level::none,
-                  pro::constraint_level::trivial, (pro::constraint_level)-1>>);
+                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+                  pro::constraint_level::none, pro::constraint_level::trivial,
+                  (pro::constraint_level)-1>>);
 
 // Bad destructibility (greater than constraint_level::trivial)
 static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, 8, 4, pro::constraint_level::none,
-                  pro::constraint_level::trivial, (pro::constraint_level)100>>);
+                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+                  pro::constraint_level::none, pro::constraint_level::trivial,
+                  (pro::constraint_level)100>>);
 
 struct BadFacade_BadConstraints_NotConstant {
+  using super_types = std::tuple<>;
   using convention_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static const std::size_t max_size;
@@ -397,6 +481,7 @@ static_assert(!pro::facade<BadFacade_BadConstraints_NotConstant>);
 const std::size_t BadFacade_BadConstraints_NotConstant::max_size =
     2 * sizeof(void*);
 struct BadFacade_MissingReflectionTypes {
+  using super_types = std::tuple<>;
   using convention_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -410,6 +495,7 @@ struct BadReflection {
   BadReflection() = delete;
 };
 struct BadFacade_BadReflectionType {
+  using super_types = std::tuple<>;
   using convention_types = std::tuple<>;
   using reflection_types = std::tuple<BadReflection>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
@@ -430,6 +516,61 @@ struct BigFacade : pro::facade_builder                                //
                    ::build {};
 static_assert(sizeof(pro::proxy<BigFacade>) ==
               3 * sizeof(void*)); // Accessors should not add paddings
+
+// A facade-aware convention declared on a super is substituted against the
+// deriving facade, so proxiable shall reflect the substituted overload rather
+// than only the one the super was checked with.
+namespace facade_aware_from_super {
+
+struct Super;
+struct Mid;
+struct Derived;
+struct Sibling;
+template <class F>
+struct ReturnTypeTraits;
+template <>
+struct ReturnTypeTraits<Super> : std::type_identity<int> {};
+template <>
+struct ReturnTypeTraits<Mid> : std::type_identity<int> {};
+template <>
+struct ReturnTypeTraits<Derived> : std::type_identity<std::string> {};
+template <>
+struct ReturnTypeTraits<Sibling> : std::type_identity<int> {};
+template <class F>
+using GetOverload = typename ReturnTypeTraits<F>::type() const;
+struct GetDispatch {
+  template <class T>
+  int operator()(const T& self) const {
+    return self.Get();
+  }
+};
+struct Super
+    : pro::facade_builder //
+      ::add_convention<GetDispatch,
+                       pro::facade_aware_overload_t<GetOverload>>::build {};
+struct Mid : pro::facade_builder //
+             ::add_facade<Super> //
+             ::build {};
+struct Derived : pro::facade_builder //
+                 ::add_facade<Mid>   //
+                 ::build {};
+struct Sibling : pro::facade_builder //
+                 ::add_facade<Mid>   //
+                 ::build {};
+struct Impl {
+  int Get() const { return 0; }
+};
+
+// GetOverload<Super> is int() const, which Impl satisfies; GetOverload<Derived>
+// is std::string() const, which it does not. The convention is carried across
+// two levels of super, so the check reaches Derived through Mid.
+static_assert(pro::proxiable<Impl*, Super>);
+static_assert(pro::proxiable<Impl*, Mid>);
+static_assert(!pro::proxiable<Impl*, Derived>);
+// A facade that fails the check does not taint its siblings.
+static_assert(pro::proxiable<Impl*, Sibling>);
+
+} // namespace facade_aware_from_super
 
 struct FacadeWithSizeOfNonPowerOfTwo : pro::facade_builder   //
                                        ::restrict_layout<6u> //

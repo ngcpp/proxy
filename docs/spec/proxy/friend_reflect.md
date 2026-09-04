@@ -11,7 +11,7 @@ Acquires reflection information of the contained type of a `proxy<F>`, through a
 
 Let `P` be the contained type of `p`. Returns a `const` reference of `R` direct-non-list-initialized with [`std::in_place_type<P>`](https://en.cppreference.com/w/cpp/utility/in_place). The behavior is undefined if `p` does not contain a value.
 
-There shall be a reflection type `Refl` defined in `typename F::reflection_types` where
+There shall be a reflection type `Refl` defined in the reflection types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
 
 - `Refl::is_direct` is `true`, and
 - `typename Refl::reflector_type` is `R`.

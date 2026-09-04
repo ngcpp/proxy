@@ -17,7 +17,7 @@ Invokes a `proxy_indirect_accessor<F>` with a specified dispatch type `D`, an ov
 
 Let `ptr` be the contained value of the `proxy` object associated to `p` with the same cv ref-qualifiers. Equivalent to [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), *ptr, static_cast<Args2>(args)...)`.
 
-There shall be a convention type `Conv` defined in `typename F::convention_types` where
+There shall be a convention type `Conv` defined in the convention types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
 
 - `Conv::is_direct` is `false`, and
 - `typename Conv::dispatch_type` is `D`, and

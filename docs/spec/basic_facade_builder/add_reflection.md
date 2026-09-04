@@ -11,23 +11,25 @@ template <class R>
 using add_direct_reflection = basic_facade_builder</* see below */>;
 ```
 
-The alias templates `add_reflection`, `add_indirect_reflection` and `add_direct_reflection` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add reflection types to the template parameters. Specifically,
+The alias templates `add_reflection`, `add_indirect_reflection` and `add_direct_reflection` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add reflection types to the template parameters. Specifically,
 
 - `add_reflection` is equivalent to `add_indirect_reflection`.
-- `add_indirect_reflection` merges an implementation-defined reflection type `Refl` into `Rs`, where:
+- `add_indirect_reflection` appends an implementation-defined reflection type `Refl` to `Rs`, where:
   - `Refl::is_direct` is `false`.
   - `typename Refl::reflector_type` is `R`.
   - `typename Refl::template accessor<F>` is `typename R::template accessor<proxy_indirect_accessor<F>, R>` if applicable.
-- `add_direct_reflection` merges an implementation-defined reflection type `Refl` into `Rs`, where:
+- `add_direct_reflection` appends an implementation-defined reflection type `Refl` to `Rs`, where:
   - `Refl::is_direct` is `true`.
   - `typename Refl::reflector_type` is `R`.
   - `typename Refl::template accessor<F>` is `typename R::template accessor<proxy<F>, R>` if applicable.
 
-When `Rs` already contains `Refl`, the template parameters shall not change.
+Reflection types are deduplicated when a [`proxy`](../proxy/README.md) of the built facade is instantiated, not when they are added.
+
+*Since 5.0.0*: reflection types are appended rather than merged into `Rs`.
 
 ## Notes
 
-Adding duplicate reflection types is well-defined, whether done directly via `add_reflection`, `add_indirect_reflection`, `add_direct_reflection`, or indirectly via [`add_facade`](add_facade.md). This process does not affect the behavior of [`build`](build.md) at either compile-time or runtime.
+Adding duplicate reflection types is well-defined, whether done directly via `add_reflection`, `add_indirect_reflection`, `add_direct_reflection`, or indirectly via [`add_facade`](add_facade.md). While such duplicates change the type produced by [`build`](build.md), they do not affect a [`proxy`](../proxy/README.md) of that facade at either compile-time or runtime.
 
 ## Example
 
