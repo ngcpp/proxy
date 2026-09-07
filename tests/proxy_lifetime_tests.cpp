@@ -1217,6 +1217,32 @@ TEST(ProxyLifetimeTests, Test_CopySubstitution_FromNull) {
   ASSERT_FALSE(p2.has_value());
 }
 
+TEST(ProxyLifetimeTests, Test_CopySubstitution_MixedMetaStorage) {
+  struct Super : pro::facade_builder //
+                 ::add_convention<utils::spec::FreeToString,
+                                  std::string() const>                 //
+                 ::support_copy<pro::constraint_level::trivial>        //
+                 ::support_relocation<pro::constraint_level::trivial>  //
+                 ::support_destruction<pro::constraint_level::trivial> //
+                 ::build {};
+  struct Derived : pro::facade_builder                   //
+                   ::add_facade_with_substitution<Super> //
+                   ::build {};
+  static_assert(
+      pro::detail::specialization_of<pro::compact_facade_meta_traits::storage<
+                                         pro::detail::proxy_meta<Super>>,
+                                     pro::detail::inplace_meta_storage>);
+  static_assert(
+      pro::detail::specialization_of<pro::compact_facade_meta_traits::storage<
+                                         pro::detail::proxy_meta<Derived>>,
+                                     pro::detail::static_meta_storage>);
+  int v = 123;
+  pro::proxy<Derived> p1 = &v;
+  pro::proxy<Super> p2 = p1;
+  ASSERT_EQ(ToString(*p1), "123");
+  ASSERT_EQ(ToString(*p2), "123");
+}
+
 TEST(ProxyLifetimeTests, Test_MoveSubstitution_FromValue) {
   utils::LifetimeTracker tracker;
   std::vector<utils::LifetimeOperation> expected_ops;
