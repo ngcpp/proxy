@@ -1421,7 +1421,7 @@ private:
   void initialize(const proxy<F2>& rhs) {
     PRO4D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
-      if constexpr (F::copyability == constraint_level::trivial) {
+      if constexpr (F2::copyability == constraint_level::trivial) {
         std::uninitialized_copy_n(rhs.ptr_, F2::max_size, ptr_);
       } else {
         invoke<detail::copy_dispatch,
@@ -1438,7 +1438,7 @@ private:
     PRO4D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
       auto meta = rhs.meta_;
-      if constexpr (F::relocatability == constraint_level::trivial) {
+      if constexpr (F2::relocatability == constraint_level::trivial) {
         std::uninitialized_copy_n(rhs.ptr_, F2::max_size, ptr_);
         rhs.meta_.reset();
       } else {

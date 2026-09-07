@@ -1284,3 +1284,26 @@ TEST(ProxyLifetimeTests, Test_ConvertingCopyAssignment_NoRelocation) {
   ASSERT_TRUE(p2.has_value());
   ASSERT_EQ(ToString(*p2), "Session 2");
 }
+
+TEST(ProxyLifetimeTests, Test_Substitution_TrivialDerived) {
+  struct Super : pro::facade_builder //
+                 ::add_convention<utils::spec::FreeToString,
+                                  std::string() const>                   //
+                 ::support_copy<pro::constraint_level::nothrow>          //
+                 ::support_relocation<pro::constraint_level::nontrivial> //
+                 ::build {};
+  struct Derived : pro::facade_builder                            //
+                   ::add_facade<Super>                            //
+                   ::support_copy<pro::constraint_level::trivial> //
+                   ::restrict_layout<sizeof(int*), alignof(int*)> //
+                   ::build {};
+  static_assert(Derived::max_size < Super::max_size);
+  int v = 123;
+  pro::proxy<Derived> p1 = &v;
+  pro::proxy<Super> p2 = p1;
+  ASSERT_TRUE(p1.has_value());
+  ASSERT_EQ(ToString(*p2), "123");
+  pro::proxy<Super> p3 = std::move(p1);
+  ASSERT_FALSE(p1.has_value());
+  ASSERT_EQ(ToString(*p3), "123");
+}

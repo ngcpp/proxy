@@ -15,7 +15,7 @@ proxy(const proxy& rhs)
 
 // (3)
 proxy(proxy&& rhs)
-    noexcept(F::relocatability == constraint_level::nothrow)
+    noexcept(F::relocatability >= constraint_level::nothrow)
     requires(F::relocatability >= constraint_level::nontrivial &&
         F::copyability != constraint_level::trivial);
 
