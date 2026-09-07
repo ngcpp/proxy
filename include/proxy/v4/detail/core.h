@@ -139,25 +139,21 @@ template <class... Tss>
 using merge_tuples_t =
     flattening_merge_t<reduction_t<add_tuple_reduction>, Tss...>;
 
-template <class Expr>
-consteval bool is_consteval(Expr) {
-  return requires { typename std::bool_constant<(Expr{}(), false)>; };
-}
-template <class T, class U>
-concept static_prop = std::is_same_v<T, const U&>;
+template <class T, auto V>
+  requires(std::is_same_v<T, decltype(V)>)
+struct static_prop_probe;
 
 template <class T, std::size_t I>
 concept has_tuple_element = requires { typename std::tuple_element_t<I, T>; };
 template <class T>
 consteval bool is_tuple_like_well_formed() {
   if constexpr (requires {
-                  { std::tuple_size<T>::value } -> static_prop<std::size_t>;
+                  typename static_prop_probe<std::size_t,
+                                             std::tuple_size<T>::value>;
                 }) {
-    if constexpr (is_consteval([] { return std::tuple_size<T>::value; })) {
-      return []<std::size_t... I>(std::index_sequence<I...>) {
-        return (has_tuple_element<T, I> && ...);
-      }(std::make_index_sequence<std::tuple_size_v<T>>{});
-    }
+    return []<std::size_t... I>(std::index_sequence<I...>) {
+      return (has_tuple_element<T, I> && ...);
+    }(std::make_index_sequence<std::tuple_size_v<T>>{});
   }
   return false;
 }
@@ -489,25 +485,12 @@ consteval void diagnose_proxiable_required_convention_not_implemented() {
                 "not proxiable due to a required convention not implemented");
 }
 
-template <class T>
-consteval bool is_is_direct_well_formed() {
-  if constexpr (requires {
-                  { T::is_direct } -> static_prop<bool>;
-                }) {
-    if constexpr (is_consteval([] { return T::is_direct; })) {
-      return true;
-    }
-  }
-  return false;
-}
-
 template <class C>
-concept basic_convention =
-    requires {
-      { typename C::dispatch_type() } noexcept;
-      typename C::overload_type;
-    } && is_is_direct_well_formed<C>() &&
-    extended_overload<typename C::overload_type>;
+concept basic_convention = requires {
+  { typename C::dispatch_type() } noexcept;
+  typename C::overload_type;
+  typename static_prop_probe<bool, C::is_direct>;
+} && extended_overload<typename C::overload_type>;
 
 template <class M>
 concept basic_meta =
@@ -521,7 +504,8 @@ concept meta = basic_meta<M> &&
 template <class R>
 concept basic_reflection = requires {
   typename R::reflector_type;
-} && is_is_direct_well_formed<R>() && basic_meta<typename R::reflector_type>;
+  typename static_prop_probe<bool, R::is_direct>;
+} && basic_meta<typename R::reflector_type>;
 
 template <class T>
 struct a11y_traits_impl
@@ -808,21 +792,18 @@ consteval bool is_cl_well_formed(constraint_level cl) {
 template <class F>
 consteval bool is_facade_constraints_well_formed() {
   if constexpr (requires {
-                  { F::max_size } -> static_prop<std::size_t>;
-                  { F::max_align } -> static_prop<std::size_t>;
-                  { F::copyability } -> static_prop<constraint_level>;
-                  { F::relocatability } -> static_prop<constraint_level>;
-                  { F::destructibility } -> static_prop<constraint_level>;
+                  typename static_prop_probe<std::size_t, F::max_size>;
+                  typename static_prop_probe<std::size_t, F::max_align>;
+                  typename static_prop_probe<constraint_level, F::copyability>;
+                  typename static_prop_probe<constraint_level,
+                                             F::relocatability>;
+                  typename static_prop_probe<constraint_level,
+                                             F::destructibility>;
                 }) {
-    if constexpr (is_consteval([] {
-                    return std::tuple{F::max_size, F::max_align, F::copyability,
-                                      F::relocatability, F::destructibility};
-                  })) {
-      return is_layout_well_formed(F::max_size, F::max_align) &&
-             is_cl_well_formed(F::copyability) &&
-             is_cl_well_formed(F::relocatability) &&
-             is_cl_well_formed(F::destructibility);
-    }
+    return is_layout_well_formed(F::max_size, F::max_align) &&
+           is_cl_well_formed(F::copyability) &&
+           is_cl_well_formed(F::relocatability) &&
+           is_cl_well_formed(F::destructibility);
   }
   return false;
 }
