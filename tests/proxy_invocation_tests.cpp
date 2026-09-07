@@ -229,6 +229,51 @@ TEST(ProxyInvocationTests, TestMultipleDispatches_Duplicated) {
   ASSERT_EQ(sum, 6);
 }
 
+TEST(ProxyInvocationTests, TestSuper_Duplicated) {
+  // Adding the same super twice, and redeclaring a convention that the super
+  // already provides, must not affect the metadata.
+  struct DuplicatedIterable
+      : pro::facade_builder                                        //
+        ::add_facade<detail::Iterable<int>>                        //
+        ::add_facade<detail::Iterable<int>>                        //
+        ::add_convention<detail::FreeSize, std::size_t() noexcept> //
+        ::build {};
+  static_assert(sizeof(pro::detail::proxy_meta<DuplicatedIterable>) ==
+                sizeof(pro::detail::proxy_meta<detail::Iterable<int>>));
+  std::list<int> l = {1, 2, 3};
+  pro::proxy<DuplicatedIterable> p = &l;
+  ASSERT_EQ(Size(*p), std::size_t{3});
+  int sum = 0;
+  auto accumulate_sum = [&](int x) { sum += x; };
+  ForEach(*p, accumulate_sum);
+  ASSERT_EQ(sum, 6);
+}
+
+TEST(ProxyInvocationTests, TestSuper_Overlapping) {
+  // Two unrelated supers sharing a convention: the shared accessor must remain
+  // unambiguous, and both supers' conventions must be reachable.
+  struct Sized : pro::facade_builder                                        //
+                 ::add_convention<detail::FreeSize, std::size_t() noexcept> //
+                 ::build {};
+  struct SizedAndIterable
+      : pro::facade_builder                                        //
+        ::add_convention<detail::FreeSize, std::size_t() noexcept> //
+        ::add_convention<detail::FreeForEach,
+                         void(std::function<void(int&)>)> //
+        ::build {};
+  struct Both : pro::facade_builder            //
+                ::add_facade<Sized>            //
+                ::add_facade<SizedAndIterable> //
+                ::build {};
+  std::list<int> l = {1, 2, 3};
+  pro::proxy<Both> p = &l;
+  ASSERT_EQ(Size(*p), std::size_t{3});
+  int sum = 0;
+  auto accumulate_sum = [&](int x) { sum += x; };
+  ForEach(*p, accumulate_sum);
+  ASSERT_EQ(sum, 6);
+}
+
 TEST(ProxyInvocationTests, TestRecursiveDefinition) {
   std::list<int> l = {1, 2, 3};
   pro::proxy<detail::Container<int>> p = &l;

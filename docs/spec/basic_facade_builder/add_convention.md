@@ -11,27 +11,23 @@ template <class D, class... Os> requires(/* see below */)
 using add_direct_convention = basic_facade_builder</* see below */>;
 ```
 
-The alias templates `add_convention`, `add_indirect_convention`, and `add_direct_convention` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add convention types to the template parameters. The expression inside `requires` is equivalent to `sizeof...(Os) > 0u` and each type in `Os` meets the [*ProOverload* requirements](../ProOverload.md). Let `F` be a facade type,
+The alias templates `add_convention`, `add_indirect_convention`, and `add_direct_convention` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add convention types to the template parameters. The expression inside `requires` is equivalent to `sizeof...(Os) > 0u` and each type in `Os` meets the [*ProOverload* requirements](../ProOverload.md).
 
 - `add_convention` is equivalent to `add_indirect_convention`.
-- `add_indirect_convention` merges an implementation-defined convention type `IC` into `Cs` for each type `O` in `Os`, where:
+- `add_indirect_convention` appends an implementation-defined convention type `IC` to `Cs` for each type `O` in `Os`, where:
   - `IC::is_direct` is `false`.
   - `typename IC::dispatch_type` is `D`.
   - `typename IC::overload_type` is `O`.
-- `add_direct_convention` merges an implementation-defined convention type `IC` into `Cs` for each type `O` in `Os`, where:
+- `add_direct_convention` appends an implementation-defined convention type `IC` to `Cs` for each type `O` in `Os`, where:
   - `IC::is_direct` is `true`.
   - `typename IC::dispatch_type` is `D`.
   - `typename IC::overload_type` is `O`.
-
-When `Cs` already contains a convention type identical to `IC`, the template parameters shall not change.
-
-Let `F` be a facade type. The accessor a convention contributes to a [`proxy`](../proxy/README.md) of `F` is formed per dispatch type rather than per convention: let `Gs` be the types in `Cs` that share `IC::is_direct` and `typename IC::dispatch_type`, and `GOs` be their `overload_type`s in order of first appearance. The accessor is `typename D::template accessor<proxy_indirect_accessor<F>, D, `[`substituted-overload<GOs, F>`](../ProOverload.md)`...>` when `IC::is_direct` is `false`, or `typename D::template accessor<proxy<F>, D, `[`substituted-overload<GOs, F>`](../ProOverload.md)`...>` when it is `true`, if applicable.
 
 *Since 5.0.0*: each type in `Os` produces its own convention type, rather than one convention type carrying a tuple-like `overload_types`.
 
 ## Notes
 
-Adding duplicated combinations of some dispatch type and overload type is well-defined (either directly via `add_convention`, `add_indirect_convention`, `add_direct_convention`, or indirectly via [`add_facade`](add_facade.md)), and does not have side-effects to [`build`](build.md) at either compile-time or runtime.
+Adding duplicated combinations of some dispatch type and overload type is well-defined (either directly via `add_convention`, `add_indirect_convention`, `add_direct_convention`, or indirectly via [`add_facade`](add_facade.md)). While such duplicates change the type produced by [`build`](build.md), they do not have side-effects on a [`proxy`](../proxy/README.md) of that facade at either compile-time or runtime.
 
 ## Example
 

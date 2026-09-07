@@ -31,11 +31,15 @@ struct TestRttiFacade : pro::facade_builder                           //
                         ::add_facade_with_substitution<TestFacade>    //
                         ::build {};
 
-// Additional static asserts for substitution
-static_assert(!std::is_convertible_v<pro::proxy<TestTrivialFacade>,
-                                     pro::proxy<utils::spec::Stringable>>);
+// Additional static asserts for super conversion
+static_assert(std::is_convertible_v<pro::proxy<TestTrivialFacade>,
+                                    pro::proxy<utils::spec::Stringable>>);
 static_assert(
     std::is_convertible_v<pro::proxy<TestRttiFacade>, pro::proxy<TestFacade>>);
+static_assert(!std::is_convertible_v<pro::proxy<utils::spec::Stringable>,
+                                     pro::proxy<TestTrivialFacade>>);
+static_assert(!std::is_convertible_v<pro::proxy<TestTrivialFacade>,
+                                     pro::proxy<TestFacade>>);
 
 } // namespace proxy_lifetime_tests_detail
 
@@ -1243,4 +1247,40 @@ TEST(ProxyLifetimeTests, Test_MoveSubstitution_FromNull) {
   pro::proxy<detail::TestFacade> p2 = std::move(p1);
   ASSERT_FALSE(p1.has_value());
   ASSERT_FALSE(p2.has_value());
+}
+
+TEST(ProxyLifetimeTests, Test_MoveSubstitution_Trivial) {
+  // A trivially copyable proxy has no move constructor; a conversion from an
+  // rvalue shall fall back to the copy constructor and leave rhs intact, just
+  // like a move between two proxies of the same facade.
+  struct Derived : pro::facade_builder                     //
+                   ::add_facade<detail::TestTrivialFacade> //
+                   ::build {};
+  int v = 123;
+  pro::proxy<Derived> p1 = &v;
+  pro::proxy<detail::TestTrivialFacade> p2 = std::move(p1);
+  ASSERT_TRUE(p1.has_value());
+  ASSERT_EQ(ToString(*p1), "123");
+  ASSERT_EQ(ToString(*p2), "123");
+}
+
+TEST(ProxyLifetimeTests, Test_ConvertingCopyAssignment_NoRelocation) {
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>             //
+                  ::support_copy<pro::constraint_level::nontrivial> //
+                  ::support_relocation<pro::constraint_level::none> //
+                  ::build {};
+  struct PinnedDerived : pro::facade_builder  //
+                         ::add_facade<Pinned> //
+                         ::build {};
+  utils::LifetimeTracker tracker;
+  pro::proxy<Pinned> p1{std::in_place_type<utils::LifetimeTracker::Session>,
+                        &tracker};
+  pro::proxy<PinnedDerived> p2{
+      std::in_place_type<utils::LifetimeTracker::Session>, &tracker};
+  p1 = p2;
+  ASSERT_EQ(ToString(*p1), "Session 3");
+  ASSERT_TRUE(p2.has_value());
+  ASSERT_EQ(ToString(*p2), "Session 2");
 }

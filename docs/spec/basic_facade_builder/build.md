@@ -4,14 +4,15 @@
 using build = /* see below */;
 ```
 
-Specifies a [facade](../facade.md) type deduced from the template parameters of `basic_facade_builder<Cs, Rs, C>`.
+Specifies a [facade](../facade.md) type deduced from the template parameters of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>`.
 
 ## Member Types
 
-| Name               | Definition |
-| ------------------ | ---------- |
-| `convention_types` | `Cs`       |
-| `reflection_types` | `Rs`       |
+| Name                               | Definition |
+| ---------------------------------- | ---------- |
+| `super_types`<br />*(since 5.0.0)* | `Ss`       |
+| `convention_types`                 | `Cs`       |
+| `reflection_types`                 | `Rs`       |
 
 ## Member Constants
 
