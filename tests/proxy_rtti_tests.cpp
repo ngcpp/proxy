@@ -131,6 +131,26 @@ TEST(ProxyRttiTests, TestIndirectCast_ConstPtr_Fail) {
   ASSERT_EQ(v, 123);
 }
 
+TEST(ProxyRttiTests, TestIndirectCast_Ref_ConstTarget) {
+  const auto p = pro::make_proxy<detail::TestFacade, int>(123);
+  bool exception_thrown = false;
+  try {
+    proxy_cast<int&>(*p);
+  } catch (const pro::bad_proxy_cast&) {
+    exception_thrown = true;
+  }
+  ASSERT_TRUE(exception_thrown);
+  ASSERT_EQ(proxy_cast<const int&>(*p), 123);
+}
+
+TEST(ProxyRttiTests, TestIndirectCast_Ptr_ConstTarget) {
+  const auto p = pro::make_proxy<detail::TestFacade, int>(123);
+  ASSERT_EQ(proxy_cast<int>(&*p), nullptr);
+  auto ptr = proxy_cast<const int>(&*p);
+  static_assert(std::is_same_v<decltype(ptr), const int*>);
+  ASSERT_EQ(*ptr, 123);
+}
+
 TEST(ProxyRttiTests, TestIndirectTypeid) {
   int a = 123;
   pro::proxy<detail::TestFacade> p = &a;

@@ -205,7 +205,8 @@ struct proxy_cast_dispatch {
     if (typeid(T) == *ctx.type_ptr) [[likely]] {
       if (ctx.is_ref) {
         if constexpr (std::is_lvalue_reference_v<T>) {
-          if (ctx.is_const || !std::is_const_v<T>) [[likely]] {
+          if (ctx.is_const || !std::is_const_v<std::remove_reference_t<T>>)
+              [[likely]] {
             *static_cast<void**>(ctx.result_ptr) = (void*)std::addressof(self);
           }
         }
