@@ -391,9 +391,7 @@ R invoke_dispatch(Args&&... args) {
 template <class P>
 struct destroying_guard {
   explicit destroying_guard(P* p) noexcept : p_(p) {}
-  ~destroying_guard() noexcept(std::is_nothrow_destructible_v<P>) {
-    std::destroy_at(p_);
-  }
+  ~destroying_guard() noexcept(std::is_nothrow_destructible_v<P>) { p_->~P(); }
 
 private:
   P* p_;
@@ -580,10 +578,7 @@ struct copy_dispatch {
   }
 };
 struct destroy_dispatch {
-  template <class T>
-  PRO4D_STATIC_CALL(void, T& self) noexcept(std::is_nothrow_destructible_v<T>) {
-    std::destroy_at(&self);
-  }
+  PRO4D_STATIC_CALL(void, auto&&) noexcept {}
 };
 template <class D, class ONE, class OE, constraint_level C>
 struct lifetime_meta_traits : std::type_identity<void> {};
@@ -1010,8 +1005,8 @@ struct facade_traits
                                   void(void*) const, F::copyability>,
                   lifetime_meta_t<relocate_dispatch, void(void*) && noexcept,
                                   void(void*) &&, F::relocatability>,
-                  lifetime_meta_t<destroy_dispatch, void() noexcept, void(),
-                                  F::destructibility>,
+                  lifetime_meta_t<destroy_dispatch, void() && noexcept,
+                                  void() &&, F::destructibility>,
                   typename facade_traits::self_conv_meta,
                   typename facade_traits::refl_meta>>;
 
@@ -1470,8 +1465,8 @@ private:
     if constexpr (F::destructibility != constraint_level::trivial) {
       if (meta_.has_value()) {
         invoke<detail::destroy_dispatch,
-               void() noexcept(F::destructibility ==
-                               constraint_level::nothrow)>(*this);
+               void() && noexcept(F::destructibility ==
+                                  constraint_level::nothrow)>(std::move(*this));
       }
     }
   }

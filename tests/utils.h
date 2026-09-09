@@ -5,6 +5,7 @@
 #ifndef _MSFT_PROXY_TEST_UTILS_
 #define _MSFT_PROXY_TEST_UTILS_
 
+#include <exception>
 #include <proxy/proxy.h>
 #include <string>
 #include <vector>
@@ -37,6 +38,8 @@ struct ConstructionFailure : std::exception {
 
   LifetimeOperationType type_;
 };
+
+struct DestructionFailure : std::exception {};
 
 class LifetimeTracker {
 public:
@@ -72,6 +75,16 @@ public:
   private:
     int id_;
     LifetimeTracker* const host_;
+  };
+
+  class ThrowingDestructionSession : public Session {
+  public:
+    using Session::Session;
+    ~ThrowingDestructionSession() noexcept(false) {
+      if (std::uncaught_exceptions() == 0) {
+        throw DestructionFailure{};
+      }
+    }
   };
 
   const std::vector<LifetimeOperation>& GetOperations() const { return ops_; }

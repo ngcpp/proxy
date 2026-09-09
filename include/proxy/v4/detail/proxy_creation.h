@@ -78,7 +78,7 @@ template <class Alloc, class T>
 void deallocate(const Alloc& alloc, T* ptr) {
   auto al =
       typename std::allocator_traits<Alloc>::template rebind_alloc<T>(alloc);
-  std::destroy_at(ptr);
+  ptr->~T();
   al.deallocate(ptr, 1);
 }
 template <class Alloc>
@@ -223,7 +223,7 @@ public:
   strong_compact_ptr(strong_compact_ptr&& rhs) = delete;
   ~strong_compact_ptr() noexcept(std::is_nothrow_destructible_v<T>) {
     if (ptr_->strong_count.fetch_sub(1, std::memory_order::acq_rel) == 1) {
-      std::destroy_at(operator->());
+      operator->()->~T();
       if (ptr_->weak_count.fetch_sub(1u, std::memory_order::release) == 1) {
         deallocate(ptr_->alloc, ptr_);
       }

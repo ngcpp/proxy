@@ -36,6 +36,7 @@ jobs:
   run-bvt-appleclang-arm64e:
     uses: ./.github/workflows/bvt-appleclang-arm64e.yml
     name: Run BVT with AppleClang (arm64e with PAC)
+    if: github.event_name != 'push' || github.repository == 'ngcpp/proxy'
 
   run-bvt-nvhpc:
     uses: ./.github/workflows/bvt-nvhpc.yml
