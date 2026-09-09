@@ -278,7 +278,7 @@ The library is not yet published to the [Bazel Central Registry](https://registr
 
 With **Bzlmod** (Bazel 7+), add to your `MODULE.bazel`:
 
-```python
+```starlark
 bazel_dep(name = "proxy", version = "4.1.0")
 git_override(
     module_name = "proxy",
@@ -289,7 +289,7 @@ git_override(
 
 With **legacy WORKSPACE mode** (Bazel 5.1+ without Bzlmod), add to your `WORKSPACE`:
 
-```python
+```starlark
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 git_repository(
     name = "proxy",
