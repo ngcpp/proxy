@@ -171,13 +171,13 @@ struct inplace_meta_storage : M {
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
   inplace_meta_storage&
       operator=(const inplace_meta_storage<M2>& rhs) noexcept {
-    static_cast<M&>(*this) = *rhs;
+    M::operator=(*rhs);
     return *this;
   }
   template <class M2>
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
   inplace_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
-    static_cast<M&>(*this) = *rhs;
+    M::operator=(*rhs);
     return *this;
   }
 
