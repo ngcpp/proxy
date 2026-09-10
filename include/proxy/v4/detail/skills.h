@@ -163,7 +163,7 @@ struct proxy_cast_accessor_impl {
                              .is_ref = true,
                              .is_const = std::is_const_v<U>,
                              .result_ptr = &result};
-      invoke<D, O>(static_cast<Self>(self), ctx);
+      invoke_cast<T>(static_cast<Self>(self), ctx);
       if (result == nullptr) [[unlikely]] {
         PRO4D_THROW(bad_proxy_cast{});
       }
@@ -174,7 +174,7 @@ struct proxy_cast_accessor_impl {
                              .is_ref = false,
                              .is_const = false,
                              .result_ptr = &result};
-      invoke<D, O>(static_cast<Self>(self), ctx);
+      invoke_cast<T>(static_cast<Self>(self), ctx);
       if (!result.has_value()) [[unlikely]] {
         PRO4D_THROW(bad_proxy_cast{});
       }
@@ -190,8 +190,31 @@ struct proxy_cast_accessor_impl {
                            .is_ref = true,
                            .is_const = std::is_const_v<T>,
                            .result_ptr = &result};
-    invoke<D, O>(*self, ctx);
+    invoke_cast<T>(*self, ctx);
     return static_cast<T*>(result);
+  }
+
+private:
+  template <class T>
+  static void invoke_cast(Self self, const proxy_cast_context& cast_ctx) {
+    if constexpr (specialization_of<std::remove_cvref_t<Self>, proxy>) {
+      using F = std::remove_cvref_t<Self>::facade_type;
+      constexpr bool is_rv =
+          overload_traits<O>::this_qualifier == qualifier_type::rv;
+      if (proxy_typeid(self) == *cast_ctx.type_ptr) [[likely]] {
+        erased_context<true, D, O> ctx{proxy_helper::get_ptr(self)};
+        if constexpr (is_rv) {
+          proxy_helper::meta_resetting_guard<F> guard{self};
+          invoke<std::decay_t<T>>(ctx, cast_ctx);
+        } else {
+          invoke<std::decay_t<T>>(ctx, cast_ctx);
+        }
+      } else if constexpr (is_rv) {
+        self.reset();
+      }
+    } else {
+      invoke<D, O>(static_cast<Self>(self), cast_ctx);
+    }
   }
 };
 
@@ -243,6 +266,17 @@ struct proxy_typeid_reflector {
 
   const std::type_info* info;
 };
+
+struct direct_rtti_reflector : proxy_typeid_reflector {
+  using proxy_typeid_reflector::proxy_typeid_reflector;
+
+  template <class Self, class R>
+  struct PRO4D_ENFORCE_EBO accessor
+      : proxy_typeid_reflector::accessor<Self, R>,
+        proxy_cast_dispatch::accessor<
+            Self, proxy_cast_dispatch, void(proxy_cast_context) &,
+            void(proxy_cast_context) const&, void(proxy_cast_context) &&> {};
+};
 #endif // __cpp_rtti >= 199711L
 
 } // namespace detail
@@ -271,11 +305,7 @@ using indirect_rtti = FB::template add_indirect_convention<
 
 template <class FB>
 using direct_rtti =
-    FB::template add_direct_convention<detail::proxy_cast_dispatch,
-                                       void(detail::proxy_cast_context) &,
-                                       void(detail::proxy_cast_context) const&,
-                                       void(detail::proxy_cast_context) &&>::
-        template add_direct_reflection<detail::proxy_typeid_reflector>;
+    FB::template add_direct_reflection<detail::direct_rtti_reflector>;
 
 template <class FB>
 using rtti = indirect_rtti<FB>;
