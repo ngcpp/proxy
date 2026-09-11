@@ -1,7 +1,8 @@
 # Function `swap` (`proxy<F>`)
 
 ```cpp
-friend void swap(proxy& lhs, proxy& rhs) noexcept(noexcept(lhs.swap(rhs)));
+friend void swap(proxy& lhs, proxy& rhs) noexcept(noexcept(lhs.swap(rhs)))
+    requires(requires { lhs.swap(rhs); });
 ```
 
 Overloads the [std::swap](https://en.cppreference.com/w/cpp/algorithm/swap) algorithm for `proxy`. Exchanges the state of `lhs` with that of `rhs`. Effectively calls `lhs.swap(rhs)`.

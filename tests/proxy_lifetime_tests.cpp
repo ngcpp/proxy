@@ -1200,6 +1200,207 @@ TEST(ProxyLifetimeTests, TestSwap_Trivial) {
   ASSERT_EQ(ToString(*p2), "123");
 }
 
+TEST(ProxyLifetimeTests, Test_CopyAssignment_NoRelocation) {
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>             //
+                  ::support_copy<pro::constraint_level::nontrivial> //
+                  ::support_relocation<pro::constraint_level::none> //
+                  ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<Pinned> p1{utils::ThrowingCopyPtr<int>{&v1}};
+  pro::proxy<Pinned> p2{utils::ThrowingCopyPtr<int>{&v2}};
+  p1 = p2;
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "222");
+  p1 = utils::ThrowingCopyPtr<int>{&v1};
+  ASSERT_EQ(ToString(*p1), "111");
+}
+
+TEST(ProxyLifetimeTests, Test_PointerAssignment_NoRelocationNoCopy) {
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>             //
+                  ::support_relocation<pro::constraint_level::none> //
+                  ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<Pinned> p{utils::ThrowingCopyPtr<int>{&v1}};
+  p = utils::ThrowingCopyPtr<int>{&v2};
+  ASSERT_EQ(ToString(*p), "222");
+}
+
+TEST(ProxyLifetimeTests, Test_PointerAssignment_ThrowingInitialization) {
+  struct Movable : pro::facade_builder //
+                   ::add_convention<utils::spec::FreeToString,
+                                    std::string() const>                   //
+                   ::support_copy<pro::constraint_level::nontrivial>       //
+                   ::support_relocation<pro::constraint_level::nontrivial> //
+                   ::build {};
+  struct TriviallyCopyable
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>             //
+        ::support_copy<pro::constraint_level::trivial>    //
+        ::support_relocation<pro::constraint_level::none> //
+        ::build {};
+  struct NothrowCopyable : pro::facade_builder //
+                           ::add_convention<utils::spec::FreeToString,
+                                            std::string() const>             //
+                           ::support_copy<pro::constraint_level::nothrow>    //
+                           ::support_relocation<pro::constraint_level::none> //
+                           ::build {};
+  int v1 = 111, v2 = 222;
+
+  pro::proxy<Movable> p1{std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
+  ASSERT_THROW(p1 = utils::ThrowOnMovePtr<int>{&v2},
+               utils::ConstructionFailure);
+  ASSERT_TRUE(p1.has_value());
+  ASSERT_EQ(ToString(*p1), "111");
+
+  pro::proxy<TriviallyCopyable> p2{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
+  ASSERT_THROW(p2 = utils::ThrowOnMovePtr<int>{&v2},
+               utils::ConstructionFailure);
+  ASSERT_TRUE(p2.has_value());
+  ASSERT_EQ(ToString(*p2), "111");
+
+  pro::proxy<NothrowCopyable> p3{std::in_place_type<utils::ThrowOnMovePtr<int>>,
+                                 &v1};
+  ASSERT_THROW(p3 = utils::ThrowOnMovePtr<int>{&v2},
+               utils::ConstructionFailure);
+  ASSERT_TRUE(p3.has_value());
+  ASSERT_EQ(ToString(*p3), "111");
+}
+
+TEST(ProxyLifetimeTests, TestSwap_NoRelocation) {
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>             //
+                  ::support_copy<pro::constraint_level::nothrow>    //
+                  ::support_relocation<pro::constraint_level::none> //
+                  ::build {};
+  struct PinnedThrowingDestruction
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>                    //
+        ::support_copy<pro::constraint_level::nothrow>           //
+        ::support_relocation<pro::constraint_level::none>        //
+        ::support_destruction<pro::constraint_level::nontrivial> //
+        ::build {};
+
+  int v1 = 111, v2 = 222;
+  pro::proxy<Pinned> p1 = &v1;
+  pro::proxy<Pinned> p2 = &v2;
+  static_assert(noexcept(p1.swap(p2)));
+  p1.swap(p2);
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "111");
+  swap(p1, p2);
+  ASSERT_EQ(ToString(*p1), "111");
+  ASSERT_EQ(ToString(*p2), "222");
+  swap(p1, p1);
+  ASSERT_EQ(ToString(*p1), "111");
+
+  pro::proxy<Pinned> p3;
+  swap(p1, p3);
+  ASSERT_FALSE(p1.has_value());
+  ASSERT_EQ(ToString(*p3), "111");
+  swap(p1, p3);
+  ASSERT_EQ(ToString(*p1), "111");
+  ASSERT_FALSE(p3.has_value());
+  swap(p3, p3);
+  ASSERT_FALSE(p3.has_value());
+  pro::proxy<Pinned> p4;
+  swap(p3, p4);
+  ASSERT_FALSE(p3.has_value());
+  ASSERT_FALSE(p4.has_value());
+
+  pro::proxy<PinnedThrowingDestruction> r1 = &v1;
+  pro::proxy<PinnedThrowingDestruction> r2 = &v2;
+  static_assert(!noexcept(r1.swap(r2)));
+  swap(r1, r2);
+  ASSERT_EQ(ToString(*r1), "222");
+  ASSERT_EQ(ToString(*r2), "111");
+}
+
+TEST(ProxyLifetimeTests, TestSwap_NoRelocation_ThrowingCopy) {
+  struct PinnedThrowingCopy
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>             //
+        ::support_copy<pro::constraint_level::nontrivial> //
+        ::support_relocation<pro::constraint_level::none> //
+        ::build {};
+  utils::LifetimeTracker tracker;
+  pro::proxy<PinnedThrowingCopy> p1{
+      std::in_place_type<utils::LifetimeTracker::Session>, &tracker};
+  pro::proxy<PinnedThrowingCopy> p2{
+      std::in_place_type<utils::LifetimeTracker::Session>, &tracker};
+  static_assert(!noexcept(p1.swap(p2)));
+  swap(p1, p2);
+  ASSERT_EQ(ToString(*p1), "Session 4");
+  ASSERT_EQ(ToString(*p2), "Session 5");
+  tracker.ThrowOnNextConstruction();
+  ASSERT_THROW(swap(p1, p2), utils::ConstructionFailure);
+  ASSERT_EQ(ToString(*p1), "Session 4");
+  ASSERT_EQ(ToString(*p2), "Session 5");
+}
+
+TEST(ProxyLifetimeTests, TestSwap_NoRelocation_Null) {
+  struct PinnedThrowingCopy
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>             //
+        ::support_copy<pro::constraint_level::nontrivial> //
+        ::support_relocation<pro::constraint_level::none> //
+        ::build {};
+  utils::LifetimeTracker tracker;
+  std::vector<utils::LifetimeOperation> expected_ops;
+  {
+    pro::proxy<PinnedThrowingCopy> p1{
+        std::in_place_type<utils::LifetimeTracker::Session>, &tracker};
+    expected_ops.emplace_back(1,
+                              utils::LifetimeOperationType::kValueConstruction);
+    pro::proxy<PinnedThrowingCopy> p2;
+    swap(p1, p2);
+    ASSERT_FALSE(p1.has_value());
+    ASSERT_TRUE(p2.has_value());
+    ASSERT_EQ(ToString(*p2), "Session 2");
+    expected_ops.emplace_back(2,
+                              utils::LifetimeOperationType::kCopyConstruction);
+    expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
+    ASSERT_TRUE(tracker.GetOperations() == expected_ops);
+
+    swap(p1, p2);
+    ASSERT_TRUE(p1.has_value());
+    ASSERT_EQ(ToString(*p1), "Session 3");
+    ASSERT_FALSE(p2.has_value());
+    expected_ops.emplace_back(3,
+                              utils::LifetimeOperationType::kCopyConstruction);
+    expected_ops.emplace_back(2, utils::LifetimeOperationType::kDestruction);
+    ASSERT_TRUE(tracker.GetOperations() == expected_ops);
+  }
+  expected_ops.emplace_back(3, utils::LifetimeOperationType::kDestruction);
+  ASSERT_TRUE(tracker.GetOperations() == expected_ops);
+}
+
+TEST(ProxyLifetimeTests, TestSwap_PrefersRelocation) {
+  struct Relocatable
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>                   //
+        ::support_copy<pro::constraint_level::nothrow>          //
+        ::support_relocation<pro::constraint_level::nontrivial> //
+        ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<Relocatable> p1 = &v1;
+  pro::proxy<Relocatable> p2 = &v2;
+  static_assert(!noexcept(p1.swap(p2)));
+  swap(p1, p2);
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "111");
+}
+
 TEST(ProxyLifetimeTests, Test_DirectConvension_Lvalue) {
   utils::LifetimeTracker tracker;
   std::vector<utils::LifetimeOperation> expected_ops;
