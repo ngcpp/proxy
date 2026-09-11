@@ -141,43 +141,17 @@ PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_INVOKER)
 #undef PRO4D_DEF_INVOKER
 
 template <class M>
-struct PRO4D_ENFORCE_EBO inplace_meta_storage : M {
-  using M::M;
-
-  inplace_meta_storage() = default;
-  inplace_meta_storage(const inplace_meta_storage&) = default;
-  template <class M2>
-    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
-  inplace_meta_storage(const inplace_meta_storage<M2>& rhs) noexcept
-      : M(static_cast<const M&>(*rhs)) {}
-  inplace_meta_storage& operator=(const inplace_meta_storage&) = default;
-  template <class M2>
-    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
-  inplace_meta_storage&
-      operator=(const inplace_meta_storage<M2>& rhs) noexcept {
-    static_cast<M&>(*this) = static_cast<const M&>(*rhs);
-    return *this;
-  }
-
-  const M& operator*() const noexcept { return *this; }
-};
-
-template <class M>
 struct static_meta_storage {
   static_meta_storage() = default;
-  template <class M2>
-    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
-  static_meta_storage(const static_meta_storage<M2>& rhs) noexcept
-      : ptr_(std::addressof(static_cast<const M&>(*rhs))) {}
+  template <class P>
+  explicit static_meta_storage(std::in_place_type_t<P>)
+      : ptr_(std::addressof(storage<P>)) {}
   template <class M2>
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
   static_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
     ptr_ = std::addressof(static_cast<const M&>(*rhs));
     return *this;
   }
-  template <class P>
-  explicit static_meta_storage(std::in_place_type_t<P>)
-      : ptr_(std::addressof(storage<P>)) {}
   bool has_value() const noexcept { return ptr_ != nullptr; }
   void reset() noexcept { ptr_ = nullptr; }
   const M& operator*() const noexcept { return *ptr_; }
@@ -187,6 +161,27 @@ private:
 
   template <class P>
   static inline const M storage{std::in_place_type<P>};
+};
+
+template <class M>
+struct inplace_meta_storage : M {
+  using M::M;
+
+  template <class M2>
+    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
+  inplace_meta_storage&
+      operator=(const inplace_meta_storage<M2>& rhs) noexcept {
+    M::operator=(*rhs);
+    return *this;
+  }
+  template <class M2>
+    requires(std::is_nothrow_convertible_v<const M2&, const M&>)
+  inplace_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
+    M::operator=(*rhs);
+    return *this;
+  }
+
+  const M& operator*() const noexcept { return *this; }
 };
 
 } // namespace detail
