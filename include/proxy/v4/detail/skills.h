@@ -42,7 +42,32 @@ struct enabled_t {};
 template <class T, template <class...> class TT, class... Ctx>
 concept enabled_for = std::is_base_of_v<enabled_t<TT, Ctx...>, T>;
 
-struct view_conversion_dispatch : cast_dispatch_base<false, true> {
+#define PRO4D_DEF_FAW_CAST_ACCESSOR(oq, pq, ne, ...)                           \
+  template <facade F, class D, template <class> class TargetFacade>            \
+  struct accessor<proxy<F>, D, proxy<TargetFacade<F>>() oq ne> {               \
+    template <facade F2>                                                       \
+      requires(std::is_convertible_v<proxy<TargetFacade<F>>,                   \
+                                     proxy<TargetFacade<F2>>>)                 \
+    operator proxy<TargetFacade<F2>>() oq ne {                                 \
+      if (!static_cast<const proxy<F>&>(*this).has_value()) {                  \
+        return nullptr;                                                        \
+      }                                                                        \
+      return invoke<                                                           \
+          D, proxy<TargetFacade<std::conditional_t<                            \
+                 std::is_convertible_v<proxy<F2> pq, proxy<TargetFacade<F2>>>, \
+                 F2, F>>>() oq ne>(static_cast<proxy<F> pq>(*this));           \
+    }                                                                          \
+  }
+struct faw_cast_dispatch_base {
+  template <class ProP, class ProD, class... ProOs>
+  struct accessor {
+    accessor() = delete;
+  };
+  PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_FAW_CAST_ACCESSOR)
+};
+#undef PRO4D_DEF_FAW_CAST_ACCESSOR
+
+struct view_conversion_dispatch : faw_cast_dispatch_base {
   template <class T>
   PRO4D_STATIC_CALL(auto, T& value) noexcept
     requires(requires {
@@ -57,7 +82,7 @@ struct view_conversion_dispatch : cast_dispatch_base<false, true> {
 template <class F>
 using view_conversion_overload = proxy_view<F>() & noexcept;
 
-struct weak_conversion_dispatch : cast_dispatch_base<false, true> {
+struct weak_conversion_dispatch : faw_cast_dispatch_base {
   template <class P>
   PRO4D_STATIC_CALL(auto, const P& self) noexcept
     requires(requires(const typename P::weak_type& w) {

@@ -168,11 +168,10 @@ struct TestSharedStringable
       ::add_direct_reflection<LifetimeModelReflector>            //
       ::build {};
 
-struct TestWeakSharedStringable
-    : pro::facade_builder                                  //
-      ::add_facade_with_substitution<TestSharedStringable> //
-      ::add_skill<pro::skills::as_weak>                    //
-      ::build {};
+struct TestWeakSharedStringable : pro::facade_builder                //
+                                  ::add_facade<TestSharedStringable> //
+                                  ::add_skill<pro::skills::as_weak>  //
+                                  ::build {};
 
 static_assert(pro::proxiable<int*, TestSharedStringable>);
 static_assert(!pro::proxiable<int*, TestWeakSharedStringable>);
@@ -930,6 +929,55 @@ TEST(ProxyCreationTests,
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
   }
   ASSERT_TRUE(tracker.GetOperations() == expected_ops);
+}
+
+TEST(ProxyCreationTests, TestMakeProxyShared_WeakOfSuper) {
+  struct WeakSuper
+      : pro::facade_builder                                        //
+        ::support_copy<pro::constraint_level::nothrow>             //
+        ::add_convention<utils::spec::FreeToString, std::string()> //
+        ::add_skill<pro::skills::as_weak>                          //
+        ::build {};
+  struct WeakDerived
+      : pro::facade_builder                                           //
+        ::add_facade<WeakSuper>                                       //
+        ::add_convention<pro::operator_dispatch<"+">, int(int) const> //
+        ::build {};
+  auto p1 = pro::make_proxy_shared<WeakDerived>(123);
+  pro::weak_proxy<WeakSuper> p2 = p1;
+  {
+    auto p3 = p2.lock();
+    ASSERT_TRUE(p3.has_value());
+    ASSERT_EQ(ToString(*p3), "123");
+  }
+  p1.reset();
+  ASSERT_FALSE(p2.lock().has_value());
+  pro::proxy<WeakDerived> p4;
+  pro::weak_proxy<WeakSuper> p5 = p4;
+  ASSERT_FALSE(p5.has_value());
+}
+
+TEST(ProxyCreationTests, TestMakeProxyShared_WeakOfSuperWithoutSkill) {
+  struct WeakSuper
+      : pro::facade_builder                                        //
+        ::support_copy<pro::constraint_level::nothrow>             //
+        ::add_convention<utils::spec::FreeToString, std::string()> //
+        ::build {};
+  struct WeakDerived
+      : pro::facade_builder                                           //
+        ::add_facade<WeakSuper>                                       //
+        ::add_skill<pro::skills::as_weak>                             //
+        ::add_convention<pro::operator_dispatch<"+">, int(int) const> //
+        ::build {};
+  auto p1 = pro::make_proxy_shared<WeakDerived>(123);
+  pro::weak_proxy<WeakSuper> p2 = p1;
+  {
+    auto p3 = p2.lock();
+    ASSERT_TRUE(p3.has_value());
+    ASSERT_EQ(ToString(*p3), "123");
+  }
+  p1.reset();
+  ASSERT_FALSE(p2.lock().has_value());
 }
 
 TEST(ProxyCreationTests, TestMakeProxyShared_SharedCompact_FromValue) {

@@ -10,9 +10,9 @@ template <class FB>
 using as_weak = /* see below */;
 ```
 
-The alias template `as_weak` modifies a specialization of [`basic_facade_builder`](basic_facade_builder/README.md) to allow implicit conversion from [`proxy`](proxy/README.md)`<F>` to [`weak_proxy`](weak_proxy.md)`<F>`, where `F` is a built [facade](facade.md) type.
+The alias template `as_weak` modifies a specialization of [`basic_facade_builder`](basic_facade_builder/README.md) to allow implicit conversion from [`proxy`](proxy/README.md)`<F>` to [`weak_proxy`](weak_proxy.md)`<G>`, where `F` is a built [facade](facade.md) type and `G` is `F` or a super of `F`, reachable via `typename F::super_types` transitively, for which converting `weak_proxy<F>` to `weak_proxy<G>` is not potentially-throwing. *Since 5.0.0*: conversion to a weak proxy of a super is allowed. Previously only `weak_proxy<F>` was available.
 
-Let `p` be a value of type `proxy<F>`, `ptr` be the contained value of `p` (if any), `Ptr` be the type of `ptr`, the conversion from type `const proxy<F>&` to type `weak_proxy<F>` is equivalent to `return typename Ptr::weak_type{p}` if `p` contains a value, or otherwise equivalent to `return nullptr`.
+Let `p` be a value of type `proxy<F>`, `ptr` be the contained value of `p` (if any), `Ptr` be the type of `ptr`, the conversion from type `const proxy<F>&` to type `weak_proxy<G>` is equivalent to `return typename Ptr::weak_type{p}` if `p` contains a value, or otherwise equivalent to `return nullptr`.
 
 ## Example
 

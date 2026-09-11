@@ -831,28 +831,6 @@ TEST(ProxyDispatchTests, TestFreeAsMemDispatch) {
   ASSERT_EQ(p->ToString(), "123");
 }
 
-TEST(ProxyDispatchTests, TestSubstitutionDispatch) {
-#ifdef PRO4D_HAS_FORMAT
-  struct Base : pro::facade_builder              //
-                ::add_skill<pro::skills::format> //
-                ::build {};
-  struct TestFacade : pro::facade_builder //
-                      ::add_direct_convention<pro::substitution_dispatch,
-                                              pro::proxy<Base>() const&,
-                                              pro::proxy<Base>() &&> //
-                      ::build {};
-  pro::proxy<TestFacade> p1 = pro::make_proxy<TestFacade>(123);
-  pro::proxy<Base> p2 = p1;
-  ASSERT_TRUE(p1.has_value());
-  ASSERT_EQ(std::format("{}", *p2), "123");
-  pro::proxy<Base> p3 = std::move(p1);
-  ASSERT_FALSE(p1.has_value());
-  ASSERT_EQ(std::format("{}", *p3), "123");
-#else
-  GTEST_SKIP() << "std::format not available";
-#endif // PRO4D_HAS_FORMAT
-}
-
 TEST(ProxyDispatchTests, TestSuperConversion) {
 #ifdef PRO4D_HAS_FORMAT
   struct Base : pro::facade_builder                            //

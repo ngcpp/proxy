@@ -143,9 +143,9 @@ TEST(ProxyViewTests, TestOverloadShadowing) {
 
 TEST(ProxyViewTests, TestSubstitution_FromNull) {
   struct TestFacade1 : pro::facade_builder::build {};
-  struct TestFacade2 : pro::facade_builder                         //
-                       ::add_facade_with_substitution<TestFacade1> //
-                       ::add_skill<pro::skills::as_view>           //
+  struct TestFacade2 : pro::facade_builder               //
+                       ::add_facade<TestFacade1>         //
+                       ::add_skill<pro::skills::as_view> //
                        ::build {};
   pro::proxy<TestFacade2> p1;
   pro::proxy_view<TestFacade2> p2 = p1;
@@ -162,7 +162,7 @@ TEST(ProxyViewTests, TestSubstitution_FromValue) {
         ::build {};
   struct TestFacade2 : pro::facade_builder                               //
                        ::support_copy<pro::constraint_level::nontrivial> //
-                       ::add_facade_with_substitution<TestFacade1>       //
+                       ::add_facade<TestFacade1>                         //
                        ::add_skill<pro::skills::as_view>                 //
                        ::build {};
   pro::proxy<TestFacade2> p1 = pro::make_proxy<TestFacade2>(123);
@@ -213,6 +213,44 @@ TEST(ProxyViewTests, TestFacadeAware_FromSuper) {
   // ToString comes from the super, operator+ from the deriving facade
   ASSERT_EQ(ToString(*p2), "123");
   ASSERT_EQ((*p2) + 1, 124);
+}
+
+TEST(ProxyViewTests, TestFacadeAware_ToSuperView) {
+  struct TestFacade1
+      : pro::facade_builder                                              //
+        ::add_convention<utils::spec::FreeToString, std::string() const> //
+        ::add_skill<pro::skills::as_view>                                //
+        ::build {};
+  struct TestFacade2
+      : pro::facade_builder                                           //
+        ::add_facade<TestFacade1>                                     //
+        ::add_convention<pro::operator_dispatch<"+">, int(int) const> //
+        ::build {};
+  pro::proxy<TestFacade2> p1 = pro::make_proxy<TestFacade2>(123);
+  pro::proxy_view<TestFacade1> p2 = p1;
+  ASSERT_EQ(ToString(*p2), "123");
+  pro::proxy<TestFacade2> p3;
+  pro::proxy_view<TestFacade1> p4 = p3;
+  ASSERT_FALSE(p4.has_value());
+}
+
+TEST(ProxyViewTests, TestFacadeAware_ToSuperViewWithoutSkill) {
+  struct SuperWithoutAsView
+      : pro::facade_builder                                              //
+        ::add_convention<utils::spec::FreeToString, std::string() const> //
+        ::add_convention<pro::operator_dispatch<"-">, int(int) const>    //
+        ::add_convention<pro::operator_dispatch<"*">, int(int) const>    //
+        ::build {};
+  struct TestFacade2
+      : pro::facade_builder                                           //
+        ::add_facade<SuperWithoutAsView>                              //
+        ::add_skill<pro::skills::as_view>                             //
+        ::add_convention<pro::operator_dispatch<"+">, int(int) const> //
+        ::build {};
+  pro::proxy<TestFacade2> p1 = pro::make_proxy<TestFacade2>(123);
+  pro::proxy_view<SuperWithoutAsView> p2 = p1;
+  ASSERT_EQ(ToString(*p2), "123");
+  ASSERT_EQ((*p2) - 1, 122);
 }
 
 TEST(ProxyViewTests, TestFacadeAware) {

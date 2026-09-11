@@ -36,7 +36,7 @@ struct TestThrowingDestructionFacade
 
 struct TestRttiFacade : pro::facade_builder                           //
                         ::add_direct_reflection<utils::RttiReflector> //
-                        ::add_facade_with_substitution<TestFacade>    //
+                        ::add_facade<TestFacade>                      //
                         ::build {};
 
 // Additional static asserts for super conversion
@@ -1304,8 +1304,9 @@ TEST(ProxyLifetimeTests, Test_CopySubstitution_MixedMetaStorage) {
                  ::support_relocation<pro::constraint_level::trivial>  //
                  ::support_destruction<pro::constraint_level::trivial> //
                  ::build {};
-  struct Derived : pro::facade_builder                   //
-                   ::add_facade_with_substitution<Super> //
+  struct Derived : pro::facade_builder                           //
+                   ::add_direct_reflection<utils::RttiReflector> //
+                   ::add_facade<Super>                           //
                    ::build {};
   static_assert(
       pro::detail::specialization_of<pro::compact_facade_meta_traits::storage<

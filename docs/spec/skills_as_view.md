@@ -10,11 +10,13 @@ template <class FB>
 using as_view = /* see below */;
 ```
 
-The alias template `as_view` modifies a specialization of [`basic_facade_builder`](basic_facade_builder/README.md) to allow implicit conversion from [`proxy`](proxy/README.md)`<F>` to [`proxy_view`](proxy_view.md)`<F>`, where `F` is a built [facade](facade.md) type.
+The alias template `as_view` modifies a specialization of [`basic_facade_builder`](basic_facade_builder/README.md) to allow implicit conversion from [`proxy`](proxy/README.md)`<F>` to [`proxy_view`](proxy_view.md)`<G>`, where `F` is a built [facade](facade.md) type and `G` is `F` or a super of `F`, reachable via `typename F::super_types` transitively. *Since 5.0.0*: conversion to a view of a super is allowed. Previously only `proxy_view<F>` was available.
 
-Let `p` be a value of type `proxy<F>`, `ptr` be the contained value of `p` (if any), the conversion from type `proxy<F>&` to type `proxy_view<F>` is equivalent to `return observer-ptr{std::addressof(*ptr)}` if `p` contains a value, or otherwise equivalent to `return nullptr`. `observer-ptr` is an exposition-only type that `*observer-ptr`, `*std::as_const(observer-ptr)`, `*std::move(observer-ptr)` and `*std::move(std::as_const(observer-ptr))` are equivalent to `*ptr`, `*std::as_const(ptr)`, `*std::move(ptr)` and `*std::move(std::as_const(ptr))`, respectively.
+Let `p` be a value of type `proxy<F>`, `ptr` be the contained value of `p` (if any), the conversion from type `proxy<F>&` to type `proxy_view<G>` is equivalent to `return observer-ptr{std::addressof(*ptr)}` if `p` contains a value, or otherwise equivalent to `return nullptr`. `observer-ptr` is an exposition-only type that `*observer-ptr`, `*std::as_const(observer-ptr)`, `*std::move(observer-ptr)` and `*std::move(std::as_const(observer-ptr))` are equivalent to `*ptr`, `*std::as_const(ptr)`, `*std::move(ptr)` and `*std::move(std::as_const(ptr))`, respectively.
 
 ## Notes
+
+A view of a super exposes the conventions and reflections of that super. It observes the same object as `p` without taking ownership, exactly as `proxy_view<F>` does.
 
 `as_view` is useful when a certain context does not take ownership of a `proxy` object. Similar to [`std::unique_ptr::get`](https://en.cppreference.com/w/cpp/memory/unique_ptr/get), [`std::shared_ptr::get`](https://en.cppreference.com/w/cpp/memory/shared_ptr/get) and the [borrowing mechanism in Rust](https://doc.rust-lang.org/rust-by-example/scope/borrow.html).
 

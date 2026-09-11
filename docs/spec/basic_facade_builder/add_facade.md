@@ -20,11 +20,11 @@ The alias template `add_facade` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, Ma
 
 The conventions and reflections of `F` are not copied into `Cs` or `Rs`. They are reached through the super. Adding the same facade more than once, or redeclaring a convention that a super already provides, is well-defined and does not have side effects on [`build`](build.md) at either compile-time or runtime.
 
-A convention whose overload is a specialization of [`facade_aware_overload_t`](../facade_aware_overload_t.md) is the exception: its overload depends on the facade it is built into, so it is also checked and made available against the built facade, not only against the super that declares it. [`proxiable`](../proxiable.md) therefore requires the pointer type to satisfy both substitutions, and a failure of either is diagnosed. This is what lets a skill such as [`as_view`](../skills_as_view.md) declared on a super yield a [`proxy_view`](../proxy_view.md) of the built facade rather than of the super.
+A convention whose overload is a specialization of [`facade_aware_overload_t`](../facade_aware_overload_t.md) is the exception: its overload depends on the facade it is built into, so it is also checked and made available against the built facade, not only against the super that declares it. [`proxiable`](../proxiable.md) therefore requires the pointer type to satisfy both substitutions, and a failure of either is diagnosed. This is what lets a skill such as [`as_view`](../skills_as_view.md) declared on a super yield a [`proxy_view`](../proxy_view.md) of the built facade as well as of the super.
 
 The metadata of the built facade embeds the metadata of each super, so that converting to a `proxy<F>` needs no indirect call to translate the metadata. The contained value is still copied or relocated as it would be by a copy or a move of a `proxy` of the built facade, which involves an indirect call unless the corresponding [`constraint_level`](../constraint_level.md) is `trivial`. Two consequences of embedding are worth noting. When a super is reachable through more than one other super (a diamond), its metadata is embedded once per path. When the built facade strengthens a [`constraint_level`](../constraint_level.md) that `F` also declares (for example from `nontrivial` to `nothrow`), both levels are represented. Either case makes the metadata larger than the sum of the distinct conventions, and nesting diamonds compounds the effect. Metadata of that size is held out of line and shared by every `proxy` of the facade, so the cost is in static data rather than in `sizeof(proxy<F>)`.
 
-A [`proxy`](../proxy/README.md) of the built facade converts to a `proxy<F>`, subject to the copyability and relocatability of `F`.
+A [`proxy`](../proxy/README.md) of the built facade converts to a `proxy<F>`, subject to the copyability and relocatability of `F`. It also converts to a [`proxy_view`](../proxy_view.md)`<F>` when [`as_view`](../skills_as_view.md) is in effect, and to a [`weak_proxy`](../weak_proxy.md)`<F>` when [`as_weak`](../skills_as_weak.md) is.
 
 ## Example
 
@@ -89,5 +89,4 @@ int main() {
 
 ## See Also
 
-- [`add_facade_with_substitution`](add_facade_with_substitution.md)
 - [`build`](build.md)

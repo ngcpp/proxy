@@ -58,7 +58,6 @@ template <facade F>
 class proxy_indirect_accessor;
 template <facade F>
 class PRO4D_ENFORCE_EBO proxy;
-struct substitution_dispatch;
 
 template <class T>
 struct is_bitwise_trivially_relocatable
@@ -257,14 +256,6 @@ struct proxy_helper {
   static const M& get_meta(const proxy_indirect_accessor<F>& p) noexcept {
     return get_meta<M>(as_proxy<F, qualifier_type::const_lv>(p));
   }
-  template <class P, class F>
-  static proxy<F> make_relocated(void* src) noexcept {
-    proxy<F> ret;
-    std::uninitialized_copy_n(static_cast<const std::byte*>(src), sizeof(P),
-                              ret.ptr_);
-    ret.meta_ = decltype(ret.meta_){std::in_place_type<P>};
-    return ret;
-  }
   template <class F>
   static void* get_ptr(proxy<F>& p) noexcept {
     return p.ptr_;
@@ -440,27 +431,6 @@ struct erased_context<true, relocate_dispatch, O> {
 
   void* p_;
 };
-// TODO: remove together with substitution_dispatch.
-#define PRO4D_DEF_SUBSTITUTION_CONTEXT(...)                                    \
-  template <class F>                                                           \
-  struct erased_context<true, substitution_dispatch,                           \
-                        proxy<F>() && __VA_ARGS__> {                           \
-    template <class P>                                                         \
-    friend proxy<F> invoke(erased_context ctx) __VA_ARGS__ {                   \
-      if constexpr (is_bitwise_trivially_relocatable_v<P>) {                   \
-        return proxy_helper::make_relocated<P, F>(ctx.p_);                     \
-      } else {                                                                 \
-        auto* self = std::launder(static_cast<P*>(ctx.p_));                    \
-        destroying_guard<P> guard{self};                                       \
-        return proxy<F>{std::move(*self)};                                     \
-      }                                                                        \
-    }                                                                          \
-                                                                               \
-    void* p_;                                                                  \
-  }
-PRO4D_DEF_SUBSTITUTION_CONTEXT();
-PRO4D_DEF_SUBSTITUTION_CONTEXT(noexcept);
-#undef PRO4D_DEF_SUBSTITUTION_CONTEXT
 
 template <bool IsDirect, class D, class O>
 using erased_invoker_t = invoker<erased_context<IsDirect, D, O>, O>;
@@ -1627,25 +1597,14 @@ private:
   LR lr_;
 };
 
-template <class O>
-using observer_substitution_overload =
-    proxy_view<typename ret_t<O>::facade_type>() const noexcept;
 template <class C>
 struct observer_conv_traits : std::type_identity<void> {};
-template <class C>
-  requires(C::is_direct &&
-           std::is_same_v<typename C::dispatch_type, substitution_dispatch>)
-struct observer_conv_traits<C>
-    : std::type_identity<conv_impl<
-          true, substitution_dispatch,
-          observer_substitution_overload<typename C::overload_type>>> {};
 template <class C>
   requires(!C::is_direct)
 struct observer_conv_traits<C> : std::type_identity<C> {};
 template <class... Cs>
-using observer_conv_types = merge_tuples_t<
-    std::tuple<>,
-    composite_t<std::tuple<>, typename observer_conv_traits<Cs>::type...>>;
+using observer_conv_types =
+    composite_t<std::tuple<>, typename observer_conv_traits<Cs>::type...>;
 template <class... Rs>
 using observer_refl_types =
     composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void, Rs>...>;
@@ -1675,51 +1634,7 @@ using weak_lock_overload = proxy<typename WF::strong_type>() const noexcept;
 template <facade... Fs>
 using weak_super_types = std::tuple<weak_facade<Fs>...>;
 
-template <class O>
-struct weak_substitution_overload_traits;
-#define PRO4D_DEF_WEAK_SUBSTITUTION_OVERLOAD_TRAITS(oq, pq, ne, ...)           \
-  template <class F>                                                           \
-  struct weak_substitution_overload_traits<proxy<F>() oq ne>                   \
-      : std::type_identity<weak_proxy<F>() oq ne> {};
-PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_WEAK_SUBSTITUTION_OVERLOAD_TRAITS)
-#undef PRO4D_DEF_WEAK_SUBSTITUTION_OVERLOAD_TRAITS
-template <class C>
-struct weak_conv_traits : std::type_identity<void> {};
-template <class C>
-  requires(C::is_direct &&
-           std::is_same_v<typename C::dispatch_type, substitution_dispatch>)
-struct weak_conv_traits<C>
-    : std::type_identity<conv_impl<true, substitution_dispatch,
-                                   typename weak_substitution_overload_traits<
-                                       typename C::overload_type>::type>> {};
-template <class... Cs>
-using weak_conv_types = merge_tuples_t<
-    std::tuple<conv_impl<true, weak_mem_lock,
-                         facade_aware_overload_t<weak_lock_overload>>>,
-    composite_t<std::tuple<>, typename weak_conv_traits<Cs>::type...>>;
-
 } // namespace detail
-
-struct PRO4D_ENFORCE_EBO substitution_dispatch
-    : detail::cast_dispatch_base<false, true> {
-  template <class T>
-  PRO4D_STATIC_CALL(T&&, T&& self) noexcept {
-    return std::forward<T>(self);
-  }
-
-  // This overload is not reachable at runtime, but is necessary to ensure
-  // substitution_dispatch is SFINAE-friendly.
-  template <class T>
-  PRO4D_STATIC_CALL(auto, T&&) noexcept
-    requires(std::is_same_v<T, std::remove_cvref_t<T>> &&
-             is_bitwise_trivially_relocatable_v<T>)
-  {
-    return detail::converter{
-        []<class F2>(std::in_place_type_t<proxy<F2>>) noexcept -> proxy<F2>
-          requires(proxiable<T, F2>)
-        { PRO4D_UNREACHABLE(); }};
-  }
-};
 
 template <facade F>
 struct observer_facade
@@ -1738,8 +1653,9 @@ struct weak_facade
     : detail::facade_impl<
           detail::specialization_t<detail::weak_super_types,
                                    typename F::super_types>,
-          detail::specialization_t<detail::weak_conv_types,
-                                   typename F::convention_types>,
+          std::tuple<detail::conv_impl<
+              true, detail::weak_mem_lock,
+              facade_aware_overload_t<detail::weak_lock_overload>>>,
           std::tuple<>, F::max_size, F::max_align, F::copyability,
           F::relocatability, F::destructibility> {
   using strong_type = F;

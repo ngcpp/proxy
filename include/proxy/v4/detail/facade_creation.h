@@ -31,36 +31,6 @@ consteval std::size_t max_align_of(std::size_t value) {
 
 using ptr_prototype = void* [2];
 
-template <class F, constraint_level CL>
-using copy_conversion_overload =
-    proxy<F>() const& noexcept(CL >= constraint_level::nothrow);
-template <class F, constraint_level CL>
-using move_conversion_overload =
-    proxy<F>() && noexcept(CL >= constraint_level::nothrow);
-template <class Cs, class F, constraint_level CCL, constraint_level RCL>
-struct add_substitution_conv
-    : std::type_identity<merge_tuples_t<
-          Cs, composite_t<std::tuple<>,
-                          std::conditional_t<
-                              CCL == constraint_level::none, void,
-                              conv_impl<true, substitution_dispatch,
-                                        copy_conversion_overload<F, CCL>>>,
-                          std::conditional_t<
-                              RCL == constraint_level::none, void,
-                              conv_impl<true, substitution_dispatch,
-                                        move_conversion_overload<F, RCL>>>>>> {
-};
-template <class Cs, class F>
-struct add_substitution_conv<Cs, F, constraint_level::none,
-                             constraint_level::none> : std::type_identity<Cs> {
-};
-template <class Cs, class F>
-using add_substitution_conv_t =
-    add_substitution_conv<Cs, F, F::copyability,
-                          F::copyability != constraint_level::trivial
-                              ? F::relocatability
-                              : constraint_level::none>::type;
-
 } // namespace detail
 
 template <class Ss, class Cs, class Rs, std::size_t MaxSize,
@@ -99,13 +69,7 @@ struct basic_facade_builder {
       detail::merge_constraint(Relocatability, F::relocatability),
       detail::merge_constraint(Destructibility, F::destructibility)>;
   template <facade F>
-  using add_facade_with_substitution = basic_facade_builder<
-      detail::composite_t<Ss, F>, detail::add_substitution_conv_t<Cs, F>, Rs,
-      detail::merge_size(MaxSize, F::max_size),
-      detail::merge_size(MaxAlign, F::max_align),
-      detail::merge_constraint(Copyability, F::copyability),
-      detail::merge_constraint(Relocatability, F::relocatability),
-      detail::merge_constraint(Destructibility, F::destructibility)>;
+  using add_facade_with_substitution = add_facade<F>;
   template <std::size_t PtrSize,
             std::size_t PtrAlign = detail::max_align_of(PtrSize)>
     requires(detail::is_layout_well_formed(PtrSize, PtrAlign))

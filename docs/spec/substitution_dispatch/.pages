@@ -1,4 +1,0 @@
-nav:
-  - substitution_dispatch: README.md
-  - accessor: accessor.md
-  - operator(): operator_call.md
