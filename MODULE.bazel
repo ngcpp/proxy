@@ -1,6 +1,6 @@
 module(
     name = "proxy",
-    version = "4.1.0",
+    version = "5.0.0",
 )
 
 bazel_dep(name = "platforms", version = "1.1.0")

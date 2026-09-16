@@ -243,7 +243,7 @@ Fetch via [CPM](https://github.com/cpm-cmake/CPM.cmake) (a thin wrapper over CMa
 ```cmake
 CPMAddPackage(
   NAME msft_proxy5
-  GIT_TAG 4.1.0
+  GIT_TAG 5.0.0
   GIT_REPOSITORY https://github.com/ngcpp/proxy.git
 )
 
@@ -259,7 +259,7 @@ Place a wrap file at `subprojects/proxy.wrap` and Meson will fetch the source au
 ```ini
 [wrap-git]
 url = https://github.com/ngcpp/proxy.git
-revision = 4.1.0
+revision = 5.0.0
 
 [provide]
 dependency_names = msft_proxy5
@@ -279,7 +279,7 @@ The library is not yet published to the [Bazel Central Registry](https://registr
 With **Bzlmod** (Bazel 7+), add to your `MODULE.bazel`:
 
 ```python
-bazel_dep(name = "proxy", version = "4.1.0")
+bazel_dep(name = "proxy", version = "5.0.0")
 git_override(
     module_name = "proxy",
     remote = "https://github.com/ngcpp/proxy.git",
@@ -294,7 +294,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 git_repository(
     name = "proxy",
     remote = "https://github.com/ngcpp/proxy.git",
-    tag = "4.1.0",
+    tag = "5.0.0",
 )
 load("@proxy//:proxy_deps.bzl", "proxy_deps")
 proxy_deps()
