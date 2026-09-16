@@ -3,7 +3,7 @@ target_compile_options(
   msft_proxy_freestanding_tests
   PRIVATE ${PROXY_STRICT_WARNING_FLAGS}
 )
-target_link_libraries(msft_proxy_freestanding_tests PRIVATE msft_proxy4::proxy)
+target_link_libraries(msft_proxy_freestanding_tests PRIVATE msft_proxy5::proxy)
 add_test(NAME ProxyFreestandingTests COMMAND msft_proxy_freestanding_tests)
 
 if(PROXY_BUILD_MODULES)
@@ -17,7 +17,7 @@ if(PROXY_BUILD_MODULES)
   )
   target_link_libraries(
     msft_proxy_freestanding_module_tests
-    PRIVATE msft_proxy4::proxy_module
+    PRIVATE msft_proxy5::proxy_module
   )
   add_test(
     NAME ProxyFreestandingModuleSupportTests

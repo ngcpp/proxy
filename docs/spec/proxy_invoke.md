@@ -2,7 +2,7 @@
 
 > Header: `proxy.h`  
 > Module: `proxy`  
-> Namespace: `pro::inline v4`
+> Namespace: `pro::inline v5`
 
 > **Deprecated since 4.1.0**: Use the non-member `invoke` of [`proxy`](proxy/friend_invoke.md) (for `(2)`) or [`proxy_indirect_accessor`](proxy_indirect_accessor/friend_invoke.md) (for `(1)`) instead. Each overload of `proxy_invoke` is marked `[[deprecated]]` and forwards to the corresponding overload of `invoke`. `proxy_invoke` is retained for backward compatibility and may be removed in a future major release.
 

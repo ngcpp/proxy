@@ -30,13 +30,13 @@ static_assert(
     SupportsToString<decltype(*std::declval<pro::proxy<TestFacade>>())>);
 static_assert(sizeof(pro::proxy<TestFacade>) == 3 * sizeof(void*));
 
-#ifdef PRO4D_HAS_PAC
+#ifdef PRO5D_HAS_PAC
 static_assert(
     std::is_nothrow_copy_constructible_v<pro::proxy_view<TestFacade>>);
 #else
 static_assert(
     std::is_trivially_copy_constructible_v<pro::proxy_view<TestFacade>>);
-#endif // PRO4D_HAS_PAC
+#endif // PRO5D_HAS_PAC
 static_assert(std::is_trivially_destructible_v<pro::proxy_view<TestFacade>>);
 static_assert(SupportsIntPlusEqual<
               decltype(*std::declval<pro::proxy_view<TestFacade>>())>);

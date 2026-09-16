@@ -5,6 +5,6 @@
 #ifndef MSFT_PROXY_PROXY_FMT_H_
 #define MSFT_PROXY_PROXY_FMT_H_
 
-#include "v4/proxy_fmt.h" // IWYU pragma: export
+#include "v5/proxy_fmt.h" // IWYU pragma: export
 
 #endif // MSFT_PROXY_PROXY_FMT_H_

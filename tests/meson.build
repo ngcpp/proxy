@@ -14,7 +14,7 @@ test_srcs = files(
   'proxy_view_tests.cpp',
 )
 
-test_deps = [msft_proxy4_dep, gtest_dep]
+test_deps = [msft_proxy5_dep, gtest_dep]
 
 if fmt_dep.found()
   test_srcs += files(

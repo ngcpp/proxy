@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <utility>
 
-import proxy.v4;
+import proxy.v5;
 
 constexpr unsigned DefaultHash = -1;
 unsigned GetHashImpl(int v) { return static_cast<unsigned>(v + 3) * 31; }

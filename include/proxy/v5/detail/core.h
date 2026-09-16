@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V4_DETAIL_CORE_H_
-#define MSFT_PROXY_V4_DETAIL_CORE_H_
+#ifndef MSFT_PROXY_V5_DETAIL_CORE_H_
+#define MSFT_PROXY_V5_DETAIL_CORE_H_
 
 #include <bit>
 #include <cassert>
@@ -20,20 +20,20 @@
 #include "./facade_meta_traits.h"
 
 #if __has_cpp_attribute(msvc::no_unique_address)
-#define PRO4D_NO_UNIQUE_ADDRESS_ATTRIBUTE msvc::no_unique_address
+#define PRO5D_NO_UNIQUE_ADDRESS_ATTRIBUTE msvc::no_unique_address
 #elif __has_cpp_attribute(no_unique_address)
-#define PRO4D_NO_UNIQUE_ADDRESS_ATTRIBUTE no_unique_address
+#define PRO5D_NO_UNIQUE_ADDRESS_ATTRIBUTE no_unique_address
 #else
 #error Proxy requires C++20 attribute no_unique_address.
 #endif // __has_cpp_attribute(msvc::no_unique_address)
 
 #if __cpp_lib_unreachable >= 202202L
-#define PRO4D_UNREACHABLE() std::unreachable()
+#define PRO5D_UNREACHABLE() std::unreachable()
 #else
-#define PRO4D_UNREACHABLE() std::abort()
+#define PRO5D_UNREACHABLE() std::abort()
 #endif // __cpp_lib_unreachable >= 202202L
 
-namespace pro::inline v4 {
+namespace pro::inline v5 {
 
 namespace detail {
 
@@ -57,7 +57,7 @@ concept facade = detail::basic_facade_traits<F>::applicable;
 template <facade F>
 class proxy_indirect_accessor;
 template <facade F>
-class PRO4D_ENFORCE_EBO proxy;
+class PRO5D_ENFORCE_EBO proxy;
 
 template <class T>
 struct is_bitwise_trivially_relocatable
@@ -509,7 +509,7 @@ struct reflection_meta {
             std::in_place_type<typename std::pointer_traits<P>::element_type>) {
   }
 
-  [[PRO4D_NO_UNIQUE_ADDRESS_ATTRIBUTE]]
+  [[PRO5D_NO_UNIQUE_ADDRESS_ATTRIBUTE]]
   R reflector;
 };
 
@@ -527,13 +527,13 @@ consteval bool is_reflector_well_formed() {
 }
 struct copy_dispatch {
   template <class T>
-  PRO4D_STATIC_CALL(void, const T& self, void* rhs) noexcept(
+  PRO5D_STATIC_CALL(void, const T& self, void* rhs) noexcept(
       std::is_nothrow_copy_constructible_v<T>) {
     std::construct_at(static_cast<T*>(rhs), self);
   }
 };
 struct destroy_dispatch {
-  PRO4D_STATIC_CALL(void, auto&&) noexcept {}
+  PRO5D_STATIC_CALL(void, auto&&) noexcept {}
 };
 template <class D, class ONE, class OE, constraint_level C>
 struct lifetime_meta_traits : std::type_identity<void> {};
@@ -547,7 +547,7 @@ template <class D, class ONE, class OE, constraint_level C>
 using lifetime_meta_t = lifetime_meta_traits<D, ONE, OE, C>::type;
 
 template <class... As>
-struct PRO4D_ENFORCE_EBO composite_accessor : As... {};
+struct PRO5D_ENFORCE_EBO composite_accessor : As... {};
 
 template <class P, class... Rs>
 using refl_accessors_t =
@@ -647,7 +647,7 @@ private:
 };
 
 template <class... Ms>
-struct PRO4D_ENFORCE_EBO composite_meta : Ms... {
+struct PRO5D_ENFORCE_EBO composite_meta : Ms... {
   composite_meta() = default;
   template <class P>
   constexpr explicit composite_meta(std::in_place_type_t<P>)
@@ -977,7 +977,7 @@ struct facade_traits
   template <class P>
   [[noreturn]] static consteval void diagnose_proxiable_noreturn() {
     diagnose_proxiable<P>();
-    PRO4D_UNREACHABLE(); // Propagate the error to the caller side
+    PRO5D_UNREACHABLE(); // Propagate the error to the caller side
   }
 
   template <class P>
@@ -1017,7 +1017,7 @@ public:
   const T&& operator*() const&& noexcept { return std::move(value_); }
 
 private:
-  [[PRO4D_NO_UNIQUE_ADDRESS_ATTRIBUTE]]
+  [[PRO5D_NO_UNIQUE_ADDRESS_ATTRIBUTE]]
   T value_;
 };
 
@@ -1390,12 +1390,12 @@ public:
 
 private:
   void initialize() {
-    PRO4D_DEBUG(std::ignore = &pro_symbol_guard;)
+    PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     meta_.reset();
   }
   template <facade F2>
   void initialize(const proxy<F2>& rhs) {
-    PRO4D_DEBUG(std::ignore = &pro_symbol_guard;)
+    PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
       if constexpr (F2::copyability == constraint_level::trivial) {
         std::uninitialized_copy_n(rhs.ptr_, F2::max_size, ptr_);
@@ -1411,7 +1411,7 @@ private:
   }
   template <facade F2>
   void initialize(proxy<F2>&& rhs) {
-    PRO4D_DEBUG(std::ignore = &pro_symbol_guard;)
+    PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
       auto meta = rhs.meta_;
       if constexpr (F2::relocatability == constraint_level::trivial) {
@@ -1430,7 +1430,7 @@ private:
   }
   template <class P, class... Args>
   constexpr P& initialize(Args&&... args) {
-    PRO4D_DEBUG(std::ignore = &pro_symbol_guard;)
+    PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     P& result = *std::construct_at(reinterpret_cast<P*>(ptr_),
                                    std::forward<Args>(args)...);
     if constexpr (proxiable<P, F>) {
@@ -1451,7 +1451,7 @@ private:
       }
     }
   }
-  PRO4D_DEBUG(static inline void pro_symbol_guard(proxy& self,
+  PRO5D_DEBUG(static inline void pro_symbol_guard(proxy& self,
                                                   const proxy& cself) {
     self.operator->();
     *self;
@@ -1562,10 +1562,10 @@ private:
   F f_;
 };
 
-#define PRO4D_DEF_CAST_ACCESSOR(oq, pq, ne, ...)                               \
+#define PRO5D_DEF_CAST_ACCESSOR(oq, pq, ne, ...)                               \
   template <class P, class D, class T>                                         \
   struct accessor<P, D, T() oq ne> {                                           \
-    PRO4D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(operator T)                        \
+    PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(operator T)                        \
     explicit(Expl) operator T() oq ne {                                        \
       if constexpr (Nullable) {                                                \
         if (!static_cast<const P&>(*this).has_value()) {                       \
@@ -1577,11 +1577,11 @@ private:
   }
 template <bool Expl, bool Nullable>
 struct cast_dispatch_base {
-  PRO4D_DEF_ACCESSOR_TEMPLATE(
-      MEM, PRO4D_DEF_CAST_ACCESSOR,
+  PRO5D_DEF_ACCESSOR_TEMPLATE(
+      MEM, PRO5D_DEF_CAST_ACCESSOR,
       operator typename overload_traits<ProOs>::return_type)
 };
-#undef PRO4D_DEF_CAST_ACCESSOR
+#undef PRO5D_DEF_CAST_ACCESSOR
 
 template <bool IsDirect, class D, class O>
 struct conv_impl {
@@ -1656,7 +1656,7 @@ auto weak_lock_impl(const P& self) noexcept
     return self.lock();
   }
 }
-PRO4_DEF_FREE_AS_MEM_DISPATCH(weak_mem_lock, weak_lock_impl, lock);
+PRO5_DEF_FREE_AS_MEM_DISPATCH(weak_mem_lock, weak_lock_impl, lock);
 
 template <class WF>
 using weak_lock_overload = proxy<typename WF::strong_type>() const noexcept;
@@ -1690,6 +1690,6 @@ struct weak_facade
   using strong_type = F;
 };
 
-} // namespace pro::inline v4
+} // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V4_DETAIL_CORE_H_
+#endif // MSFT_PROXY_V5_DETAIL_CORE_H_

@@ -31,7 +31,7 @@ add_executable(
 target_include_directories(msft_proxy_tests PRIVATE .)
 target_link_libraries(
   msft_proxy_tests
-  PRIVATE msft_proxy4::proxy gtest_main fmt::fmt
+  PRIVATE msft_proxy5::proxy gtest_main fmt::fmt
 )
 target_compile_options(msft_proxy_tests PRIVATE ${PROXY_STRICT_WARNING_FLAGS})
 gtest_discover_tests(msft_proxy_tests)

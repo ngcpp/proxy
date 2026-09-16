@@ -2,7 +2,7 @@
 
 > Header: `proxy.h`  
 > Module: `proxy`  
-> Namespace: `pro::inline v4`  
+> Namespace: `pro::inline v5`  
 > Since: 3.3.0
 
 The definition of `allocate_proxy_shared` makes use of exposition-only class templates *strong-compact-ptr* and *weak-compact-ptr*. Their semantics are similar to [`std::shared_ptr`](https://en.cppreference.com/w/cpp/memory/shared_ptr) and [`std::weak_ptr`](https://en.cppreference.com/w/cpp/memory/weak_ptr), but do not provide a polymorphic deleter. Their size and alignment are guaranteed not to be greater than those of a raw pointer type. *strong-compact-ptr&lt;T, Alloc&gt;* is conditionally convertible to *weak-compact-ptr&lt;T, Alloc&gt;* only if necessary. Similar to [`std::optional`](https://en.cppreference.com/w/cpp/utility/optional), *strong-compact-ptr&lt;T, Alloc&gt;* provides `operator*` for accessing the managed object of type `T` with the same qualifiers.

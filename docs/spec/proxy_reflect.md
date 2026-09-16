@@ -2,7 +2,7 @@
 
 > Header: `proxy.h`  
 > Module: `proxy`  
-> Namespace: `pro::inline v4`
+> Namespace: `pro::inline v5`
 
 > **Deprecated since 4.1.0**: Use the non-member `reflect` of [`proxy`](proxy/friend_reflect.md) (for `(2)`) or [`proxy_indirect_accessor`](proxy_indirect_accessor/friend_reflect.md) (for `(1)`) instead. Each overload of `proxy_reflect` is marked `[[deprecated]]` and forwards to the corresponding overload of `reflect`. `proxy_reflect` is retained for backward compatibility and may be removed in a future major release.
 

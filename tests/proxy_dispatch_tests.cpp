@@ -832,7 +832,7 @@ TEST(ProxyDispatchTests, TestFreeAsMemDispatch) {
 }
 
 TEST(ProxyDispatchTests, TestSuperConversion) {
-#ifdef PRO4D_HAS_FORMAT
+#ifdef PRO5D_HAS_FORMAT
   struct Base : pro::facade_builder                            //
                 ::add_skill<pro::skills::format>               //
                 ::support_copy<pro::constraint_level::nothrow> //
@@ -859,5 +859,5 @@ TEST(ProxyDispatchTests, TestSuperConversion) {
   ASSERT_EQ(std::format("{}", *p6), "456");
 #else
   GTEST_SKIP() << "std::format not available";
-#endif // PRO4D_HAS_FORMAT
+#endif // PRO5D_HAS_FORMAT
 }

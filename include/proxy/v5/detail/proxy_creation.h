@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V4_DETAIL_PROXY_CREATION_H_
-#define MSFT_PROXY_V4_DETAIL_PROXY_CREATION_H_
+#ifndef MSFT_PROXY_V5_DETAIL_PROXY_CREATION_H_
+#define MSFT_PROXY_V5_DETAIL_PROXY_CREATION_H_
 
 #include <initializer_list>
 #include <memory>
@@ -15,7 +15,7 @@
 
 #include "core.h"
 
-namespace pro::inline v4 {
+namespace pro::inline v5 {
 
 template <class T, class F>
 concept inplace_proxiable_target = proxiable<detail::inplace_ptr<T>, F>;
@@ -86,7 +86,7 @@ struct alloc_aware {
   explicit alloc_aware(const Alloc& alloc) noexcept : alloc(alloc) {}
   alloc_aware(const alloc_aware&) noexcept = default;
 
-  [[PRO4D_NO_UNIQUE_ADDRESS_ATTRIBUTE]]
+  [[PRO5D_NO_UNIQUE_ADDRESS_ATTRIBUTE]]
   Alloc alloc;
 };
 template <class T>
@@ -107,7 +107,7 @@ protected:
 };
 
 template <class T, class Alloc>
-class PRO4D_ENFORCE_EBO wide_ptr : private alloc_aware<Alloc>,
+class PRO5D_ENFORCE_EBO wide_ptr : private alloc_aware<Alloc>,
                                    public indirect_ptr<inplace_ptr<T>> {
 public:
   template <class... Args>
@@ -127,7 +127,7 @@ public:
 };
 
 template <class T, class Alloc>
-struct PRO4D_ENFORCE_EBO compact_ptr_storage : alloc_aware<Alloc>,
+struct PRO5D_ENFORCE_EBO compact_ptr_storage : alloc_aware<Alloc>,
                                                inplace_ptr<T> {
   template <class... Args>
   explicit compact_ptr_storage(const Alloc& alloc, Args&&... args)
@@ -157,7 +157,7 @@ struct shared_compact_ptr_storage_base {
   std::atomic_long ref_count = 1;
 };
 template <class T, class Alloc>
-struct PRO4D_ENFORCE_EBO shared_compact_ptr_storage
+struct PRO5D_ENFORCE_EBO shared_compact_ptr_storage
     : shared_compact_ptr_storage_base,
       alloc_aware<Alloc>,
       inplace_ptr<T> {
@@ -425,6 +425,6 @@ constexpr proxy<F> make_proxy_shared(std::initializer_list<U> il,
 }
 #endif // __STDC_HOSTED__
 
-} // namespace pro::inline v4
+} // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V4_DETAIL_PROXY_CREATION_H_
+#endif // MSFT_PROXY_V5_DETAIL_PROXY_CREATION_H_

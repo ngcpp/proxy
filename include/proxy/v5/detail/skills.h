@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V4_DETAIL_SKILLS_H_
-#define MSFT_PROXY_V4_DETAIL_SKILLS_H_
+#ifndef MSFT_PROXY_V5_DETAIL_SKILLS_H_
+#define MSFT_PROXY_V5_DETAIL_SKILLS_H_
 
 #include <memory>
 #include <version>
@@ -13,7 +13,7 @@
 #if __cpp_lib_format >= 201907L || _LIBCPP_VERSION >= 170000
 #include <format>
 #include <string_view>
-#define PRO4D_HAS_FORMAT
+#define PRO5D_HAS_FORMAT
 #endif // __cpp_lib_format || _LIBCPP_VERSION >= 170000
 #endif // __STDC_HOSTED__
 
@@ -24,13 +24,13 @@
 
 #include "core.h"
 
-namespace pro::inline v4 {
+namespace pro::inline v5 {
 
 #if __cpp_rtti >= 199711L
 class bad_proxy_cast : public std::bad_cast {
 public:
   char const* what() const noexcept override {
-    return "pro::v4::bad_proxy_cast";
+    return "pro::v5::bad_proxy_cast";
   }
 };
 #endif // __cpp_rtti >= 199711L
@@ -42,7 +42,7 @@ struct enabled_t {};
 template <class T, template <class...> class TT, class... Ctx>
 concept enabled_for = std::is_base_of_v<enabled_t<TT, Ctx...>, T>;
 
-#define PRO4D_DEF_FAW_CAST_ACCESSOR(oq, pq, ne, ...)                           \
+#define PRO5D_DEF_FAW_CAST_ACCESSOR(oq, pq, ne, ...)                           \
   template <facade F, class D, template <class> class TargetFacade>            \
   struct accessor<proxy<F>, D, proxy<TargetFacade<F>>() oq ne> {               \
     template <facade F2>                                                       \
@@ -63,13 +63,13 @@ struct faw_cast_dispatch_base {
   struct accessor {
     accessor() = delete;
   };
-  PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_FAW_CAST_ACCESSOR)
+  PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(PRO5D_DEF_FAW_CAST_ACCESSOR)
 };
-#undef PRO4D_DEF_FAW_CAST_ACCESSOR
+#undef PRO5D_DEF_FAW_CAST_ACCESSOR
 
 struct view_conversion_dispatch : faw_cast_dispatch_base {
   template <class T>
-  PRO4D_STATIC_CALL(auto, T& value) noexcept
+  PRO5D_STATIC_CALL(auto, T& value) noexcept
     requires(requires {
       { std::addressof(*value) } noexcept;
     })
@@ -84,7 +84,7 @@ using view_conversion_overload = proxy_view<F>() & noexcept;
 
 struct weak_conversion_dispatch : faw_cast_dispatch_base {
   template <class P>
-  PRO4D_STATIC_CALL(auto, const P& self) noexcept
+  PRO5D_STATIC_CALL(auto, const P& self) noexcept
     requires(requires(const typename P::weak_type& w) {
       { w.lock() } noexcept;
     } && std::is_convertible_v<const P&, typename P::weak_type>)
@@ -109,7 +109,7 @@ struct format_traits {
 
   struct dispatch {
     template <class T, class CharT>
-    PRO4D_STATIC_CALL(auto, const T& self, StringView<CharT> spec,
+    PRO5D_STATIC_CALL(auto, const T& self, StringView<CharT> spec,
                       FormatContext<CharT>& fc)
       requires(std::is_default_constructible_v<Formatter<T, CharT>>)
     {
@@ -122,7 +122,7 @@ struct format_traits {
     }
 
     template <class P, class D, class... Os>
-    struct PRO4D_ENFORCE_EBO accessor : accessor<P, D, Os>... {};
+    struct PRO5D_ENFORCE_EBO accessor : accessor<P, D, Os>... {};
     template <class P, class D>
     struct accessor<P, D, overload<char>> : enabled_t<Formatter, char> {};
     template <class P, class D>
@@ -152,7 +152,7 @@ struct format_traits {
   };
 };
 
-#ifdef PRO4D_HAS_FORMAT
+#ifdef PRO5D_HAS_FORMAT
 template <class CharT>
 struct std_format_context_traits;
 template <>
@@ -166,7 +166,7 @@ using std_format_context = std_format_context_traits<CharT>::type;
 struct std_format_traits
     : format_traits<std::formatter, std::basic_string_view,
                     std::basic_format_parse_context, std_format_context> {};
-#endif // PRO4D_HAS_FORMAT
+#endif // PRO5D_HAS_FORMAT
 
 #if __cpp_rtti >= 199711L
 struct proxy_cast_context {
@@ -190,7 +190,7 @@ struct proxy_cast_accessor_impl {
                              .result_ptr = &result};
       invoke_cast<T>(static_cast<Self>(self), ctx);
       if (result == nullptr) [[unlikely]] {
-        PRO4D_THROW(bad_proxy_cast{});
+        PRO5D_THROW(bad_proxy_cast{});
       }
       return *static_cast<U*>(result);
     } else {
@@ -201,7 +201,7 @@ struct proxy_cast_accessor_impl {
                              .result_ptr = &result};
       invoke_cast<T>(static_cast<Self>(self), ctx);
       if (!result.has_value()) [[unlikely]] {
-        PRO4D_THROW(bad_proxy_cast{});
+        PRO5D_THROW(bad_proxy_cast{});
       }
       return std::move(*result);
     }
@@ -243,13 +243,13 @@ private:
   }
 };
 
-#define PRO4D_DEF_PROXY_CAST_ACCESSOR(oq, pq, ne, ...)                         \
+#define PRO5D_DEF_PROXY_CAST_ACCESSOR(oq, pq, ne, ...)                         \
   template <class P, class D>                                                  \
   struct accessor<P, D, void(proxy_cast_context) oq ne>                        \
       : proxy_cast_accessor_impl<P pq, D, void(proxy_cast_context) oq ne> {}
 struct proxy_cast_dispatch {
   template <class T>
-  PRO4D_STATIC_CALL(void, T&& self, proxy_cast_context ctx) {
+  PRO5D_STATIC_CALL(void, T&& self, proxy_cast_context ctx) {
     if (typeid(T) == *ctx.type_ptr) [[likely]] {
       if (ctx.is_ref) {
         if constexpr (std::is_lvalue_reference_v<T>) {
@@ -266,9 +266,9 @@ struct proxy_cast_dispatch {
       }
     }
   }
-  PRO4D_DEF_ACCESSOR_TEMPLATE(FREE, PRO4D_DEF_PROXY_CAST_ACCESSOR)
+  PRO5D_DEF_ACCESSOR_TEMPLATE(FREE, PRO5D_DEF_PROXY_CAST_ACCESSOR)
 };
-#undef PRO4D_DEF_PROXY_CAST_ACCESSOR
+#undef PRO5D_DEF_PROXY_CAST_ACCESSOR
 
 struct proxy_typeid_reflector {
   proxy_typeid_reflector() = default;
@@ -282,7 +282,7 @@ struct proxy_typeid_reflector {
       const proxy_typeid_reflector& refl = reflect<R>(self);
       return *refl.info;
     }
-    PRO4D_DEBUG(
+    PRO5D_DEBUG(
         accessor() noexcept { std::ignore = &pro_symbol_guard; }
 
         private : static inline const std::type_info& pro_symbol_guard(
@@ -296,7 +296,7 @@ struct direct_rtti_reflector : proxy_typeid_reflector {
   using proxy_typeid_reflector::proxy_typeid_reflector;
 
   template <class Self, class R>
-  struct PRO4D_ENFORCE_EBO accessor
+  struct PRO5D_ENFORCE_EBO accessor
       : proxy_typeid_reflector::accessor<Self, R>,
         proxy_cast_dispatch::accessor<
             Self, proxy_cast_dispatch, void(proxy_cast_context) &,
@@ -308,7 +308,7 @@ struct direct_rtti_reflector : proxy_typeid_reflector {
 
 namespace skills {
 
-#ifdef PRO4D_HAS_FORMAT
+#ifdef PRO5D_HAS_FORMAT
 template <class FB>
 using format =
     FB::template add_convention<detail::std_format_traits::dispatch,
@@ -318,7 +318,7 @@ template <class FB>
 using wformat =
     FB::template add_convention<detail::std_format_traits::dispatch,
                                 detail::std_format_traits::overload<wchar_t>>;
-#endif // PRO4D_HAS_FORMAT
+#endif // PRO5D_HAS_FORMAT
 
 #if __cpp_rtti >= 199711L
 template <class FB>
@@ -351,17 +351,17 @@ using as_weak = FB::template add_direct_convention<
 
 } // namespace skills
 
-} // namespace pro::inline v4
+} // namespace pro::inline v5
 
-#ifdef PRO4D_HAS_FORMAT
+#ifdef PRO5D_HAS_FORMAT
 namespace std {
 
 template <class T, class CharT>
-  requires(pro::v4::detail::enabled_for<T, std::formatter, CharT>)
+  requires(pro::v5::detail::enabled_for<T, std::formatter, CharT>)
 struct formatter<T, CharT>
-    : pro::v4::detail::std_format_traits::formatter<CharT> {};
+    : pro::v5::detail::std_format_traits::formatter<CharT> {};
 
 } // namespace std
-#endif // PRO4D_HAS_FORMAT
+#endif // PRO5D_HAS_FORMAT
 
-#endif // MSFT_PROXY_V4_DETAIL_SKILLS_H_
+#endif // MSFT_PROXY_V5_DETAIL_SKILLS_H_

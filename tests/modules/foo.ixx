@@ -7,7 +7,7 @@ module;
 
 export module foo;
 
-import proxy.v4;
+import proxy.v5;
 
 extern "C++" {
 PRO_DEF_MEM_DISPATCH(MemGetFoo, GetFoo);

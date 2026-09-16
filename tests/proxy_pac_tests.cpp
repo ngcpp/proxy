@@ -4,7 +4,7 @@
 
 #include <proxy/proxy.h>
 
-#ifdef PRO4D_HAS_PAC
+#ifdef PRO5D_HAS_PAC
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -129,4 +129,4 @@ TEST(ProxyPacTests, TestRelocationAttack_StaticMetaStorage) {
       },
       "");
 }
-#endif // PRO4D_HAS_PAC
+#endif // PRO5D_HAS_PAC

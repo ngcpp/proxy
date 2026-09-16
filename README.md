@@ -242,12 +242,12 @@ Fetch via [CPM](https://github.com/cpm-cmake/CPM.cmake) (a thin wrapper over CMa
 
 ```cmake
 CPMAddPackage(
-  NAME msft_proxy4
+  NAME msft_proxy5
   GIT_TAG 4.1.0
   GIT_REPOSITORY https://github.com/ngcpp/proxy.git
 )
 
-target_link_libraries(main PRIVATE msft_proxy4::proxy)
+target_link_libraries(main PRIVATE msft_proxy5::proxy)
 ```
 
 Or, if you already have a local clone, use `add_subdirectory(path/to/proxy)` instead of `CPMAddPackage`.
@@ -262,14 +262,14 @@ url = https://github.com/ngcpp/proxy.git
 revision = 4.1.0
 
 [provide]
-dependency_names = msft_proxy4
+dependency_names = msft_proxy5
 ```
 
 Then in your `meson.build`:
 
 ```meson
-msft_proxy4_dep = dependency('msft_proxy4')
-executable('main', 'main.cpp', dependencies: msft_proxy4_dep)
+msft_proxy5_dep = dependency('msft_proxy5')
+executable('main', 'main.cpp', dependencies: msft_proxy5_dep)
 ```
 
 ### Bazel

@@ -2,14 +2,14 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V4_DETAIL_FACADE_CREATION_H_
-#define MSFT_PROXY_V4_DETAIL_FACADE_CREATION_H_
+#ifndef MSFT_PROXY_V5_DETAIL_FACADE_CREATION_H_
+#define MSFT_PROXY_V5_DETAIL_FACADE_CREATION_H_
 
 #include <limits>
 
 #include "core.h"
 
-namespace pro::inline v4 {
+namespace pro::inline v5 {
 
 namespace detail {
 
@@ -115,6 +115,6 @@ using facade_builder =
                          detail::invalid_cl, detail::invalid_cl,
                          detail::invalid_cl>;
 
-} // namespace pro::inline v4
+} // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V4_DETAIL_FACADE_CREATION_H_
+#endif // MSFT_PROXY_V5_DETAIL_FACADE_CREATION_H_

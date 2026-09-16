@@ -210,7 +210,7 @@ struct TrivialFacade : pro::facade_builder                                   //
                        ::support_relocation<pro::constraint_level::trivial>  //
                        ::support_destruction<pro::constraint_level::trivial> //
                        ::build {};
-#ifdef PRO4D_HAS_PAC
+#ifdef PRO5D_HAS_PAC
 static_assert(std::is_nothrow_copy_constructible_v<pro::proxy<TrivialFacade>>);
 static_assert(std::is_nothrow_copy_assignable_v<pro::proxy<TrivialFacade>>);
 static_assert(std::is_nothrow_move_constructible_v<pro::proxy<TrivialFacade>>);
@@ -222,7 +222,7 @@ static_assert(std::is_trivially_copy_assignable_v<pro::proxy<TrivialFacade>>);
 static_assert(
     std::is_trivially_move_constructible_v<pro::proxy<TrivialFacade>>);
 static_assert(std::is_trivially_move_assignable_v<pro::proxy<TrivialFacade>>);
-#endif // PRO4D_HAS_PAC
+#endif // PRO5D_HAS_PAC
 static_assert(std::is_trivially_destructible_v<pro::proxy<TrivialFacade>>);
 static_assert(!pro::proxiable<MockMovablePtr, TrivialFacade>);
 static_assert(!pro::proxiable<MockCopyablePtr, TrivialFacade>);

@@ -2,22 +2,22 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V4_PROXY_FMT_H_
-#define MSFT_PROXY_V4_PROXY_FMT_H_
+#ifndef MSFT_PROXY_V5_PROXY_FMT_H_
+#define MSFT_PROXY_V5_PROXY_FMT_H_
 
 #include <string_view>
 #include <type_traits>
 
-#ifndef __msft_lib_proxy4
+#ifndef __msft_lib_proxy5
 #error Please ensure that proxy.h is included before proxy_fmt.h.
-#endif // __msft_lib_proxy4
+#endif // __msft_lib_proxy5
 
 #if FMT_VERSION < 60100
 #error Please ensure that the appropriate {fmt} headers (version 6.1.0 or \
 later) are included before proxy_fmt.h.
 #endif // FMT_VERSION < 60100
 
-namespace pro::inline v4 {
+namespace pro::inline v5 {
 
 namespace detail {
 
@@ -48,15 +48,15 @@ using fmt_wformat = typename FB::template add_convention<
 
 } // namespace skills
 
-} // namespace pro::inline v4
+} // namespace pro::inline v5
 
 namespace fmt {
 
 template <class T, class CharT>
-  requires(pro::v4::detail::enabled_for<T, fmt::formatter, CharT>)
+  requires(pro::v5::detail::enabled_for<T, fmt::formatter, CharT>)
 struct formatter<T, CharT>
-    : pro::v4::detail::fmt_format_traits::formatter<CharT> {};
+    : pro::v5::detail::fmt_format_traits::formatter<CharT> {};
 
 } // namespace fmt
 
-#endif // MSFT_PROXY_V4_PROXY_FMT_H_
+#endif // MSFT_PROXY_V5_PROXY_FMT_H_

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-import proxy.v4;
+import proxy.v5;
 import foo;
 import foo_impl;
 

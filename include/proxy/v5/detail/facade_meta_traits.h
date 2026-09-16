@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V4_DETAIL_FACADE_META_TRAITS_H_
-#define MSFT_PROXY_V4_DETAIL_FACADE_META_TRAITS_H_
+#ifndef MSFT_PROXY_V5_DETAIL_FACADE_META_TRAITS_H_
+#define MSFT_PROXY_V5_DETAIL_FACADE_META_TRAITS_H_
 
 #include <cstddef>
 #include <type_traits>
@@ -12,17 +12,17 @@
 #ifdef __has_feature
 #if __has_feature(ptrauth_calls)
 #include <ptrauth.h>
-#define PRO4D_HAS_PAC
+#define PRO5D_HAS_PAC
 #endif // __has_feature(ptrauth_calls)
 #endif // __has_feature
 
 #include "../proxy_macros.h"
 
-namespace pro::inline v4 {
+namespace pro::inline v5 {
 
 namespace detail {
 
-#ifdef PRO4D_HAS_PAC
+#ifdef PRO5D_HAS_PAC
 template <class O, class Disc>
 class code_ptr {
 public:
@@ -105,7 +105,7 @@ using code_ptr = O*;
 
 template <class T, class Disc>
 using meta_ptr = const T*;
-#endif // PRO4D_HAS_PAC
+#endif // PRO5D_HAS_PAC
 
 template <class O, class Disc>
 struct invoker_base {
@@ -125,7 +125,7 @@ private:
 
 template <class Ctx, class O>
 struct invoker;
-#define PRO4D_DEF_INVOKER(oq, pq, ne, ...)                                     \
+#define PRO5D_DEF_INVOKER(oq, pq, ne, ...)                                     \
   template <class Ctx, class R, class... Args>                                 \
   struct invoker<Ctx, R(Args...) oq ne>                                        \
       : invoker_base<R(Ctx, Args...) ne, R (*)(Ctx, Args...) ne> {             \
@@ -137,8 +137,8 @@ struct invoker;
                 return invoke<P>(ctx, std::forward<Args>(args)...);            \
               }) {}                                                            \
   }
-PRO4D_DEF_OVERLOAD_SPECIALIZATIONS(PRO4D_DEF_INVOKER)
-#undef PRO4D_DEF_INVOKER
+PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(PRO5D_DEF_INVOKER)
+#undef PRO5D_DEF_INVOKER
 
 template <class M>
 struct static_meta_storage {
@@ -204,6 +204,6 @@ struct flat_facade_meta_traits {
   using storage = detail::inplace_meta_storage<M>;
 };
 
-} // namespace pro::inline v4
+} // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V4_DETAIL_FACADE_META_TRAITS_H_
+#endif // MSFT_PROXY_V5_DETAIL_FACADE_META_TRAITS_H_
