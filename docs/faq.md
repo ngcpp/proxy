@@ -77,15 +77,15 @@ Upgrading a small component is usually straightforward, but migrating a monorepo
 1. **Minor or patch upgrades (e.g. 3.3.0 → 3.4.0)**
     All 3.x.y releases preserve API/ABI compatibility, so different parts of the program may safely depend on different 3.x.y versions. No special action is required.
 
-2. **Major upgrades (e.g. 3.4.0 → 4.0.0)**
+2. **Major upgrades (e.g. 4.1.0 → 5.0.0)**
   - If your current version is *earlier* than 3.4.0, migrate to 3.4.0 first.
-  - Starting with 3.4.0, each major release is placed in a versioned inline namespace (`pro::v3`, `pro::v4`, …).  When a translation unit sees multiple majors, qualify the namespace explicitly:
+  - Starting with 3.4.0, each major release is placed in a versioned inline namespace (`pro::v3`, `pro::v4`, `pro::v5`, …).  When a translation unit sees multiple majors, qualify the namespace explicitly:
     ```cpp
-    pro::v3::foo(); // Proxy 3 API
     pro::v4::foo(); // Proxy 4 API
+    pro::v5::foo(); // Proxy 5 API
     ```
     The newest release re-exports its namespace as the inline (default) namespace, so unqualified calls (`pro::foo()`) resolve to the latest version once the migration is complete.
-  - The macros also have major-qualified aliases, e.g. [`PRO4_DEF_MEM_DISPATCH`](spec/PRO_DEF_MEM_DISPATCH.md). Use these forms whenever headers from multiple majors are included in the same translation unit.
+  - The macros also have major-qualified aliases, e.g. [`PRO5_DEF_MEM_DISPATCH`](spec/PRO_DEF_MEM_DISPATCH.md). Use these forms whenever headers from multiple majors are included in the same translation unit.
   - Upgrade subsystems incrementally, module-by-module or DLL-by-DLL. When every target depends only on the new major, drop the old include path and remove the previous version from your build.
 
 These rules let old and new code coexist during the transition while keeping ODR violations at bay.
