@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   renovate:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # The weekly cron only runs on the canonical repo. Forks can still trigger it manually.
     if: github.event_name != 'schedule' || github.repository == 'ngcpp/proxy'
     steps:

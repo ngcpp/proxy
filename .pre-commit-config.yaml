@@ -14,19 +14,19 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.6
+    rev: v0.16.8
     hooks:
       - id: ruff-format
 
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
-    rev: 0.28.1
+    rev: 0.29.1
     hooks:
       - id: gersemi
         args: ["--indent", "2"]
         exclude: '^(subprojects|build|bazel-.*)/'
 
   - repo: https://github.com/keith/pre-commit-buildifier
-    rev: 8.5.1
+    rev: 10.0.1
     hooks:
       - id: buildifier
         exclude: '^(subprojects|build|bazel-.*)/'
@@ -50,7 +50,7 @@ repos:
       - id: clang-format
         name: clang-format
         language: python
-        additional_dependencies: ["clang-format==23.1.0"]
+        additional_dependencies: ["clang-format==23.1.1"]
         entry: python3 tools/format_cpp.py
         pass_filenames: false
         files: '\.(h|ixx|cpp|md)$'

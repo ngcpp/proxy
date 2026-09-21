@@ -4,7 +4,7 @@ on:
 
 jobs:
   bvt-codecoverage:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     container: gcc:16
     steps:
     - uses: actions/checkout@v7
