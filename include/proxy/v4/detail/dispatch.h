@@ -273,11 +273,10 @@ struct implicit_conversion_dispatch : detail::cast_dispatch_base<false, false> {
 struct explicit_conversion_dispatch : detail::cast_dispatch_base<true, false> {
   template <class T>
   PRO4D_STATIC_CALL(auto, T&& self) noexcept {
-    return detail::converter{
-        [&self]<class U>(std::in_place_type_t<U>) noexcept(
-            std::is_nothrow_constructible_v<U, T>) -> U
-          requires(detail::explicitly_convertible < T &&, U >)
-        { return static_cast<U>(std::forward<T>(self)); }};
+    return detail::converter{[&self]<class U>(std::in_place_type_t<U>) noexcept(
+                                 std::is_nothrow_constructible_v<U, T>) -> U
+                               requires(detail::explicitly_convertible<T&&, U>)
+                             { return static_cast<U>(std::forward<T>(self)); }};
   }
 };
 using conversion_dispatch = explicit_conversion_dispatch;
