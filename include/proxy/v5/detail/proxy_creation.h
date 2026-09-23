@@ -17,13 +17,13 @@
 
 namespace pro::inline v5 {
 
-template <class T, class F>
-concept inplace_proxiable_target = proxiable<detail::inplace_ptr<T>, F>;
+template <class T, class F, class MP = compact_metadata>
+concept inplace_proxiable_target = proxiable<detail::inplace_ptr<T>, F, MP>;
 
-template <class T, class F>
+template <class T, class F, class MP = compact_metadata>
 concept proxiable_target =
     proxiable<detail::observer_ptr<T&, const T&, T&&, const T&&>,
-              observer_facade<F>>;
+              observer_facade<F>, MP>;
 
 template <class T>
   requires(is_bitwise_trivially_relocatable_v<T>)
@@ -38,27 +38,28 @@ constexpr proxy<F> make_proxy_inplace(T&& value) noexcept(
   return proxy<F>{std::in_place_type<detail::inplace_ptr<std::decay_t<T>>>,
                   std::in_place, std::forward<T>(value)};
 }
-template <facade F, class T, class... Args>
-constexpr proxy<F> make_proxy_inplace(Args&&... args) noexcept(
+template <facade F, class T, class MP = compact_metadata, class... Args>
+constexpr proxy<F, MP> make_proxy_inplace(Args&&... args) noexcept(
     std::is_nothrow_constructible_v<T, Args...>)
   requires(std::is_constructible_v<T, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::inplace_ptr<T>>, std::in_place,
-                  std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::inplace_ptr<T>>, std::in_place,
+                      std::forward<Args>(args)...};
 }
-template <facade F, class T, class U, class... Args>
-constexpr proxy<F>
+template <facade F, class T, class MP = compact_metadata, class U,
+          class... Args>
+constexpr proxy<F, MP>
     make_proxy_inplace(std::initializer_list<U> il, Args&&... args) noexcept(
         std::is_nothrow_constructible_v<T, std::initializer_list<U>&, Args...>)
   requires(std::is_constructible_v<T, std::initializer_list<U>&, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::inplace_ptr<T>>, std::in_place, il,
-                  std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::inplace_ptr<T>>, std::in_place,
+                      il, std::forward<Args>(args)...};
 }
 
-template <facade F, class T>
-constexpr proxy_view<F> make_proxy_view(T& value) noexcept {
-  return proxy_view<F>{
+template <facade F, class MP = compact_metadata, class T>
+constexpr proxy_view<F, MP> make_proxy_view(T& value) noexcept {
+  return proxy_view<F, MP>{
       detail::observer_ptr<T&, const T&, T&&, const T&&>{value}};
 }
 
@@ -262,48 +263,51 @@ public:
     }
   }
   auto lock() const noexcept {
-    return converter{[ptr = this->ptr_]<class F>(
-                         std::in_place_type_t<proxy<F>>) noexcept -> proxy<F> {
-      long ref_count = ptr->strong_count.load(std::memory_order::relaxed);
-      do {
-        if (ref_count == 0) {
-          return proxy<F>{};
-        }
-      } while (!ptr->strong_count.compare_exchange_weak(
-          ref_count, ref_count + 1, std::memory_order::relaxed));
-      return proxy<F>{std::in_place_type<strong_compact_ptr<T, Alloc>>, ptr};
-    }};
+    return converter{
+        [ptr = this->ptr_]<class F, class MP>(
+            std::in_place_type_t<proxy<F, MP>>) noexcept -> proxy<F, MP> {
+          long ref_count = ptr->strong_count.load(std::memory_order::relaxed);
+          do {
+            if (ref_count == 0) {
+              return proxy<F, MP>{};
+            }
+          } while (!ptr->strong_count.compare_exchange_weak(
+              ref_count, ref_count + 1, std::memory_order::relaxed));
+          return proxy<F, MP>{std::in_place_type<strong_compact_ptr<T, Alloc>>,
+                              ptr};
+        }};
   }
 
 private:
   strong_weak_compact_ptr_storage<T, Alloc>* ptr_;
 };
 
-template <class F, class T, class Alloc>
+template <class F, class MP, class T, class Alloc>
 struct allocated_ptr_traits : std::type_identity<compact_ptr<T, Alloc>> {};
-template <class F, class T, class Alloc>
-  requires(proxiable<wide_ptr<T, Alloc>, F>)
-struct allocated_ptr_traits<F, T, Alloc>
+template <class F, class MP, class T, class Alloc>
+  requires(proxiable<wide_ptr<T, Alloc>, F, MP>)
+struct allocated_ptr_traits<F, MP, T, Alloc>
     : std::type_identity<wide_ptr<T, Alloc>> {};
-template <class F, class T, class Alloc>
-using allocated_ptr = allocated_ptr_traits<F, T, Alloc>::type;
+template <class F, class MP, class T, class Alloc>
+using allocated_ptr = allocated_ptr_traits<F, MP, T, Alloc>::type;
 
-template <class F, class T>
-struct owned_ptr_traits : allocated_ptr_traits<F, T, std::allocator<void>> {};
-template <class F, class T>
-  requires(proxiable<inplace_ptr<T>, F>)
-struct owned_ptr_traits<F, T> : std::type_identity<inplace_ptr<T>> {};
-template <class F, class T>
-using owned_ptr = owned_ptr_traits<F, T>::type;
+template <class F, class MP, class T>
+struct owned_ptr_traits : allocated_ptr_traits<F, MP, T, std::allocator<void>> {
+};
+template <class F, class MP, class T>
+  requires(proxiable<inplace_ptr<T>, F, MP>)
+struct owned_ptr_traits<F, MP, T> : std::type_identity<inplace_ptr<T>> {};
+template <class F, class MP, class T>
+using owned_ptr = owned_ptr_traits<F, MP, T>::type;
 
-template <class F, class T, class Alloc>
+template <class F, class MP, class T, class Alloc>
 struct shared_ptr_traits : std::type_identity<shared_compact_ptr<T, Alloc>> {};
-template <class F, class T, class Alloc>
-  requires(std::is_convertible_v<proxy<F>, weak_proxy<F>>)
-struct shared_ptr_traits<F, T, Alloc>
+template <class F, class MP, class T, class Alloc>
+  requires(std::is_convertible_v<proxy<F, MP>, weak_proxy<F, MP>>)
+struct shared_ptr_traits<F, MP, T, Alloc>
     : std::type_identity<strong_compact_ptr<T, Alloc>> {};
-template <class F, class T, class Alloc = std::allocator<void>>
-using shared_ptr = shared_ptr_traits<F, T, Alloc>::type;
+template <class F, class MP, class T, class Alloc = std::allocator<void>>
+using shared_ptr = shared_ptr_traits<F, MP, T, Alloc>::type;
 
 } // namespace detail
 
@@ -337,44 +341,52 @@ constexpr proxy<F> allocate_proxy(const Alloc& alloc, T&& value)
   requires(std::is_constructible_v<std::decay_t<T>, T>)
 {
   return proxy<F>{
-      std::in_place_type<detail::allocated_ptr<F, std::decay_t<T>, Alloc>>,
+      std::in_place_type<
+          detail::allocated_ptr<F, compact_metadata, std::decay_t<T>, Alloc>>,
       alloc, std::forward<T>(value)};
 }
-template <facade F, class T, class Alloc, class... Args>
-constexpr proxy<F> allocate_proxy(const Alloc& alloc, Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class Alloc,
+          class... Args>
+constexpr proxy<F, MP> allocate_proxy(const Alloc& alloc, Args&&... args)
   requires(std::is_constructible_v<T, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::allocated_ptr<F, T, Alloc>>, alloc,
-                  std::forward<Args>(args)...};
+  return proxy<F, MP>{
+      std::in_place_type<detail::allocated_ptr<F, MP, T, Alloc>>, alloc,
+      std::forward<Args>(args)...};
 }
-template <facade F, class T, class Alloc, class U, class... Args>
-constexpr proxy<F> allocate_proxy(const Alloc& alloc,
-                                  std::initializer_list<U> il, Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class Alloc, class U,
+          class... Args>
+constexpr proxy<F, MP> allocate_proxy(const Alloc& alloc,
+                                      std::initializer_list<U> il,
+                                      Args&&... args)
   requires(std::is_constructible_v<T, std::initializer_list<U>&, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::allocated_ptr<F, T, Alloc>>, alloc,
-                  il, std::forward<Args>(args)...};
+  return proxy<F, MP>{
+      std::in_place_type<detail::allocated_ptr<F, MP, T, Alloc>>, alloc, il,
+      std::forward<Args>(args)...};
 }
 template <facade F, class T>
 constexpr proxy<F> make_proxy(T&& value)
   requires(std::is_constructible_v<std::decay_t<T>, T>)
 {
-  return proxy<F>{std::in_place_type<detail::owned_ptr<F, std::decay_t<T>>>,
+  return proxy<F>{std::in_place_type<
+                      detail::owned_ptr<F, compact_metadata, std::decay_t<T>>>,
                   std::allocator<void>{}, std::forward<T>(value)};
 }
-template <facade F, class T, class... Args>
-constexpr proxy<F> make_proxy(Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class... Args>
+constexpr proxy<F, MP> make_proxy(Args&&... args)
   requires(std::is_constructible_v<T, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::owned_ptr<F, T>>,
-                  std::allocator<void>{}, std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::owned_ptr<F, MP, T>>,
+                      std::allocator<void>{}, std::forward<Args>(args)...};
 }
-template <facade F, class T, class U, class... Args>
-constexpr proxy<F> make_proxy(std::initializer_list<U> il, Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class U,
+          class... Args>
+constexpr proxy<F, MP> make_proxy(std::initializer_list<U> il, Args&&... args)
   requires(std::is_constructible_v<T, std::initializer_list<U>&, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::owned_ptr<F, T>>,
-                  std::allocator<void>{}, il, std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::owned_ptr<F, MP, T>>,
+                      std::allocator<void>{}, il, std::forward<Args>(args)...};
 }
 
 template <facade F, class Alloc, class T>
@@ -382,46 +394,51 @@ constexpr proxy<F> allocate_proxy_shared(const Alloc& alloc, T&& value)
   requires(std::is_constructible_v<std::decay_t<T>, T>)
 {
   return proxy<F>{
-      std::in_place_type<detail::shared_ptr<F, std::decay_t<T>, Alloc>>, alloc,
-      std::forward<T>(value)};
+      std::in_place_type<
+          detail::shared_ptr<F, compact_metadata, std::decay_t<T>, Alloc>>,
+      alloc, std::forward<T>(value)};
 }
-template <facade F, class T, class Alloc, class... Args>
-constexpr proxy<F> allocate_proxy_shared(const Alloc& alloc, Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class Alloc,
+          class... Args>
+constexpr proxy<F, MP> allocate_proxy_shared(const Alloc& alloc, Args&&... args)
   requires(std::is_constructible_v<T, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::shared_ptr<F, T, Alloc>>, alloc,
-                  std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::shared_ptr<F, MP, T, Alloc>>,
+                      alloc, std::forward<Args>(args)...};
 }
-template <facade F, class T, class Alloc, class U, class... Args>
-constexpr proxy<F> allocate_proxy_shared(const Alloc& alloc,
-                                         std::initializer_list<U> il,
-                                         Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class Alloc, class U,
+          class... Args>
+constexpr proxy<F, MP> allocate_proxy_shared(const Alloc& alloc,
+                                             std::initializer_list<U> il,
+                                             Args&&... args)
   requires(std::is_constructible_v<T, std::initializer_list<U>&, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::shared_ptr<F, T, Alloc>>, alloc,
-                  il, std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::shared_ptr<F, MP, T, Alloc>>,
+                      alloc, il, std::forward<Args>(args)...};
 }
 template <facade F, class T>
 constexpr proxy<F> make_proxy_shared(T&& value)
   requires(std::is_constructible_v<std::decay_t<T>, T>)
 {
-  return proxy<F>{std::in_place_type<detail::shared_ptr<F, std::decay_t<T>>>,
+  return proxy<F>{std::in_place_type<
+                      detail::shared_ptr<F, compact_metadata, std::decay_t<T>>>,
                   std::allocator<void>{}, std::forward<T>(value)};
 }
-template <facade F, class T, class... Args>
-constexpr proxy<F> make_proxy_shared(Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class... Args>
+constexpr proxy<F, MP> make_proxy_shared(Args&&... args)
   requires(std::is_constructible_v<T, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::shared_ptr<F, T>>,
-                  std::allocator<void>{}, std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::shared_ptr<F, MP, T>>,
+                      std::allocator<void>{}, std::forward<Args>(args)...};
 }
-template <facade F, class T, class U, class... Args>
-constexpr proxy<F> make_proxy_shared(std::initializer_list<U> il,
-                                     Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class U,
+          class... Args>
+constexpr proxy<F, MP> make_proxy_shared(std::initializer_list<U> il,
+                                         Args&&... args)
   requires(std::is_constructible_v<T, std::initializer_list<U>&, Args...>)
 {
-  return proxy<F>{std::in_place_type<detail::shared_ptr<F, T>>,
-                  std::allocator<void>{}, il, std::forward<Args>(args)...};
+  return proxy<F, MP>{std::in_place_type<detail::shared_ptr<F, MP, T>>,
+                      std::allocator<void>{}, il, std::forward<Args>(args)...};
 }
 #endif // __STDC_HOSTED__
 

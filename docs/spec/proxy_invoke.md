@@ -8,24 +8,24 @@
 
 ```cpp
 // (1)
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(proxy_indirect_accessor<F>& p, Args&&... args);
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(const proxy_indirect_accessor<F>& p, Args&&... args);
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(proxy_indirect_accessor<F>&& p, Args&&... args);
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(const proxy_indirect_accessor<F>&& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(proxy_indirect_accessor<F, MP>& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(const proxy_indirect_accessor<F, MP>& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(proxy_indirect_accessor<F, MP>&& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(const proxy_indirect_accessor<F, MP>&& p, Args&&... args);
 
 // (2)
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(proxy<F>& p, Args&&... args);
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(const proxy<F>& p, Args&&... args);
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(proxy<F>&& p, Args&&... args);
-template <class D, class O, facade F, class... Args>
-return-type-of<O> proxy_invoke(const proxy<F>&& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(proxy<F, MP>& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(const proxy<F, MP>& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(proxy<F, MP>&& p, Args&&... args);
+template <class D, class O, facade F, class MP, class... Args>
+return-type-of<O> proxy_invoke(const proxy<F, MP>&& p, Args&&... args);
 ```
 
 Invokes a `proxy` with a specified dispatch type, an overload type, and arguments. Let `Args2...` be the argument types of `O`, `R` be the return type of `O`. `return-type-of<O>` is `R`.
@@ -37,7 +37,7 @@ There shall be a convention type `Conv` defined in the convention types of `F` o
 
 - `Conv::is_direct` is `false` (for `(1)`) or `true` (for `(2)`), and
 - `typename Conv::dispatch_type` is `D`, and
-- [`substituted-overload`](ProOverload.md)`<typename Conv::overload_type, F>` is `O`.
+- [`substituted-overload`](ProOverload.md)`<typename Conv::overload_type, F, MP>` is `O`.
 
 ## Notes
 

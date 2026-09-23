@@ -12,21 +12,25 @@ template <facade F, class Alloc, class T>
 proxy<F> allocate_proxy(const Alloc& alloc, T&& value);  // freestanding-deleted
 
 // (2)
-template <facade F, class T, class Alloc, class... Args>
-proxy<F> allocate_proxy(const Alloc& alloc, Args&&... args);  // freestanding-deleted
+template <facade F, class T, class MP = compact_metadata, class Alloc, class... Args>
+proxy<F, MP> allocate_proxy(const Alloc& alloc, Args&&... args);  // freestanding-deleted
 
 // (3)
-template <facade F, class T, class Alloc, class U, class... Args>
-proxy<F> allocate_proxy(const Alloc& alloc, std::initializer_list<U> il, Args&&... args);  // freestanding-deleted
+template <facade F, class T, class MP = compact_metadata, class Alloc, class U, class... Args>
+proxy<F, MP> allocate_proxy(const Alloc& alloc, std::initializer_list<U> il, Args&&... args);  // freestanding-deleted
 ```
+
+Let `MP` be the [metadata policy](ProMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
 
 `(1)` Creates a `proxy<F>` object containing a value `p` of type *allocated-ptr&lt;*`std::decay_t<T>`*, Alloc&gt;*, where `*p` is direct-non-list-initialized with `std::forward<T>(value)`.
 
-`(2)` Creates a `proxy<F>` object containing a value `p` of type *allocated-ptr&lt;T, Alloc&gt;*, where `*p` is direct-non-list-initialized with `std::forward<Args>(args)...`.
+`(2)` Creates a `proxy<F, MP>` object containing a value `p` of type *allocated-ptr&lt;T, Alloc&gt;*, where `*p` is direct-non-list-initialized with `std::forward<Args>(args)...`.
 
-`(3)` Creates a `proxy<F>` object containing a value `p` of type *allocated-ptr&lt;T, Alloc&gt;*, where `*p` is direct-non-list-initialized with `il, std::forward<Args>(args)...`.
+`(3)` Creates a `proxy<F, MP>` object containing a value `p` of type *allocated-ptr&lt;T, Alloc&gt;*, where `*p` is direct-non-list-initialized with `il, std::forward<Args>(args)...`.
 
-*Since 3.3.0*: For `(1-3)`, if [`proxiable_target<std::decay_t<T>, F>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+*Since 3.3.0*: For `(1-3)`, if [`proxiable_target<std::decay_t<T>, F, MP>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+
+*Since 5.0.0*: `(2-3)` can name the metadata policy of the created `proxy`. `(1)` deduces the target type, so it always uses the default policy, and a `proxy` with another policy is created by naming the target type as well.
 
 ## Return Value
 

@@ -5,11 +5,13 @@
 > Namespace: `pro::inline v5`
 
 ```cpp
-template <class P, class F>
+template <class P, class F, class MP = compact_metadata>
 concept proxiable = /* see-below */;
 ```
 
-The concept `proxiable<P, F>` specifies that [`proxy<F>`](proxy/README.md) can potentially contain a value of type `P`. If `P` is an incomplete type, the behavior of evaluating `proxiable<P, F>` is undefined. `proxiable<P, F>` is `true` when `F` meets the [*ProFacade* requirements](ProFacade.md) of `P`; otherwise, it is `false`.
+The concept `proxiable<P, F, MP>` specifies that [`proxy<F, MP>`](proxy/README.md) can potentially contain a value of type `P`. If `P` is an incomplete type, the behavior of evaluating `proxiable<P, F, MP>` is undefined. `proxiable<P, F, MP>` is `true` when `F` meets the [*ProFacade* requirements](ProFacade.md) of `P` and `MP`; otherwise, it is `false`.
+
+*Since 5.0.0*: `proxiable` takes a [metadata policy](ProMetadataPolicy.md), which participates in the check when a convention of `F` is declared with a [`proxy_dependent_signature`](proxy_dependent_signature.md). `MP` is not itself checked by `proxiable`, and a type that does not meet the *ProMetadataPolicy* requirements is diagnosed where `proxy<F, MP>` is instantiated.
 
 ## Example
 

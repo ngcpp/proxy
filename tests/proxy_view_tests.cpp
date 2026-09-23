@@ -49,12 +49,12 @@ static_assert(std::is_nothrow_convertible_v<pro::proxy<TestFacade>&,
 static_assert(!std::is_convertible_v<pro::proxy<TestFacade>,
                                      pro::proxy_view<TestFacade>>);
 
-template <class F>
-using AreEqualOverload = bool(const pro::proxy_indirect_accessor<F>& rhs,
-                              double eps) const;
+template <class F, class MP>
+using AreEqualSignature = bool(const pro::proxy_indirect_accessor<F, MP>& rhs,
+                               double eps) const;
 
-template <class T, pro::facade F>
-bool AreEqualImpl(const T& lhs, const pro::proxy_indirect_accessor<F>& rhs,
+template <class T, pro::facade F, class MP>
+bool AreEqualImpl(const T& lhs, const pro::proxy_indirect_accessor<F, MP>& rhs,
                   double eps) {
   return lhs.AreEqual(proxy_cast<const T&>(rhs), eps);
 }
@@ -65,7 +65,7 @@ struct EqualableQuantity
     : pro::facade_builder            //
       ::add_skill<pro::skills::rtti> // for proxy_cast
       ::add_convention<MemAreEqual,
-                       pro::facade_aware_overload_t<AreEqualOverload>> //
+                       pro::proxy_dependent_signature<AreEqualSignature>> //
       ::build {};
 
 class Point_2 {

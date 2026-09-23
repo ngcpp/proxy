@@ -536,8 +536,8 @@ template <>
 struct ReturnTypeTraits<Derived> : std::type_identity<std::string> {};
 template <>
 struct ReturnTypeTraits<Sibling> : std::type_identity<int> {};
-template <class F>
-using GetOverload = typename ReturnTypeTraits<F>::type() const;
+template <class F, class MP>
+using GetSignature = typename ReturnTypeTraits<F>::type() const;
 struct GetDispatch {
   template <class T>
   int operator()(const T& self) const {
@@ -547,7 +547,7 @@ struct GetDispatch {
 struct Super
     : pro::facade_builder //
       ::add_convention<GetDispatch,
-                       pro::facade_aware_overload_t<GetOverload>>::build {};
+                       pro::proxy_dependent_signature<GetSignature>>::build {};
 struct Mid : pro::facade_builder //
              ::add_facade<Super> //
              ::build {};
@@ -561,9 +561,10 @@ struct Impl {
   int Get() const { return 0; }
 };
 
-// GetOverload<Super> is int() const, which Impl satisfies; GetOverload<Derived>
-// is std::string() const, which it does not. The convention is carried across
-// two levels of super, so the check reaches Derived through Mid.
+// GetSignature<Super> is int() const, which Impl satisfies;
+// GetSignature<Derived> is std::string() const, which it does not. The
+// convention is carried across two levels of super, so the check reaches
+// Derived through Mid.
 static_assert(pro::proxiable<Impl*, Super>);
 static_assert(pro::proxiable<Impl*, Mid>);
 static_assert(!pro::proxiable<Impl*, Derived>);

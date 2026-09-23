@@ -14,26 +14,30 @@ proxy<F> make_proxy_inplace(T&& value)
     requires(std::is_constructible_v<std::decay_t<T>, T>);
 
 // (2)
-template <facade F, class T, class... Args>
-proxy<F> make_proxy_inplace(Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class... Args>
+proxy<F, MP> make_proxy_inplace(Args&&... args)
     noexcept(std::is_nothrow_constructible_v<T, Args...>)
     requires(std::is_constructible_v<T, Args...>);
 
 // (3)
-template <facade F, class T, class U, class... Args>
-proxy<F> make_proxy_inplace(std::initializer_list<U> il, Args&&... args)
+template <facade F, class T, class MP = compact_metadata, class U, class... Args>
+proxy<F, MP> make_proxy_inplace(std::initializer_list<U> il, Args&&... args)
     noexcept(std::is_nothrow_constructible_v<
         T, std::initializer_list<U>&, Args...>)
     requires(std::is_constructible_v<T, std::initializer_list<U>&, Args...>);
 ```
 
+Let `MP` be the [metadata policy](ProMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
+
 `(1)` Creates a `proxy<F>` object containing a value `p` of type *inplace-ptr&lt;*`std::decay_t`*&gt;*, where `*p` is direct-non-list-initialized with `std::forward<T>(value)`.
 
-`(2)` Creates a `proxy<F>` object containing a value `p` of type *inplace-ptr&lt;T&gt;*, where `*p` is direct-non-list-initialized with `std::forward<Args>(args)...`.
+`(2)` Creates a `proxy<F, MP>` object containing a value `p` of type *inplace-ptr&lt;T&gt;*, where `*p` is direct-non-list-initialized with `std::forward<Args>(args)...`.
 
-`(3)` Creates a `proxy<F>` object containing a value `p` of type *inplace-ptr&lt;T&gt;*, where `*p` is direct-non-list-initialized with `il, std::forward<Args>(args)...`.
+`(3)` Creates a `proxy<F, MP>` object containing a value `p` of type *inplace-ptr&lt;T&gt;*, where `*p` is direct-non-list-initialized with `il, std::forward<Args>(args)...`.
 
-*Since 3.3.0*: For `(1-3)`, if [`inplace_proxiable_target<std::decay_t<T>, F>`](inplace_proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+*Since 3.3.0*: For `(1-3)`, if [`inplace_proxiable_target<std::decay_t<T>, F, MP>`](inplace_proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+
+*Since 5.0.0*: `(2-3)` can name the metadata policy of the created `proxy`. `(1)` deduces the target type, so it always uses the default policy, and a `proxy` with another policy is created by naming the target type as well.
 
 ## Return Value
 

@@ -21,13 +21,14 @@ This document provides the API specifications for the C++ library Proxy (version
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [`bad_proxy_cast`](bad_proxy_cast.md)                        | Exception thrown by the value-returning forms of `proxy_cast` on a type mismatch |
 | [`basic_facade_builder`<br />`facade_builder`](basic_facade_builder/README.md) | Provides capability to build a facade type at compile-time   |
+| [`compact_metadata`<br />`inline_metadata`](compact_metadata.md) | The metadata policies provided by the library                |
 | [`constraint_level`](constraint_level.md)                    | Defines the 4 constraint levels of a special member function |
 | [`explicit_conversion_dispatch`<br />`conversion_dispatch`](explicit_conversion_dispatch/README.md) | Dispatch type for explicit conversion expressions with accessibility |
-| [`facade_aware_overload_t`](facade_aware_overload_t.md)      | Specifies a facade-aware overload template                   |
 | [`implicit_conversion_dispatch`](implicit_conversion_dispatch/README.md) | Dispatch type for implicit conversion expressions with accessibility |
 | [`is_bitwise_trivially_relocatable`](is_bitwise_trivially_relocatable.md) | Specifies whether a type is bitwise trivially relocatable    |
 | [`not_implemented` ](not_implemented.md)                     | Exception thrown by `weak_dispatch` for the default implementation |
 | [`operator_dispatch`](operator_dispatch/README.md)           | Dispatch type for operator expressions with accessibility    |
+| [`proxy_dependent_signature`](proxy_dependent_signature.md)  | Specifies a proxy-dependent signature template               |
 | [`proxy_indirect_accessor`](proxy_indirect_accessor/README.md) | Provides indirection accessibility for `proxy`               |
 | [`proxy_view`<br />`observer_facade`](proxy_view.md)         | Non-owning `proxy` optimized for raw pointer types           |
 | [`proxy`](proxy/README.md)                                   | Wraps a pointer object matching specified facade             |
@@ -85,9 +86,12 @@ Also included in `proxy.h`.
 | [*ProAccessible*](ProAccessible.md)           | Specifies that a type provides accessibility to `proxy`      |
 | [*ProBasicConvention*](ProBasicConvention.md) | Specifies that a type potentially models a "convention"      |
 | [*ProBasicFacade*](ProBasicFacade.md)         | Specifies that a type potentially models a "facade" of `proxy` |
+| [*ProBasicMetadata*](ProBasicMetadata.md)     | Specifies that a type potentially models "metadata"          |
 | [*ProBasicReflection*](ProBasicReflection.md) | Specifies that a type potentially models a "reflection"      |
 | [*ProConvention*](ProConvention.md)           | Specifies that a type models a "convention"                  |
 | [*ProDispatch*](ProDispatch.md)               | Specifies that a type models a "dispatch"                    |
 | [*ProFacade*](ProFacade.md)                   | Specifies that a type models a "facade" of `proxy`           |
+| [*ProMetadata*](ProMetadata.md)               | Specifies that a type models "metadata" of a type            |
+| [*ProMetadataPolicy*](ProMetadataPolicy.md)   | Specifies that a type models a "metadata policy" of `proxy`  |
 | [*ProOverload*](ProOverload.md)               | Specifies that a type models an "overload"                   |
 | [*ProReflection*](ProReflection.md)           | Specifies that a type models a "reflection"                  |

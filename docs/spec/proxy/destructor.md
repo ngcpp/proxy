@@ -1,4 +1,4 @@
-# `proxy<F>::~proxy`
+# `proxy<F, MP>::~proxy`
 
 ```cpp
 ~proxy() requires(F::destructibility == constraint_level::trivial)

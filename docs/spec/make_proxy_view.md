@@ -8,11 +8,13 @@
 The definition of `make_proxy_view` makes use of an exposition-only class template *observer-ptr*. `observer-ptr<T>` contains a raw pointer to an object of type `T`, and provides `operator*` for access with the same qualifiers.
 
 ```cpp
-template <facade F, class T>
-proxy_view<F> make_proxy_view(T& value) noexcept;
+template <facade F, class MP = compact_metadata, class T>
+proxy_view<F, MP> make_proxy_view(T& value) noexcept;
 ```
 
-Creates a `proxy_view<F>` object containing a value `p` of type `observer-ptr<T>`, where `p` is direct-non-list-initialized with `std::addressof(value)`. If [`proxiable_target<T, F>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+Creates a `proxy_view<F, MP>` object containing a value `p` of type `observer-ptr<T>`, where `p` is direct-non-list-initialized with `std::addressof(value)`. If [`proxiable_target<T, F, MP>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+
+*Since 5.0.0*: the [metadata policy](ProMetadataPolicy.md) of the created `proxy_view` can be named explicitly, and defaults to [`compact_metadata`](compact_metadata.md). `make_proxy_view` has a single overload and no target-type parameter, so the policy is named right after the facade.
 
 ## Return Value
 

@@ -9,11 +9,11 @@
 template <facade F>
 struct observer_facade;
 
-template <facade F>
-using proxy_view = proxy<observer_facade<F>>;
+template <facade F, class MP = compact_metadata>
+using proxy_view = proxy<observer_facade<F>, MP>;
 ```
 
-`proxy_view<F>` is a non-owning, trivially copyable, trivially relocatable view of an object that models [`proxiable_target<T, F>`](proxiable_target.md). It behaves like a `proxy<F>` except that it never owns the lifetime of the underlying object.
+`proxy_view<F, MP>` is a non-owning, trivially copyable, trivially relocatable view of an object that models [`proxiable_target<T, F, MP>`](proxiable_target.md). It behaves like a `proxy<F, MP>` except that it never owns the lifetime of the underlying object.
 
 `observer_facade<F>` adapts an existing [facade](facade.md) `F` for this non-owning use. The adaptation preserves only those parts of `F` that remain semantically valid when the storage is reduced to a single pointer. Each super of `F` is adapted in the same way, so that view-ness is preserved when converting to a `proxy` of a super: a `proxy_view<F>` converts to a `proxy_view<G>` for every super `G` of `F`.
 

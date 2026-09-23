@@ -5,8 +5,8 @@
 > Namespace: `pro::inline v5`
 
 ```cpp
-template <class T, class F>
-concept inplace_proxiable_target = proxiable<inplace-ptr<T>, F>;
+template <class T, class F, class MP = compact_metadata>
+concept inplace_proxiable_target = proxiable<inplace-ptr<T>, F, MP>;
 ```
 
 See [`make_proxy_inplace`](make_proxy_inplace.md) for the definition of the exposition-only class template *inplace-ptr*.

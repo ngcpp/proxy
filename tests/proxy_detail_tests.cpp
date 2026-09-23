@@ -33,8 +33,7 @@ struct NullableMeta {
   template <class P>
   constexpr explicit NullableMeta(std::in_place_type_t<P>) noexcept
       : v(I + 1) {}
-  void reset() noexcept { v = 0; }
-  bool has_value() const noexcept { return v != 0; }
+  explicit operator bool() const noexcept { return v != 0; }
 
   int v = 0;
 };
@@ -47,6 +46,76 @@ struct PlainMeta {
 
 static_assert(pro::detail::nullable<NullableMeta<0>>);
 static_assert(!pro::detail::nullable<PlainMeta<0>>);
+
+struct PolicyWithoutInvoker {
+  template <class M>
+  using storage = pro::detail::inline_meta_storage<M>;
+};
+struct PolicyWithoutStorage {
+  template <class Ctx, class O>
+  using invoker = pro::detail::invoker<Ctx, O>;
+};
+template <class Ctx, class O>
+struct FinalInvoker final : pro::detail::invoker<Ctx, O> {
+  using pro::detail::invoker<Ctx, O>::invoker;
+};
+struct PolicyWithFinalInvoker {
+  template <class Ctx, class O>
+  using invoker = FinalInvoker<Ctx, O>;
+  template <class M>
+  using storage = pro::detail::inline_meta_storage<M>;
+};
+template <class Ctx, class O>
+struct PlainInvoker {
+  PlainInvoker() = default;
+  template <class P>
+  constexpr explicit PlainInvoker(std::in_place_type_t<P>) noexcept {}
+};
+struct PolicyWithPlainInvoker {
+  template <class Ctx, class O>
+  using invoker = PlainInvoker<Ctx, O>;
+  template <class M>
+  using storage = pro::detail::inline_meta_storage<M>;
+};
+template <class M>
+struct PlainStorage {
+  PlainStorage() = default;
+  template <class P>
+  explicit PlainStorage(std::in_place_type_t<P>) noexcept : value_(nullptr) {}
+  const M& operator*() const noexcept { return value_; }
+
+  M value_;
+};
+struct PolicyWithPlainStorage {
+  template <class Ctx, class O>
+  using invoker = pro::detail::invoker<Ctx, O>;
+  template <class M>
+  using storage = PlainStorage<M>;
+};
+template <class M>
+struct ByValueStorage : M {
+  using M::M;
+  M operator*() const noexcept { return *this; }
+};
+struct PolicyWithByValueStorage {
+  template <class Ctx, class O>
+  using invoker = pro::detail::invoker<Ctx, O>;
+  template <class M>
+  using storage = ByValueStorage<M>;
+};
+
+static_assert(
+    !pro::detail::is_metadata_policy_well_formed<PolicyWithoutInvoker>());
+static_assert(
+    !pro::detail::is_metadata_policy_well_formed<PolicyWithoutStorage>());
+static_assert(
+    !pro::detail::is_metadata_policy_well_formed<PolicyWithFinalInvoker>());
+static_assert(
+    !pro::detail::is_metadata_policy_well_formed<PolicyWithPlainInvoker>());
+static_assert(
+    !pro::detail::is_metadata_policy_well_formed<PolicyWithPlainStorage>());
+static_assert(
+    !pro::detail::is_metadata_policy_well_formed<PolicyWithByValueStorage>());
 
 using M0 = NullableMeta<0>;
 using M1 = NullableMeta<1>;

@@ -7,12 +7,12 @@
 The definitions of `make_proxy` make use of the following exposition-only function:
 
 ```cpp
-template <facade F, class T, class... Args>
-proxy<F> make-proxy-internal(Args&&... args) {
-  if constexpr (inplace_proxiable_target<T, F>) {
-    return make_proxy_inplace<F, T>(std::forward<Args>(args)...);
+template <facade F, class MP, class T, class... Args>
+proxy<F, MP> make-proxy-internal(Args&&... args) {
+  if constexpr (inplace_proxiable_target<T, F, MP>) {
+    return make_proxy_inplace<F, T, MP>(std::forward<Args>(args)...);
   } else {
-    return allocate_proxy<F, T>(std::allocator<void>{}, std::forward<Args>(args)...);
+    return allocate_proxy<F, T, MP>(std::allocator<void>{}, std::forward<Args>(args)...);
   }
 }
 ```
@@ -23,21 +23,25 @@ template <facade F, class T>
 proxy<F> make_proxy(T&& value);  // freestanding-deleted
 
 // (2)
-template <facade F, class T, class... Args>
-proxy<F> make_proxy(Args&&... args);  // freestanding-deleted
+template <facade F, class T, class MP = compact_metadata, class... Args>
+proxy<F, MP> make_proxy(Args&&... args);  // freestanding-deleted
 
 // (3)
-template <facade F, class T, class U, class... Args>
-proxy<F> make_proxy(std::initializer_list<U> il, Args&&... args);  // freestanding-deleted
+template <facade F, class T, class MP = compact_metadata, class U, class... Args>
+proxy<F, MP> make_proxy(std::initializer_list<U> il, Args&&... args);  // freestanding-deleted
 ```
 
-`(1)` Equivalent to `return make-proxy-internal<F, std::decay_t<T>>(std::forward<T>(value))`.
+Let `MP` be the [metadata policy](ProMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
 
-`(2)` Equivalent to `return make-proxy-internal<F, T>(std::forward<Args>(args)...)`.
+`(1)` Equivalent to `return make-proxy-internal<F, compact_metadata, std::decay_t<T>>(std::forward<T>(value))`.
 
-`(3)` Equivalent to `return make-proxy-internal<F, T>(il, std::forward<Args>(args)...)`.
+`(2)` Equivalent to `return make-proxy-internal<F, MP, T>(std::forward<Args>(args)...)`.
 
-*Since 3.3.0*: For `(1-3)`, if [`proxiable_target<std::decay_t<T>, F>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+`(3)` Equivalent to `return make-proxy-internal<F, MP, T>(il, std::forward<Args>(args)...)`.
+
+*Since 3.3.0*: For `(1-3)`, if [`proxiable_target<std::decay_t<T>, F, MP>`](proxiable_target.md) is `false`, the program is ill-formed and diagnostic messages are generated.
+
+*Since 5.0.0*: `(2-3)` can name the metadata policy of the created `proxy`. `(1)` deduces the target type, so it always uses the default policy, and a `proxy` with another policy is created by naming the target type as well.
 
 ## Return Value
 
