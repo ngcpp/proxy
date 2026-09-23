@@ -31,8 +31,8 @@ repos:
       - id: buildifier
         exclude: '^(subprojects|build|bazel-.*)/'
 
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.12
+  - repo: https://github.com/kjanat/actionlint
+    rev: v1.17.0
     hooks:
       - id: actionlint
 
