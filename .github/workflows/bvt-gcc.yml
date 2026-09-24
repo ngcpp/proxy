@@ -2,59 +2,63 @@ on:
   workflow_call:
   workflow_dispatch:
 
+env:
+  GCC_VERSION: 16
+
 jobs:
   bvt-gcc:
     runs-on: ubuntu-26.04
-    container: gcc:16
     steps:
     - uses: actions/checkout@v7
 
-    - name: Install CMake, Meson, and Bazelisk
+    - name: Install meson
+      run: pipx install meson
+
+    - name: Install gcc
       run: |
-        apt-get update
-        apt-get install -y cmake meson ninja-build curl
-        curl -fsSL -o /usr/local/bin/bazel \
-          https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-linux-amd64
-        chmod +x /usr/local/bin/bazel
+        sudo apt install -y "g++-$GCC_VERSION"
+        {
+          echo "CC=gcc-$GCC_VERSION"
+          echo "CXX=g++-$GCC_VERSION"
+        } >> "$GITHUB_ENV"
 
     - name: Check toolchain versions
       run: |
-        g++ --version
+        "$CXX" --version
         cmake --version
         ninja --version
         meson --version
         bazel version
 
-    - name: Build and run test with gcc 15 on cmake
+    - name: Build and run test with gcc ${{ env.GCC_VERSION }} on cmake
       run: |
         cmake --preset default -DCMAKE_CXX_STANDARD=23 -DPROXY_BUILD_MODULES=TRUE
         cmake --build --preset default -j
         ctest --preset default -j
         mkdir build/cmake/drop
-        chmod +x tools/dump_build_env.sh
-        ./tools/dump_build_env.sh g++ build/cmake/drop/env-info.json
+        bash ./tools/dump_build_env.sh "$CXX" build/cmake/drop/env-info.json
 
-    - name: Build and run freestanding test with gcc 15 on cmake
+    - name: Build and run freestanding test with gcc ${{ env.GCC_VERSION }} on cmake
       run: |
         cmake --preset freestanding -DCMAKE_CXX_STANDARD=23 -DPROXY_BUILD_MODULES=TRUE
         cmake --build --preset freestanding -j
         ctest --preset freestanding -j
 
-    - name: Build and run test with gcc 15 on meson
+    - name: Build and run test with gcc ${{ env.GCC_VERSION }} on meson
       run: |
         meson setup build/meson --buildtype=release -Dtests=enabled -Dbenchmarks=enabled
         meson test -C build/meson
         meson test -C build/meson --benchmark --test-args=--benchmark_list_tests=true
 
-    - name: Build and run freestanding test with gcc 15 on meson
+    - name: Build and run freestanding test with gcc ${{ env.GCC_VERSION }} on meson
       run: |
         meson setup build/meson-freestanding --buildtype=release -Dfreestanding=true
         meson test -C build/meson-freestanding
 
-    - name: Build and Run test with gcc 15 on bazel
+    - name: Build and Run test with gcc ${{ env.GCC_VERSION }} on bazel
       run: bazel test --lockfile_mode=error //tests:proxy_tests //benchmarks:proxy_benchmarks //docs/...
 
-    - name: Build and run freestanding test with gcc 15 on bazel
+    - name: Build and run freestanding test with gcc ${{ env.GCC_VERSION }} on bazel
       run: bazel test --config=freestanding --lockfile_mode=error //tests:proxy_freestanding_tests
 
     - name: Run benchmarks

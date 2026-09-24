@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 env:
-  CLANG_VERSION: 22
+  CLANG_VERSION: 23
 
 jobs:
   bvt-clang:

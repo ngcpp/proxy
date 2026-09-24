@@ -12,12 +12,14 @@ jobs:
         compiler:
           - {family: gcc, version: 13, modules: false, doc_tests: true, runner: ubuntu-26.04}
           - {family: gcc, version: 14, modules: false, doc_tests: true, runner: ubuntu-26.04}
+          - {family: gcc, version: 15, modules: true, doc_tests: true, runner: ubuntu-26.04}
           - {family: clang, version: 16, modules: false, doc_tests: false, runner: ubuntu-24.04}
           - {family: clang, version: 17, modules: false, doc_tests: true, runner: ubuntu-26.04}
           - {family: clang, version: 18, modules: false, doc_tests: true, runner: ubuntu-26.04}
           - {family: clang, version: 19, modules: false, doc_tests: true, runner: ubuntu-26.04}
           - {family: clang, version: 20, modules: true, doc_tests: true, runner: ubuntu-26.04}
           - {family: clang, version: 21, modules: true, doc_tests: true, runner: ubuntu-26.04}
+          - {family: clang, version: 22, modules: true, doc_tests: true, runner: ubuntu-26.04}
 
     steps:
     - uses: actions/checkout@v7

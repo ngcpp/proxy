@@ -2,22 +2,28 @@ on:
   workflow_call:
   workflow_dispatch:
 
+env:
+  GCC_VERSION: 16
+
 jobs:
   bvt-codecoverage:
     runs-on: ubuntu-26.04
-    container: gcc:16
     steps:
     - uses: actions/checkout@v7
 
-    - name: Install CMake, Ninja, and gcovr
+    - name: Install gcc and gcovr
       run: |
-        apt-get update
-        apt-get install -y cmake ninja-build gcovr
+        sudo apt install -y "g++-$GCC_VERSION" gcovr
+        {
+          echo "CC=gcc-$GCC_VERSION"
+          echo "CXX=g++-$GCC_VERSION"
+          echo "GCOV=gcov-$GCC_VERSION"
+        } >> "$GITHUB_ENV"
 
     - name: Check toolchain versions
       run: |
-        g++ --version
-        gcov --version
+        "$CXX" --version
+        "$GCOV" --version
         cmake --version
         ninja --version
         gcovr --version
@@ -39,7 +45,7 @@ jobs:
         mkdir -p build/coverage/report
         gcovr --root . \
           --filter 'include/proxy/' \
-          --gcov-executable gcov \
+          --gcov-executable "$GCOV" \
           --exclude-unreachable-branches \
           --print-summary \
           --txt build/coverage/report/coverage.txt \
