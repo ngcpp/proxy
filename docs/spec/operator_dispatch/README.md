@@ -54,7 +54,7 @@ Let `self` be the operand of [`proxy`](../proxy/README.md), and `other` and `oth
 | `operator_dispatch<"!", false>`   | `!self`                 |
 | `operator_dispatch<"&&", false>`  | `self && other`         |
 | `operator_dispatch<"||", false>`  | `self || other`         |
-| `operator_dispatch<"~", false>`   | `!self`                 |
+| `operator_dispatch<"~", false>`   | `~self`                 |
 | `operator_dispatch<"&", false>`   | `&self`, `self & other` |
 | `operator_dispatch<"|", false>`   | `self | other`          |
 | `operator_dispatch<"^", false>`   | `self ^ other`          |
