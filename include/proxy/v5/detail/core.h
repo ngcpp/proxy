@@ -1567,15 +1567,10 @@ private:
   struct accessor<P, D, T() oq ne> {                                           \
     PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(operator T)                        \
     explicit(Expl) operator T() oq ne {                                        \
-      if constexpr (Nullable) {                                                \
-        if (!static_cast<const P&>(*this).has_value()) {                       \
-          return nullptr;                                                      \
-        }                                                                      \
-      }                                                                        \
       return invoke<D, T() oq ne>(static_cast<P pq>(*this));                   \
     }                                                                          \
   }
-template <bool Expl, bool Nullable>
+template <bool Expl>
 struct cast_dispatch_base {
   PRO5D_DEF_ACCESSOR_TEMPLATE(
       MEM, PRO5D_DEF_CAST_ACCESSOR,

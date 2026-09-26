@@ -264,13 +264,13 @@ struct operator_dispatch<"[]", false> {
 #undef PRO5D_DEF_LHS_UNARY_OP_ACCESSOR
 #undef PRO5D_DEF_LHS_LEFT_OP_ACCESSOR
 
-struct implicit_conversion_dispatch : detail::cast_dispatch_base<false, false> {
+struct implicit_conversion_dispatch : detail::cast_dispatch_base<false> {
   template <class T>
   PRO5D_STATIC_CALL(T&&, T&& self) noexcept {
     return std::forward<T>(self);
   }
 };
-struct explicit_conversion_dispatch : detail::cast_dispatch_base<true, false> {
+struct explicit_conversion_dispatch : detail::cast_dispatch_base<true> {
   template <class T>
   PRO5D_STATIC_CALL(auto, T&& self) noexcept {
     return detail::converter{
