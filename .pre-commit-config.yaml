@@ -14,7 +14,7 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.8
+    rev: v0.16.9
     hooks:
       - id: ruff-format
 
@@ -41,7 +41,7 @@ repos:
       - id: meson-format
         name: meson format
         language: python
-        additional_dependencies: ["meson==1.12.0"]
+        additional_dependencies: ["meson==1.12.1"]
         entry: meson
         args: ["format", "--check-only", "--recursive", "meson.build"]
         pass_filenames: false
