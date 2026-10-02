@@ -2,10 +2,9 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_DETAIL_FACADE_META_TRAITS_H_
-#define MSFT_PROXY_V5_DETAIL_FACADE_META_TRAITS_H_
+#ifndef MSFT_PROXY_V5_DETAIL_METADATA_POLICY_H_
+#define MSFT_PROXY_V5_DETAIL_METADATA_POLICY_H_
 
-#include <cstddef>
 #include <type_traits>
 #include <utility>
 
@@ -32,21 +31,12 @@ public:
       : p_(ptrauth_sign_unauthenticated(
             ptrauth_strip(static_cast<O*>(f), ptrauth_key_function_pointer),
             ptrauth_key_function_pointer, schema())) {}
-  code_ptr(const code_ptr& rhs) noexcept
-      : p_(ptrauth_auth_and_resign(rhs.p_, ptrauth_key_function_pointer,
-                                   rhs.schema(), ptrauth_key_function_pointer,
-                                   schema())) {}
+  code_ptr(const code_ptr& rhs) noexcept { initialize(rhs); }
   code_ptr& operator=(const code_ptr& rhs) noexcept {
-    p_ = ptrauth_auth_and_resign(rhs.p_, ptrauth_key_function_pointer,
-                                 rhs.schema(), ptrauth_key_function_pointer,
-                                 schema());
+    initialize(rhs);
     return *this;
   }
-  code_ptr& operator=(std::nullptr_t) noexcept {
-    p_ = nullptr;
-    return *this;
-  }
-  bool operator==(std::nullptr_t) const noexcept { return p_ == nullptr; }
+  explicit operator bool() const noexcept { return p_ != nullptr; }
   template <class... Args>
   decltype(auto) operator()(Args&&... args) const {
     return ptrauth_auth_function(p_, ptrauth_key_function_pointer,
@@ -54,6 +44,13 @@ public:
   }
 
 private:
+  void initialize(const code_ptr& rhs) noexcept {
+    p_ = rhs.p_ == nullptr
+             ? nullptr
+             : ptrauth_auth_and_resign(rhs.p_, ptrauth_key_function_pointer,
+                                       rhs.schema(),
+                                       ptrauth_key_function_pointer, schema());
+  }
   ptrauth_extra_data_t schema() const noexcept {
     return ptrauth_blend_discriminator(&p_, ptrauth_type_discriminator(Disc));
   }
@@ -68,14 +65,9 @@ public:
   explicit meta_ptr(const T* p) noexcept
       : p_(ptrauth_sign_unauthenticated(p, ptrauth_key_cxx_vtable_pointer,
                                         schema())) {}
-  meta_ptr(const meta_ptr& rhs) noexcept
-      : p_(ptrauth_auth_and_resign(rhs.p_, ptrauth_key_cxx_vtable_pointer,
-                                   rhs.schema(), ptrauth_key_cxx_vtable_pointer,
-                                   schema())) {}
+  meta_ptr(const meta_ptr& rhs) noexcept { initialize(rhs); }
   meta_ptr& operator=(const meta_ptr& rhs) noexcept {
-    p_ = ptrauth_auth_and_resign(rhs.p_, ptrauth_key_cxx_vtable_pointer,
-                                 rhs.schema(), ptrauth_key_cxx_vtable_pointer,
-                                 schema());
+    initialize(rhs);
     return *this;
   }
   meta_ptr& operator=(const T* p) noexcept {
@@ -83,16 +75,19 @@ public:
                                       schema());
     return *this;
   }
-  meta_ptr& operator=(std::nullptr_t) noexcept {
-    p_ = nullptr;
-    return *this;
-  }
-  bool operator==(std::nullptr_t) const noexcept { return p_ == nullptr; }
+  explicit operator bool() const noexcept { return p_ != nullptr; }
   const T& operator*() const noexcept {
     return *ptrauth_auth_data(p_, ptrauth_key_cxx_vtable_pointer, schema());
   }
 
 private:
+  void initialize(const meta_ptr& rhs) noexcept {
+    p_ = rhs.p_ == nullptr
+             ? nullptr
+             : ptrauth_auth_and_resign(
+                   rhs.p_, ptrauth_key_cxx_vtable_pointer, rhs.schema(),
+                   ptrauth_key_cxx_vtable_pointer, schema());
+  }
   ptrauth_extra_data_t schema() const noexcept {
     return ptrauth_blend_discriminator(&p_, ptrauth_type_discriminator(Disc));
   }
@@ -112,8 +107,7 @@ struct invoker_base {
   invoker_base() = default;
   template <class F>
   constexpr explicit invoker_base(const F& f) : p_(f) {}
-  void reset() noexcept { p_ = nullptr; }
-  bool has_value() const noexcept { return p_ != nullptr; }
+  explicit operator bool() const noexcept { return static_cast<bool>(p_); }
   template <class... Args>
   decltype(auto) operator()(Args&&... args) const {
     return p_(std::forward<Args>(args)...);
@@ -152,8 +146,7 @@ struct static_meta_storage {
     ptr_ = std::addressof(static_cast<const M&>(*rhs));
     return *this;
   }
-  bool has_value() const noexcept { return ptr_ != nullptr; }
-  void reset() noexcept { ptr_ = nullptr; }
+  explicit operator bool() const noexcept { return static_cast<bool>(ptr_); }
   const M& operator*() const noexcept { return *ptr_; }
 
 private:
@@ -164,19 +157,18 @@ private:
 };
 
 template <class M>
-struct inplace_meta_storage : M {
+struct inline_meta_storage : M {
   using M::M;
 
   template <class M2>
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
-  inplace_meta_storage&
-      operator=(const inplace_meta_storage<M2>& rhs) noexcept {
+  inline_meta_storage& operator=(const inline_meta_storage<M2>& rhs) noexcept {
     M::operator=(*rhs);
     return *this;
   }
   template <class M2>
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
-  inplace_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
+  inline_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
     M::operator=(*rhs);
     return *this;
   }
@@ -186,24 +178,24 @@ struct inplace_meta_storage : M {
 
 } // namespace detail
 
-struct compact_facade_meta_traits {
+struct compact_metadata {
   template <class Ctx, class O>
   using invoker = detail::invoker<Ctx, O>;
 
   template <class M>
   using storage = std::conditional_t<sizeof(M) <= sizeof(void*),
-                                     detail::inplace_meta_storage<M>,
+                                     detail::inline_meta_storage<M>,
                                      detail::static_meta_storage<M>>;
 };
 
-struct flat_facade_meta_traits {
+struct inline_metadata {
   template <class Ctx, class O>
   using invoker = detail::invoker<Ctx, O>;
 
   template <class M>
-  using storage = detail::inplace_meta_storage<M>;
+  using storage = detail::inline_meta_storage<M>;
 };
 
 } // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V5_DETAIL_FACADE_META_TRAITS_H_
+#endif // MSFT_PROXY_V5_DETAIL_METADATA_POLICY_H_

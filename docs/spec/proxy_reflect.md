@@ -8,12 +8,12 @@
 
 ```cpp
 // (1)
-template <class R, facade F>
-const R& proxy_reflect(const proxy_indirect_accessor<F>& p) noexcept;
+template <class R, facade F, class MP>
+const R& proxy_reflect(const proxy_indirect_accessor<F, MP>& p) noexcept;
 
 // (2)
-template <class R, facade F>
-const R& proxy_reflect(const proxy<F>& p) noexcept;
+template <class R, facade F, class MP>
+const R& proxy_reflect(const proxy<F, MP>& p) noexcept;
 ```
 
 Acquires reflection information of a contained type.

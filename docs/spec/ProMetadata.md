@@ -1,8 +1,8 @@
-# Named requirements: *ProMeta*
+# Named requirements: *ProMetadata*
 
 > Since: 5.0.0
 
-A type `M` meets the *ProMeta* requirements of a type `T` if `M` meets the [*ProBasicMeta* requirements](ProBasicMeta.md), and the following expressions are well-formed and have the specified semantics.
+A type `M` meets the *ProMetadata* requirements of a type `T` if `M` meets the [*ProBasicMetadata* requirements](ProBasicMetadata.md), and the following expressions are well-formed and have the specified semantics.
 
 | Expressions                | Semantics                                                    |
 | -------------------------- | ------------------------------------------------------------ |
@@ -10,5 +10,6 @@ A type `M` meets the *ProMeta* requirements of a type `T` if `M` meets the [*Pro
 
 ## See Also
 
-- [*ProBasicMeta* requirements](ProBasicMeta.md)
+- [*ProBasicMetadata* requirements](ProBasicMetadata.md)
+- [*ProMetadataPolicy* requirements](ProMetadataPolicy.md)
 - [*ProReflection* requirements](ProReflection.md)

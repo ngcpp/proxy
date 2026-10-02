@@ -18,13 +18,14 @@ using v5::bad_proxy_cast;
 #endif // __cpp_rtti >= 199711L
 
 using v5::basic_facade_builder;
+using v5::compact_metadata;
 using v5::constraint_level;
 using v5::conversion_dispatch;
 using v5::explicit_conversion_dispatch;
 using v5::facade;
-using v5::facade_aware_overload_t;
 using v5::facade_builder;
 using v5::implicit_conversion_dispatch;
+using v5::inline_metadata;
 using v5::inplace_proxiable_target;
 using v5::is_bitwise_trivially_relocatable;
 using v5::is_bitwise_trivially_relocatable_v;
@@ -36,6 +37,7 @@ using v5::operator_dispatch;
 using v5::proxiable;
 using v5::proxiable_target;
 using v5::proxy;
+using v5::proxy_dependent_signature;
 using v5::proxy_indirect_accessor;
 using v5::proxy_invoke;
 using v5::proxy_reflect;

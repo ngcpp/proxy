@@ -2,20 +2,20 @@
 
 ```cpp
 // (1)
-proxy_indirect_accessor<F>* operator->() noexcept;
-const proxy_indirect_accessor<F>* operator->() const noexcept;
+proxy_indirect_accessor<F, MP>* operator->() noexcept;
+const proxy_indirect_accessor<F, MP>* operator->() const noexcept;
 
 // (2)
-proxy_indirect_accessor<F>& operator*() & noexcept;
-const proxy_indirect_accessor<F>& operator*() const& noexcept;
-proxy_indirect_accessor<F>&& operator*() && noexcept;
-const proxy_indirect_accessor<F>&& operator*() const&& noexcept;
+proxy_indirect_accessor<F, MP>& operator*() & noexcept;
+const proxy_indirect_accessor<F, MP>& operator*() const& noexcept;
+proxy_indirect_accessor<F, MP>&& operator*() && noexcept;
+const proxy_indirect_accessor<F, MP>&& operator*() const&& noexcept;
 ```
 
 These operators access the accessors of the indirect conventions, as if dereferencing the contained value.
 
-- `(1)` Returns a pointer to the `proxy_indirect_accessor<F>`.
-- `(2)` Returns a reference to the `proxy_indirect_accessor<F>`.
+- `(1)` Returns a pointer to the `proxy_indirect_accessor<F, MP>`.
+- `(2)` Returns a reference to the `proxy_indirect_accessor<F, MP>`.
 
 The behavior is undefined if `*this` does not contain a value.
 

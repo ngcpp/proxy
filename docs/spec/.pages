@@ -8,13 +8,14 @@ nav:
   - Classes:
     - bad_proxy_cast: bad_proxy_cast.md
     - basic_facade_builder<br />facade_builder: basic_facade_builder
+    - compact_metadata<br />inline_metadata: compact_metadata.md
     - constraint_level: constraint_level.md
     - explicit_conversion_dispatch<br />conversion_dispatch: explicit_conversion_dispatch
-    - facade_aware_overload_t: facade_aware_overload_t.md
     - implicit_conversion_dispatch: implicit_conversion_dispatch
     - is_bitwise_trivially_relocatable: is_bitwise_trivially_relocatable.md
     - not_implemented: not_implemented.md
     - operator_dispatch: operator_dispatch
+    - proxy_dependent_signature: proxy_dependent_signature.md
     - proxy_indirect_accessor: proxy_indirect_accessor
     - proxy_view<br />observer_facade: proxy_view.md
     - proxy: proxy
@@ -45,11 +46,12 @@ nav:
     - ProAccessible: ProAccessible.md
     - ProBasicConvention: ProBasicConvention.md
     - ProBasicFacade: ProBasicFacade.md
-    - ProBasicMeta: ProBasicMeta.md
+    - ProBasicMetadata: ProBasicMetadata.md
     - ProBasicReflection: ProBasicReflection.md
     - ProConvention: ProConvention.md
     - ProDispatch: ProDispatch.md
     - ProFacade: ProFacade.md
-    - ProMeta: ProMeta.md
+    - ProMetadata: ProMetadata.md
+    - ProMetadataPolicy: ProMetadataPolicy.md
     - ProOverload: ProOverload.md
     - ProReflection: ProReflection.md

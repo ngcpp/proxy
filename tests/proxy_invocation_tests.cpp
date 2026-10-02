@@ -63,9 +63,9 @@ pro::proxy<Container<T>> AppendImpl(C& container, T&& v) {
 PRO_DEF_FREE_DISPATCH(FreeAppend, AppendImpl, Append);
 
 template <class T>
-struct FreeAppendOverloadTraits {
-  template <class F>
-  using Type = pro::proxy<F>(T) const&;
+struct FreeAppendSignatureTraits {
+  template <class F, class MP>
+  using Type = pro::proxy<F, MP>(T) const&;
 };
 
 template <class T>
@@ -73,8 +73,8 @@ struct Container
     : pro::facade_builder       //
       ::add_facade<Iterable<T>> //
       ::template add_convention<
-          FreeAppend, pro::facade_aware_overload_t<
-                          FreeAppendOverloadTraits<T>::template Type>> //
+          FreeAppend, pro::proxy_dependent_signature<
+                          FreeAppendSignatureTraits<T>::template Type>> //
       ::build {};
 
 PRO_DEF_MEM_DISPATCH(MemAt, at, at);
@@ -113,15 +113,15 @@ pro::proxy<Weak<F>> GetWeakImpl(T&&) {
 template <class F>
 PRO_DEF_FREE_DISPATCH(FreeGetWeak, GetWeakImpl<F>, GetWeak);
 
-template <class F>
-using FreeGetWeakOverload = pro::proxy<Weak<F>>() const&;
+template <class F, class MP>
+using FreeGetWeakSignature = pro::proxy<Weak<F>, MP>() const&;
 
 struct SharedStringable
     : pro::facade_builder                   //
       ::add_facade<utils::spec::Stringable> //
       ::add_direct_convention<
           FreeGetWeak<SharedStringable>,
-          pro::facade_aware_overload_t<FreeGetWeakOverload>> //
+          pro::proxy_dependent_signature<FreeGetWeakSignature>> //
       ::build {};
 
 template <class F, bool NE, class... Args>
@@ -218,8 +218,11 @@ TEST(ProxyInvocationTests, TestMultipleDispatches_Duplicated) {
         ::add_convention<detail::FreeForEach,
                          void(std::function<void(int&)>)> //
         ::build {};
-  static_assert(sizeof(pro::detail::proxy_meta<DuplicatedIterable>) ==
-                sizeof(pro::detail::proxy_meta<detail::Iterable<int>>));
+  static_assert(
+      sizeof(
+          pro::detail::proxy_meta<DuplicatedIterable, pro::compact_metadata>) ==
+      sizeof(pro::detail::proxy_meta<detail::Iterable<int>,
+                                     pro::compact_metadata>));
   std::list<int> l = {1, 2, 3};
   pro::proxy<DuplicatedIterable> p = &l;
   ASSERT_EQ(Size(*p), std::size_t{3});
@@ -238,8 +241,11 @@ TEST(ProxyInvocationTests, TestSuper_Duplicated) {
         ::add_facade<detail::Iterable<int>>                        //
         ::add_convention<detail::FreeSize, std::size_t() noexcept> //
         ::build {};
-  static_assert(sizeof(pro::detail::proxy_meta<DuplicatedIterable>) ==
-                sizeof(pro::detail::proxy_meta<detail::Iterable<int>>));
+  static_assert(
+      sizeof(
+          pro::detail::proxy_meta<DuplicatedIterable, pro::compact_metadata>) ==
+      sizeof(pro::detail::proxy_meta<detail::Iterable<int>,
+                                     pro::compact_metadata>));
   std::list<int> l = {1, 2, 3};
   pro::proxy<DuplicatedIterable> p = &l;
   ASSERT_EQ(Size(*p), std::size_t{3});

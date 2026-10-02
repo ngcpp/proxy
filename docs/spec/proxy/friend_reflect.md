@@ -1,13 +1,13 @@
-# Function template `reflect` (`proxy<F>`)
+# Function template `reflect` (`proxy<F, MP>`)
 
 > Since: 4.1.0
 
 ```cpp
 template <class R>
-const R& reflect(const proxy<F>& p) noexcept;
+const R& reflect(const proxy<F, MP>& p) noexcept;
 ```
 
-Acquires reflection information of the contained type of a `proxy<F>`, through a *direct* reflection.
+Acquires reflection information of the contained type of a `proxy<F, MP>`, through a *direct* reflection.
 
 Let `P` be the contained type of `p`. Returns a `const` reference of `R` direct-non-list-initialized with [`std::in_place_type<P>`](https://en.cppreference.com/w/cpp/utility/in_place). The behavior is undefined if `p` does not contain a value.
 
@@ -18,9 +18,9 @@ There shall be a reflection type `Refl` defined in the reflection types of `F` o
 
 The reference obtained from `reflect()` may be invalidated if `p` is subsequently modified.
 
-This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy<F>` is an associated class of the arguments.
+This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy<F, MP>` is an associated class of the arguments.
 
-To acquire an *indirect* reflection (deduced from the pointed-to type), use [`reflect`](../proxy_indirect_accessor/friend_reflect.md) on the associated [`proxy_indirect_accessor<F>`](../proxy_indirect_accessor/README.md) (i.e., on `*p`).
+To acquire an *indirect* reflection (deduced from the pointed-to type), use [`reflect`](../proxy_indirect_accessor/friend_reflect.md) on the associated [`proxy_indirect_accessor<F, MP>`](../proxy_indirect_accessor/README.md) (i.e., on `*p`).
 
 ## Notes
 

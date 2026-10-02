@@ -1,19 +1,19 @@
-# Function template `invoke` (`proxy<F>`)
+# Function template `invoke` (`proxy<F, MP>`)
 
 > Since: 4.1.0
 
 ```cpp
 template <class D, class O, class... Args>
-return-type-of<O> invoke(proxy<F>& p, Args&&... args);
+return-type-of<O> invoke(proxy<F, MP>& p, Args&&... args);
 template <class D, class O, class... Args>
-return-type-of<O> invoke(const proxy<F>& p, Args&&... args);
+return-type-of<O> invoke(const proxy<F, MP>& p, Args&&... args);
 template <class D, class O, class... Args>
-return-type-of<O> invoke(proxy<F>&& p, Args&&... args);
+return-type-of<O> invoke(proxy<F, MP>&& p, Args&&... args);
 template <class D, class O, class... Args>
-return-type-of<O> invoke(const proxy<F>&& p, Args&&... args);
+return-type-of<O> invoke(const proxy<F, MP>&& p, Args&&... args);
 ```
 
-Invokes a `proxy<F>` with a specified dispatch type `D`, an overload type `O`, and arguments, through a *direct* convention. Let `Args2...` be the argument types of `O`, `R` be the return type of `O`. `return-type-of<O>` is `R`.
+Invokes a `proxy<F, MP>` with a specified dispatch type `D`, an overload type `O`, and arguments, through a *direct* convention. Let `Args2...` be the argument types of `O`, `R` be the return type of `O`. `return-type-of<O>` is `R`.
 
 Let `ptr` be the contained value of `p` with the same cv ref-qualifiers. Equivalent to [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), ptr, static_cast<Args2>(args)...)`. The behavior is undefined if `p` does not contain a value.
 
@@ -21,11 +21,11 @@ There shall be a convention type `Conv` defined in the convention types of `F` o
 
 - `Conv::is_direct` is `true`, and
 - `typename Conv::dispatch_type` is `D`, and
-- [`substituted-overload`](../ProOverload.md)`<typename Conv::overload_type, F>` is `O`.
+- [`substituted-overload`](../ProOverload.md)`<typename Conv::overload_type, F, MP>` is `O`.
 
-This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy<F>` is an associated class of the arguments.
+This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy<F, MP>` is an associated class of the arguments.
 
-To invoke an *indirect* convention, use [`invoke`](../proxy_indirect_accessor/friend_invoke.md) on the associated [`proxy_indirect_accessor<F>`](../proxy_indirect_accessor/README.md) (i.e., on `*p`).
+To invoke an *indirect* convention, use [`invoke`](../proxy_indirect_accessor/friend_invoke.md) on the associated [`proxy_indirect_accessor<F, MP>`](../proxy_indirect_accessor/README.md) (i.e., on `*p`).
 
 ## Notes
 

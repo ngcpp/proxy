@@ -5,26 +5,29 @@
 > Namespace: `pro::inline v5`
 
 ```cpp
-template <facade F>
+template <facade F, class MP = compact_metadata>
 class proxy;
 ```
 
 Class template `proxy` is a general-purpose polymorphic wrapper for C++ objects. Unlike other polymorphic wrappers in the C++ standard (e.g., [`std::function`](https://en.cppreference.com/w/cpp/utility/functional/function), [`std::move_only_function`](https://en.cppreference.com/w/cpp/utility/functional/move_only_function), [`std::any`](https://en.cppreference.com/w/cpp/utility/any), etc.), `proxy` is based on pointer semantics. It supports flexible lifetime management without runtime [garbage collection (GC)](https://en.wikipedia.org/wiki/Garbage_collection_(computer_science)), and offers best-in-class code generation quality, extendibility and accessibility.
 
-Any instance of `proxy<F>` at any given point in time either *contains a value* or *does not contain a value*. If a `proxy<F>` *contains a value*, the type of the value shall be a pointer type `P`  where [`proxiable<P, F>`](../proxiable.md) is `true`, and the value is guaranteed to be allocated as part of the `proxy` object footprint, i.e. no dynamic memory allocation occurs. However, `P` may allocate during its construction, depending on its implementation.
+The [metadata policy](../ProMetadataPolicy.md) `MP` determines how a `proxy` erases an invocation and how it keeps the metadata deduced from the contained type. It governs the size of a `proxy` and the indirections an invocation performs, and it is substituted into any [`proxy_dependent_signature`](../proxy_dependent_signature.md) declared by `F`. It does not otherwise change the behavior of a convention or a reflection. The metadata type depends on `MP`, so a `proxy` converts only to a `proxy` with the same metadata policy. See [`compact_metadata`](../compact_metadata.md) for the metadata policies provided by the library.
+
+Any instance of `proxy<F, MP>` at any given point in time either *contains a value* or *does not contain a value*. If a `proxy<F, MP>` *contains a value*, the type of the value shall be a pointer type `P`  where [`proxiable<P, F, MP>`](../proxiable.md) is `true`, and the value is guaranteed to be allocated as part of the `proxy` object footprint, i.e. no dynamic memory allocation occurs. However, `P` may allocate during its construction, depending on its implementation.
 
 Let `Cs` be the convention types of `F` and of every super of `F`, reachable via `typename F::super_types` transitively, and `Rs` be the reflection types of `F` and of every such super.
 
-- For each distinct dispatch type `D` among the types `C` in `Cs` where `C::is_direct` is `true`, let `Os...` be the overload types of those conventions with duplicates removed, and `substituted-overload-types...` be [`substituted-overload<Os, F>...`](../ProOverload.md). If `D` meets the [*ProAccessible* requirements](../ProAccessible.md) of `proxy<F>, D, substituted-overload-types...`, `typename D::template accessor<proxy<F>, D, substituted-overload-types...>` is inherited by `proxy<F>`.
-- For each type `R` in `Rs`, if `R::is_direct` is `true` and `typename R::reflector_type` meets the [*ProAccessible* requirements](../ProAccessible.md) of `proxy<F>, typename R::reflector_type`, `typename R::reflector_type::template accessor<proxy<F>, typename R::reflector_type` is inherited by `proxy<F>`.
+- For each distinct dispatch type `D` among the types `C` in `Cs` where `C::is_direct` is `true`, let `Os...` be the overload types of those conventions with duplicates removed, and `substituted-overload-types...` be [`substituted-overload<Os, F, MP>...`](../ProOverload.md). If `D` meets the [*ProAccessible* requirements](../ProAccessible.md) of `proxy<F, MP>, D, substituted-overload-types...`, `typename D::template accessor<proxy<F, MP>, D, substituted-overload-types...>` is inherited by `proxy<F, MP>`.
+- For each type `R` in `Rs`, if `R::is_direct` is `true` and `typename R::reflector_type` meets the [*ProAccessible* requirements](../ProAccessible.md) of `proxy<F, MP>, typename R::reflector_type`, `typename R::reflector_type::template accessor<proxy<F, MP>, typename R::reflector_type` is inherited by `proxy<F, MP>`.
 
-*Since 5.0.0*: `Cs` and `Rs` include the conventions and reflections of the supers of `F`, and the accessor of a dispatch type is formed from the overload types of every convention in `Cs` sharing that dispatch type, rather than from a single convention.
+*Since 5.0.0*: `Cs` and `Rs` include the conventions and reflections of the supers of `F`, and the accessor of a dispatch type is formed from the overload types of every convention in `Cs` sharing that dispatch type, rather than from a single convention. `proxy` also takes a metadata policy.
 
 ## Member Types
 
-| Name                               | Description |
-| ---------------------------------- | ----------- |
-| `facade_type`<br />*(since 3.3.1)* | `F`         |
+| Name                                        | Description |
+| ------------------------------------------- | ----------- |
+| `facade_type`<br />*(since 3.3.1)*          | `F`         |
+| `metadata_policy_type`<br />*(since 5.0.0)* | `MP`        |
 
 ## Member Functions
 

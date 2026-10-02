@@ -1,4 +1,4 @@
-# Function `swap` (`proxy<F>`)
+# Function `swap` (`proxy<F, MP>`)
 
 ```cpp
 friend void swap(proxy& lhs, proxy& rhs) noexcept(noexcept(lhs.swap(rhs)))
@@ -7,7 +7,7 @@ friend void swap(proxy& lhs, proxy& rhs) noexcept(noexcept(lhs.swap(rhs)))
 
 Overloads the [std::swap](https://en.cppreference.com/w/cpp/algorithm/swap) algorithm for `proxy`. Exchanges the state of `lhs` with that of `rhs`. Effectively calls `lhs.swap(rhs)`.
 
-This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy<F>` is an associated class of the arguments.
+This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy<F, MP>` is an associated class of the arguments.
 
 ## Example
 

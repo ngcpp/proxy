@@ -18,8 +18,9 @@ namespace proxy_pac_tests_detail {
 
 template <pro::facade F>
 constexpr bool IsInlineMetaPreferred = pro::detail::specialization_of<
-    pro::compact_facade_meta_traits::storage<pro::detail::proxy_meta<F>>,
-    pro::detail::inplace_meta_storage>;
+    pro::compact_metadata::storage<
+        pro::detail::proxy_meta<F, pro::compact_metadata>>,
+    pro::detail::inline_meta_storage>;
 
 template <class T>
 auto GetRawBytes(const T& v) noexcept {
@@ -32,8 +33,8 @@ template <pro::facade F>
 void CorruptMeta(pro::proxy<F>& p) noexcept {
   // meta_ is the second of the two slots of proxy<F>, behind the storage of
   // the contained value.
-  using Storage =
-      pro::compact_facade_meta_traits::storage<pro::detail::proxy_meta<F>>;
+  using Storage = pro::compact_metadata::storage<
+      pro::detail::proxy_meta<F, pro::compact_metadata>>;
   static_assert(sizeof(pro::proxy<F>) == sizeof(Storage) + F::max_size);
   std::byte* target =
       reinterpret_cast<std::byte*>(std::addressof(p)) + F::max_size;

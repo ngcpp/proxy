@@ -15,8 +15,9 @@ bool operator==(const It& it, const pro::proxy<F>& rhs) noexcept
   return typeid(It) == proxy_typeid(rhs) && it == proxy_cast<const It&>(rhs);
 }
 
-template <class F>
-using SelfComparisonOverload = bool(const pro::proxy<F>& rhs) const noexcept;
+template <class F, class MP>
+using SelfComparisonSignature =
+    bool(const pro::proxy<F, MP>& rhs) const noexcept;
 
 template <class T>
 struct Iterator
@@ -27,7 +28,7 @@ struct Iterator
       ::add_direct_convention<pro::operator_dispatch<"++">, void() noexcept> //
       ::add_direct_convention<
           pro::operator_dispatch<"!=">,
-          pro::facade_aware_overload_t<SelfComparisonOverload>> //
+          pro::proxy_dependent_signature<SelfComparisonSignature>> //
       ::add_convention<pro::implicit_conversion_dispatch,
                        T&() const noexcept> //
       ::build {};

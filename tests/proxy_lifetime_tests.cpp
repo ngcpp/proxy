@@ -1509,14 +1509,14 @@ TEST(ProxyLifetimeTests, Test_CopySubstitution_MixedMetaStorage) {
                    ::add_direct_reflection<utils::RttiReflector> //
                    ::add_facade<Super>                           //
                    ::build {};
-  static_assert(
-      pro::detail::specialization_of<pro::compact_facade_meta_traits::storage<
-                                         pro::detail::proxy_meta<Super>>,
-                                     pro::detail::inplace_meta_storage>);
-  static_assert(
-      pro::detail::specialization_of<pro::compact_facade_meta_traits::storage<
-                                         pro::detail::proxy_meta<Derived>>,
-                                     pro::detail::static_meta_storage>);
+  static_assert(pro::detail::specialization_of<
+                pro::compact_metadata::storage<
+                    pro::detail::proxy_meta<Super, pro::compact_metadata>>,
+                pro::detail::inline_meta_storage>);
+  static_assert(pro::detail::specialization_of<
+                pro::compact_metadata::storage<
+                    pro::detail::proxy_meta<Derived, pro::compact_metadata>>,
+                pro::detail::static_meta_storage>);
   int v = 123;
   pro::proxy<Derived> p1 = &v;
   pro::proxy<Super> p2 = p1;

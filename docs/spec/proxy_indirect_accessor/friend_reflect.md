@@ -1,10 +1,10 @@
-# Function template `reflect` (`proxy_indirect_accessor<F>`)
+# Function template `reflect` (`proxy_indirect_accessor<F, MP>`)
 
 > Since: 4.1.0
 
 ```cpp
 template <class R>
-const R& reflect(const proxy_indirect_accessor<F>& p) noexcept;
+const R& reflect(const proxy_indirect_accessor<F, MP>& p) noexcept;
 ```
 
 Acquires reflection information of the contained type of the associated `proxy`, through an *indirect* reflection.
@@ -18,9 +18,9 @@ There shall be a reflection type `Refl` defined in the reflection types of `F` o
 
 The reference obtained from `reflect()` may be invalidated if the associated `proxy` is subsequently modified.
 
-This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy_indirect_accessor<F>` is an associated class of the arguments.
+This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy_indirect_accessor<F, MP>` is an associated class of the arguments.
 
-A `proxy_indirect_accessor<F>` is obtained by dereferencing a [`proxy<F>`](../proxy/README.md) (i.e., `*p`). To acquire a *direct* reflection (deduced from the pointer type), use [`reflect`](../proxy/friend_reflect.md) on the [`proxy<F>`](../proxy/README.md) itself.
+A `proxy_indirect_accessor<F, MP>` is obtained by dereferencing a [`proxy<F, MP>`](../proxy/README.md) (i.e., `*p`). To acquire a *direct* reflection (deduced from the pointer type), use [`reflect`](../proxy/friend_reflect.md) on the [`proxy<F, MP>`](../proxy/README.md) itself.
 
 ## Notes
 
@@ -66,5 +66,5 @@ int main() {
 
 ## See Also
 
-- [function template `invoke` (`proxy_indirect_accessor<F>`)](friend_invoke.md)
+- [function template `invoke` (`proxy_indirect_accessor<F, MP>`)](friend_invoke.md)
 - [alias template `basic_facade_builder::add_reflection`](../basic_facade_builder/add_reflection.md)

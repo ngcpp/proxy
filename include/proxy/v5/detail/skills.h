@@ -42,32 +42,34 @@ struct enabled_t {};
 template <class T, template <class...> class TT, class... Ctx>
 concept enabled_for = std::is_base_of_v<enabled_t<TT, Ctx...>, T>;
 
-#define PRO5D_DEF_FAW_CAST_ACCESSOR(oq, pq, ne, ...)                           \
-  template <facade F, class D, template <class> class TargetFacade>            \
-  struct accessor<proxy<F>, D, proxy<TargetFacade<F>>() oq ne> {               \
+#define PRO5D_DEF_DEPENDENT_CAST_ACCESSOR(oq, pq, ne, ...)                     \
+  template <facade F, class MP, class D, template <class> class TargetFacade>  \
+  struct accessor<proxy<F, MP>, D, proxy<TargetFacade<F>, MP>() oq ne> {       \
     template <facade F2>                                                       \
-      requires(std::is_convertible_v<proxy<TargetFacade<F>>,                   \
-                                     proxy<TargetFacade<F2>>>)                 \
-    operator proxy<TargetFacade<F2>>() oq ne {                                 \
-      if (!static_cast<const proxy<F>&>(*this).has_value()) {                  \
+      requires(std::is_convertible_v<proxy<TargetFacade<F>, MP>,               \
+                                     proxy<TargetFacade<F2>, MP>>)             \
+    operator proxy<TargetFacade<F2>, MP>() oq ne {                             \
+      if (!static_cast<const proxy<F, MP>&>(*this).has_value()) {              \
         return nullptr;                                                        \
       }                                                                        \
       return invoke<                                                           \
           D, proxy<TargetFacade<std::conditional_t<                            \
-                 std::is_convertible_v<proxy<F2> pq, proxy<TargetFacade<F2>>>, \
-                 F2, F>>>() oq ne>(static_cast<proxy<F> pq>(*this));           \
+                       std::is_convertible_v<proxy<F2, MP> pq,                 \
+                                             proxy<TargetFacade<F2>, MP>>,     \
+                       F2, F>>,                                                \
+                   MP>() oq ne>(static_cast<proxy<F, MP> pq>(*this));          \
     }                                                                          \
   }
-struct faw_cast_dispatch_base {
+struct dependent_cast_dispatch_base {
   template <class ProP, class ProD, class... ProOs>
   struct accessor {
     accessor() = delete;
   };
-  PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(PRO5D_DEF_FAW_CAST_ACCESSOR)
+  PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(PRO5D_DEF_DEPENDENT_CAST_ACCESSOR)
 };
-#undef PRO5D_DEF_FAW_CAST_ACCESSOR
+#undef PRO5D_DEF_DEPENDENT_CAST_ACCESSOR
 
-struct view_conversion_dispatch : faw_cast_dispatch_base {
+struct view_conversion_dispatch : dependent_cast_dispatch_base {
   template <class T>
   PRO5D_STATIC_CALL(auto, T& value) noexcept
     requires(requires {
@@ -79,10 +81,10 @@ struct view_conversion_dispatch : faw_cast_dispatch_base {
                         decltype(*std::move(std::as_const(value)))>{*value};
   }
 };
-template <class F>
-using view_conversion_overload = proxy_view<F>() & noexcept;
+template <class F, class MP>
+using view_conversion_signature = proxy_view<F, MP>() & noexcept;
 
-struct weak_conversion_dispatch : faw_cast_dispatch_base {
+struct weak_conversion_dispatch : dependent_cast_dispatch_base {
   template <class P>
   PRO5D_STATIC_CALL(auto, const P& self) noexcept
     requires(requires(const typename P::weak_type& w) {
@@ -90,13 +92,15 @@ struct weak_conversion_dispatch : faw_cast_dispatch_base {
     } && std::is_convertible_v<const P&, typename P::weak_type>)
   {
     return converter{
-        [&self]<class F>(std::in_place_type_t<proxy<F>>) noexcept
-          requires(proxiable<typename P::weak_type, F>)
-        { return proxy<F>{std::in_place_type<typename P::weak_type>, self}; }};
+        [&self]<class F, class MP>(std::in_place_type_t<proxy<F, MP>>) noexcept
+          requires(proxiable<typename P::weak_type, F, MP>)
+        {
+          return proxy<F, MP>{std::in_place_type<typename P::weak_type>, self};
+        }};
   }
 };
-template <class F>
-using weak_conversion_overload = weak_proxy<F>() const noexcept;
+template <class F, class MP>
+using weak_conversion_signature = weak_proxy<F, MP>() const noexcept;
 
 template <template <class...> class Formatter,
           template <class...> class StringView,
@@ -223,13 +227,15 @@ private:
   template <class T>
   static void invoke_cast(Self self, const proxy_cast_context& cast_ctx) {
     if constexpr (specialization_of<std::remove_cvref_t<Self>, proxy>) {
-      using F = std::remove_cvref_t<Self>::facade_type;
       constexpr bool is_rv =
           overload_traits<O>::this_qualifier == qualifier_type::rv;
       if (proxy_typeid(self) == *cast_ctx.type_ptr) [[likely]] {
         erased_context<true, D, O> ctx{proxy_helper::get_ptr(self)};
         if constexpr (is_rv) {
-          proxy_helper::meta_resetting_guard<F> guard{self};
+          proxy_helper::meta_resetting_guard<
+              typename std::remove_cvref_t<Self>::facade_type,
+              typename std::remove_cvref_t<Self>::metadata_policy_type>
+              guard{self};
           invoke<std::decay_t<T>>(ctx, cast_ctx);
         } else {
           invoke<std::decay_t<T>>(ctx, cast_ctx);
@@ -342,12 +348,12 @@ using slim = FB::template restrict_layout<sizeof(void*), alignof(void*)>;
 template <class FB>
 using as_view = FB::template add_direct_convention<
     detail::view_conversion_dispatch,
-    facade_aware_overload_t<detail::view_conversion_overload>>;
+    proxy_dependent_signature<detail::view_conversion_signature>>;
 
 template <class FB>
 using as_weak = FB::template add_direct_convention<
     detail::weak_conversion_dispatch,
-    facade_aware_overload_t<detail::weak_conversion_overload>>;
+    proxy_dependent_signature<detail::weak_conversion_signature>>;
 
 } // namespace skills
 
