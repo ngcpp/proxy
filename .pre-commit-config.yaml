@@ -14,19 +14,19 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.8
+    rev: v0.16.10
     hooks:
       - id: ruff-format
 
   - repo: https://github.com/BlankSpruce/gersemi-pre-commit
-    rev: 0.29.1
+    rev: 0.29.2
     hooks:
       - id: gersemi
         args: ["--indent", "2"]
         exclude: '^(subprojects|build|bazel-.*)/'
 
   - repo: https://github.com/keith/pre-commit-buildifier
-    rev: 10.0.1
+    rev: 10.1.0
     hooks:
       - id: buildifier
         exclude: '^(subprojects|build|bazel-.*)/'
@@ -41,7 +41,7 @@ repos:
       - id: meson-format
         name: meson format
         language: python
-        additional_dependencies: ["meson==1.12.0"]
+        additional_dependencies: ["meson==1.12.1"]
         entry: meson
         args: ["format", "--check-only", "--recursive", "meson.build"]
         pass_filenames: false
@@ -50,7 +50,7 @@ repos:
       - id: clang-format
         name: clang-format
         language: python
-        additional_dependencies: ["clang-format==23.1.1"]
+        additional_dependencies: ["clang-format==23.1.2"]
         entry: python3 tools/format_cpp.py
         pass_filenames: false
         files: '\.(h|ixx|cpp|md)$'
