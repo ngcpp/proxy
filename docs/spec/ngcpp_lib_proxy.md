@@ -1,14 +1,14 @@
-# Feature test macro `__msft_lib_proxy`
+# Feature test macro `__ngcpp_lib_proxy`
 
 > Header: `proxy_macros.h` and `proxy.h`
 
 ```cpp
-#define __msft_lib_proxy /* see below */
+#define __ngcpp_lib_proxy /* see below */
 ```
 
-Starting with 3.0.0, Proxy ships a feature-test macro that encodes the library version. When headers from different major versions of the Proxy library can appear in the same translation unit (for example, Proxy 4 and Proxy 5), use the major-qualified form `__msft_lib_proxy<major>` (e.g., `__msft_lib_proxy5`).
+Starting with 3.0.0, Proxy ships a feature-test macro that encodes the library version. When headers from different major versions of the Proxy library can appear in the same translation unit (for example, Proxy 4 and Proxy 5), use the major-qualified form `__ngcpp_lib_proxy<major>` (e.g., `__ngcpp_lib_proxy5`).
 
-| Version | Value of `__msft_lib_proxy` |
+| Version | Value of `__ngcpp_lib_proxy` |
 | ------- | --------------------------- |
 | 4.1.0   | `202606L`                   |
 | 4.0.2   | `202603L`                   |
@@ -29,9 +29,9 @@ Starting with 3.0.0, Proxy ships a feature-test macro that encodes the library v
 #include <proxy/proxy.h>
 
 int main() {
-#if __msft_lib_proxy >= 202508L
+#if __ngcpp_lib_proxy >= 202508L
   puts("Compiled with library Proxy 4.0.0 or above.");
-#elif __msft_lib_proxy >= 202408L
+#elif __ngcpp_lib_proxy >= 202408L
   puts("Compiled with library Proxy 3.x.");
 #else
   puts("Cannot determine the version of library Proxy.");

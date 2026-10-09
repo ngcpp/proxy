@@ -1,4 +1,4 @@
-project(msft_proxy_benchmarks)
+project(ngcpp_proxy_benchmarks)
 
 FetchContent_Declare(
   benchmark
@@ -20,17 +20,17 @@ set(
 FetchContent_MakeAvailable(benchmark)
 
 add_executable(
-  msft_proxy_benchmarks
+  ngcpp_proxy_benchmarks
   proxy_creation_benchmark.cpp
   proxy_operation_benchmark_context.cpp
   proxy_operation_benchmark.cpp
 )
-target_include_directories(msft_proxy_benchmarks PRIVATE .)
+target_include_directories(ngcpp_proxy_benchmarks PRIVATE .)
 target_link_libraries(
-  msft_proxy_benchmarks
-  PRIVATE msft_proxy5::proxy benchmark::benchmark benchmark::benchmark_main
+  ngcpp_proxy_benchmarks
+  PRIVATE ngcpp_proxy5::proxy benchmark::benchmark benchmark::benchmark_main
 )
 target_compile_options(
-  msft_proxy_benchmarks
+  ngcpp_proxy_benchmarks
   PRIVATE ${PROXY_BUILD_FLAGS} $<$<BOOL:${MSVC}>:/bigobj>
 )

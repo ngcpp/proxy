@@ -1,4 +1,4 @@
-project(msft_proxy_docs)
+project(ngcpp_proxy_docs)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
@@ -60,7 +60,7 @@ foreach(i RANGE 0 ${_last})
   add_executable(example_${_suffix} "${_cpp}")
   target_link_libraries(
     example_${_suffix}
-    PRIVATE msft_proxy5::proxy ${_dep_names}
+    PRIVATE ngcpp_proxy5::proxy ${_dep_names}
   )
   target_compile_options(example_${_suffix} PRIVATE ${PROXY_BUILD_FLAGS})
   add_test(NAME example_${_suffix} COMMAND example_${_suffix})
