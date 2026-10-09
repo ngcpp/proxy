@@ -21,6 +21,8 @@ Starting with 3.0.0, Proxy ships a feature-test macro that encodes the library v
 | 3.1.0   | `202410L`                   |
 | 3.0.0   | `202408L`                   |
 
+`__msft_lib_proxy` and its major-qualified form `__msft_lib_proxy5` are retained as deprecated aliases for backward compatibility. Supporting compilers issue a deprecation warning when either alias is used.
+
 ## Example
 
 ```cpp
