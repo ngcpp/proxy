@@ -5,6 +5,7 @@
 #ifndef MSFT_PROXY_V5_DETAIL_METADATA_POLICY_H_
 #define MSFT_PROXY_V5_DETAIL_METADATA_POLICY_H_
 
+#include <memory>
 #include <type_traits>
 #include <utility>
 
@@ -15,14 +16,12 @@
 #endif // __has_feature(ptrauth_calls)
 #endif // __has_feature
 
-#include "../proxy_macros.h"
-
 namespace pro::inline v5 {
 
 namespace detail {
 
 #ifdef PRO5D_HAS_PAC
-template <class O, class Disc>
+template <class O>
 class code_ptr {
 public:
   code_ptr() = default;
@@ -38,7 +37,9 @@ public:
   }
   explicit operator bool() const noexcept { return p_ != nullptr; }
   template <class... Args>
-  decltype(auto) operator()(Args&&... args) const {
+    requires(std::is_invocable_v<O*, Args...>)
+  decltype(auto) operator()(Args&&... args) const
+      noexcept(std::is_nothrow_invocable_v<O*, Args...>) {
     return ptrauth_auth_function(p_, ptrauth_key_function_pointer,
                                  schema())(std::forward<Args>(args)...);
   }
@@ -52,19 +53,16 @@ private:
                                        ptrauth_key_function_pointer, schema());
   }
   ptrauth_extra_data_t schema() const noexcept {
-    return ptrauth_blend_discriminator(&p_, ptrauth_type_discriminator(Disc));
+    return ptrauth_blend_discriminator(&p_, ptrauth_type_discriminator(O*));
   }
 
   O* p_;
 };
 
-template <class T, class Disc>
+template <class T>
 class meta_ptr {
 public:
   meta_ptr() = default;
-  explicit meta_ptr(const T* p) noexcept
-      : p_(ptrauth_sign_unauthenticated(p, ptrauth_key_cxx_vtable_pointer,
-                                        schema())) {}
   meta_ptr(const meta_ptr& rhs) noexcept { initialize(rhs); }
   meta_ptr& operator=(const meta_ptr& rhs) noexcept {
     initialize(rhs);
@@ -89,98 +87,85 @@ private:
                    ptrauth_key_cxx_vtable_pointer, schema());
   }
   ptrauth_extra_data_t schema() const noexcept {
-    return ptrauth_blend_discriminator(&p_, ptrauth_type_discriminator(Disc));
+    return ptrauth_blend_discriminator(&p_,
+                                       ptrauth_type_discriminator(void (*)(T)));
   }
 
   const T* p_;
 };
 #else
-template <class O, class Disc>
+template <class O>
 using code_ptr = O*;
 
-template <class T, class Disc>
+template <class T>
 using meta_ptr = const T*;
 #endif // PRO5D_HAS_PAC
 
-template <class O, class Disc>
-struct invoker_base {
-  invoker_base() = default;
-  template <class F>
-  constexpr explicit invoker_base(const F& f) : p_(f) {}
-  explicit operator bool() const noexcept { return static_cast<bool>(p_); }
-  template <class... Args>
-  decltype(auto) operator()(Args&&... args) const {
-    return p_(std::forward<Args>(args)...);
-  }
-
-private:
-  code_ptr<O, Disc> p_;
-};
-
-template <class Ctx, class O>
-struct invoker;
-#define PRO5D_DEF_INVOKER(oq, pq, ne, ...)                                     \
-  template <class Ctx, class R, class... Args>                                 \
-  struct invoker<Ctx, R(Args...) oq ne>                                        \
-      : invoker_base<R(Ctx, Args...) ne, R (*)(Ctx, Args...) ne> {             \
-    invoker() = default;                                                       \
-    template <class P>                                                         \
-    constexpr explicit invoker(std::in_place_type_t<P>)                        \
-        : invoker_base<R(Ctx, Args...) ne, R (*)(Ctx, Args...) ne>(            \
-              [](Ctx ctx, Args... args) ne -> R {                              \
-                return invoke<P>(ctx, std::forward<Args>(args)...);            \
-              }) {}                                                            \
-  }
-PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(PRO5D_DEF_INVOKER)
-#undef PRO5D_DEF_INVOKER
-
 template <class M>
-struct static_meta_storage {
-  static_meta_storage() = default;
-  template <class P>
-  explicit static_meta_storage(std::in_place_type_t<P>)
-      : ptr_(std::addressof(storage<P>)) {}
+class static_meta_storage {
+public:
   template <class M2>
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
   static_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
     ptr_ = std::addressof(static_cast<const M&>(*rhs));
     return *this;
   }
+  void reset() noexcept { ptr_ = meta_ptr<M>(); }
+  template <class P>
+  void emplace(std::in_place_type_t<P>) noexcept {
+    ptr_ = std::addressof(storage<P>.value);
+  }
   explicit operator bool() const noexcept { return static_cast<bool>(ptr_); }
   const M& operator*() const noexcept { return *ptr_; }
 
 private:
-  meta_ptr<M, void (*)(M)> ptr_;
+  meta_ptr<M> ptr_;
+
+  struct holder {
+    template <class P>
+    constexpr explicit holder(std::in_place_type_t<P> tag) : value(tag) {}
+
+    union {
+      M value;
+    };
+  };
 
   template <class P>
-  static inline const M storage{std::in_place_type<P>};
+  static inline const holder storage{std::in_place_type<P>};
 };
 
 template <class M>
-struct inline_meta_storage : M {
-  using M::M;
-
+class inline_meta_storage {
+public:
   template <class M2>
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
   inline_meta_storage& operator=(const inline_meta_storage<M2>& rhs) noexcept {
-    M::operator=(*rhs);
+    value_ = *rhs;
     return *this;
   }
   template <class M2>
     requires(std::is_nothrow_convertible_v<const M2&, const M&>)
   inline_meta_storage& operator=(const static_meta_storage<M2>& rhs) noexcept {
-    M::operator=(*rhs);
+    value_ = *rhs;
     return *this;
   }
+  void reset() noexcept { std::construct_at(std::addressof(value_)); }
+  template <class P>
+  void emplace(std::in_place_type_t<P> tag) noexcept {
+    std::construct_at(std::addressof(value_), tag);
+  }
+  explicit operator bool() const noexcept { return static_cast<bool>(value_); }
+  const M& operator*() const noexcept { return value_; }
 
-  const M& operator*() const noexcept { return *this; }
+private:
+  M value_;
 };
 
 } // namespace detail
 
 struct compact_metadata {
-  template <class Ctx, class O>
-  using invoker = detail::invoker<Ctx, O>;
+  template <class F>
+  using invoker = detail::code_ptr<F>;
 
   template <class M>
   using storage = std::conditional_t<sizeof(M) <= sizeof(void*),
@@ -189,8 +174,8 @@ struct compact_metadata {
 };
 
 struct inline_metadata {
-  template <class Ctx, class O>
-  using invoker = detail::invoker<Ctx, O>;
+  template <class F>
+  using invoker = detail::code_ptr<F>;
 
   template <class M>
   using storage = detail::inline_meta_storage<M>;

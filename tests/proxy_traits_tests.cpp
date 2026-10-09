@@ -279,6 +279,23 @@ struct FacadeWithThrowingReflection : pro::facade_builder                  //
                                       ::add_reflection<ThrowingReflection> //
                                       ::build {};
 static_assert(!pro::proxiable<MockTrivialPtr, FacadeWithThrowingReflection>);
+static_assert(!std::is_nothrow_constructible_v<
+              pro::detail::proxy_meta<FacadeWithThrowingReflection,
+                                      pro::compact_metadata>,
+              std::in_place_type_t<MockTrivialPtr>>);
+
+struct NonTrivialDestructionReflection {
+  template <class P>
+  explicit NonTrivialDestructionReflection(std::in_place_type_t<P>) noexcept {}
+  NonTrivialDestructionReflection(const NonTrivialDestructionReflection&) =
+      default;
+  ~NonTrivialDestructionReflection() noexcept {}
+};
+struct FacadeWithNonTrivialDestructionReflection
+    : pro::facade_builder                               //
+      ::add_reflection<NonTrivialDestructionReflection> //
+      ::build {};
+static_assert(!pro::facade<FacadeWithNonTrivialDestructionReflection>);
 
 struct FacadeWithTupleLikeConventions {
   struct ToStringConvention {
