@@ -182,7 +182,7 @@ stick to a specific major version of the Proxy library.")
 #define __msft_lib_proxy                                                       \
   [] {                                                                         \
     PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(__msft_lib_proxy,                  \
-                                            __msft_lib_proxy5);                \
+                                            __ngcpp_lib_proxy5);               \
     return 0L;                                                                 \
   }()
 #else

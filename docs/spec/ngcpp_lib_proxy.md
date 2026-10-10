@@ -6,20 +6,20 @@
 #define __ngcpp_lib_proxy /* see below */
 ```
 
-Starting with 3.0.0, Proxy ships a feature-test macro that encodes the library version. When headers from different major versions of the Proxy library can appear in the same translation unit (for example, Proxy 4 and Proxy 5), use the major-qualified form `__ngcpp_lib_proxy<major>` (e.g., `__ngcpp_lib_proxy5`).
+Starting with 3.0.0, Proxy ships a feature-test macro that encodes the library version. Starting with Proxy 5, the major-qualified form `__ngcpp_lib_proxy<major>` (for example, `__ngcpp_lib_proxy5`) is also available when headers from different major versions can appear in the same translation unit.
 
 | Version | Value of `__ngcpp_lib_proxy` |
-| ------- | --------------------------- |
-| 4.1.0   | `202606L`                   |
-| 4.0.2   | `202603L`                   |
-| 4.0.1   | `202510L`                   |
-| 4.0.0   | `202508L`                   |
-| 3.4.0   | `202505L`                   |
-| 3.3.0   | `202503L`                   |
-| 3.2.1   | `202502L`                   |
-| 3.2.0   | `202501L`                   |
-| 3.1.0   | `202410L`                   |
-| 3.0.0   | `202408L`                   |
+| ------- | ---------------------------- |
+| 4.1.0   | `202606L`                    |
+| 4.0.2   | `202603L`                    |
+| 4.0.1   | `202510L`                    |
+| 4.0.0   | `202508L`                    |
+| 3.4.0   | `202505L`                    |
+| 3.3.0   | `202503L`                    |
+| 3.2.1   | `202502L`                    |
+| 3.2.0   | `202501L`                    |
+| 3.1.0   | `202410L`                    |
+| 3.0.0   | `202408L`                    |
 
 `__msft_lib_proxy` and its major-qualified form `__msft_lib_proxy5` are retained as deprecated aliases for backward compatibility. Supporting compilers issue a deprecation warning when either alias is used.
 
