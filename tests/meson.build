@@ -15,7 +15,7 @@ test_srcs = files(
   'proxy_view_tests.cpp',
 )
 
-test_deps = [msft_proxy5_dep, gtest_dep]
+test_deps = [ngcpp_proxy5_dep, gtest_dep]
 
 if fmt_dep.found()
   test_srcs += files(
@@ -28,7 +28,7 @@ endif
 test(
   'ProxyTests',
   executable(
-    'msft_proxy_tests',
+    'ngcpp_proxy_tests',
     test_srcs,
     implicit_include_directories: false,
     dependencies: test_deps,

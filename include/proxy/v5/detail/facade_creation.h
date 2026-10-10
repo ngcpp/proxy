@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_DETAIL_FACADE_CREATION_H_
-#define MSFT_PROXY_V5_DETAIL_FACADE_CREATION_H_
+#ifndef NGCPP_PROXY_V5_DETAIL_FACADE_CREATION_H_
+#define NGCPP_PROXY_V5_DETAIL_FACADE_CREATION_H_
 
 #include <limits>
 
@@ -117,4 +117,4 @@ using facade_builder =
 
 } // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V5_DETAIL_FACADE_CREATION_H_
+#endif // NGCPP_PROXY_V5_DETAIL_FACADE_CREATION_H_
