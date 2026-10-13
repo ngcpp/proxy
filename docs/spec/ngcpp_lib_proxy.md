@@ -35,7 +35,7 @@ int main() {
 #if __ngcpp_lib_proxy >= 202606L
   puts("Compiled with library Proxy 5.0.0 or above.");
 #else
-  puts("Compiled with an unsupported version of library Proxy.");
+  puts("Compiled with an unsupported version or a version below Proxy 5.0.0.");
 #endif
 }
 ```

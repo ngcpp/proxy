@@ -175,26 +175,30 @@ stick to a specific major version of the Proxy library.")
 
 // Deprecated Microsoft-era feature-test macro aliases
 
-#define __msft_lib_proxy5 __ngcpp_lib_proxy5
+#define PRO5D_DEPRECATED_MSFT_LIB_PROXY5 __ngcpp_lib_proxy5
+#define __msft_lib_proxy5 PRO5D_DEPRECATED_MSFT_LIB_PROXY5
 
 #ifdef __msft_lib_proxy
 #undef __msft_lib_proxy
-#define __msft_lib_proxy                                                       \
+#define PRO5D_DEPRECATED_MSFT_LIB_PROXY                                        \
   [] {                                                                         \
     PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(__msft_lib_proxy,                  \
                                             __ngcpp_lib_proxy5);               \
     return 0L;                                                                 \
   }()
 #else
-#define __msft_lib_proxy __ngcpp_lib_proxy
+#define PRO5D_DEPRECATED_MSFT_LIB_PROXY __ngcpp_lib_proxy
 #endif // __msft_lib_proxy
+#define __msft_lib_proxy PRO5D_DEPRECATED_MSFT_LIB_PROXY
 
 #if defined(__clang__)
-#pragma clang deprecated(__msft_lib_proxy5, "use __ngcpp_lib_proxy5 instead")
-#pragma clang deprecated(__msft_lib_proxy, "use __ngcpp_lib_proxy instead")
+#pragma clang deprecated(PRO5D_DEPRECATED_MSFT_LIB_PROXY5,                     \
+                         "use __ngcpp_lib_proxy5 instead")
+#pragma clang deprecated(PRO5D_DEPRECATED_MSFT_LIB_PROXY,                      \
+                         "use __ngcpp_lib_proxy instead")
 #elif defined(_MSC_VER)
-#pragma deprecated("__msft_lib_proxy5")
-#pragma deprecated("__msft_lib_proxy")
+#pragma deprecated("PRO5D_DEPRECATED_MSFT_LIB_PROXY5")
+#pragma deprecated("PRO5D_DEPRECATED_MSFT_LIB_PROXY")
 #endif
 
 #ifdef PRO_DEF_MEM_DISPATCH
