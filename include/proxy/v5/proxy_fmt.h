@@ -2,15 +2,15 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_PROXY_FMT_H_
-#define MSFT_PROXY_V5_PROXY_FMT_H_
+#ifndef NGCPP_PROXY_V5_PROXY_FMT_H_
+#define NGCPP_PROXY_V5_PROXY_FMT_H_
 
 #include <string_view>
 #include <type_traits>
 
-#ifndef __msft_lib_proxy5
+#ifndef __ngcpp_lib_proxy5
 #error Please ensure that proxy.h is included before proxy_fmt.h.
-#endif // __msft_lib_proxy5
+#endif // __ngcpp_lib_proxy5
 
 #if FMT_VERSION < 60100
 #error Please ensure that the appropriate {fmt} headers (version 6.1.0 or \
@@ -59,4 +59,4 @@ struct formatter<T, CharT>
 
 } // namespace fmt
 
-#endif // MSFT_PROXY_V5_PROXY_FMT_H_
+#endif // NGCPP_PROXY_V5_PROXY_FMT_H_

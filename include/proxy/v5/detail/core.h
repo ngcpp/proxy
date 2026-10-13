@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_DETAIL_CORE_H_
-#define MSFT_PROXY_V5_DETAIL_CORE_H_
+#ifndef NGCPP_PROXY_V5_DETAIL_CORE_H_
+#define NGCPP_PROXY_V5_DETAIL_CORE_H_
 
 #include <bit>
 #include <cassert>
@@ -1715,4 +1715,4 @@ struct weak_facade
 
 } // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V5_DETAIL_CORE_H_
+#endif // NGCPP_PROXY_V5_DETAIL_CORE_H_

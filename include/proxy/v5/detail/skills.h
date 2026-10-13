@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_DETAIL_SKILLS_H_
-#define MSFT_PROXY_V5_DETAIL_SKILLS_H_
+#ifndef NGCPP_PROXY_V5_DETAIL_SKILLS_H_
+#define NGCPP_PROXY_V5_DETAIL_SKILLS_H_
 
 #include <memory>
 #include <version>
@@ -370,4 +370,4 @@ struct formatter<T, CharT>
 } // namespace std
 #endif // PRO5D_HAS_FORMAT
 
-#endif // MSFT_PROXY_V5_DETAIL_SKILLS_H_
+#endif // NGCPP_PROXY_V5_DETAIL_SKILLS_H_

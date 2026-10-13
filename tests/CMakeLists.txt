@@ -1,4 +1,4 @@
-project(msft_proxy_tests)
+project(ngcpp_proxy_tests)
 
 FetchContent_Declare(
   googletest
@@ -11,7 +11,7 @@ FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
 add_executable(
-  msft_proxy_tests
+  ngcpp_proxy_tests
   proxy_creation_tests.cpp
   proxy_detail_tests.cpp
   proxy_dispatch_tests.cpp
@@ -29,12 +29,12 @@ add_executable(
   proxy_traits_tests.cpp
   proxy_view_tests.cpp
 )
-target_include_directories(msft_proxy_tests PRIVATE .)
+target_include_directories(ngcpp_proxy_tests PRIVATE .)
 target_link_libraries(
-  msft_proxy_tests
-  PRIVATE msft_proxy5::proxy gtest_main fmt::fmt
+  ngcpp_proxy_tests
+  PRIVATE ngcpp_proxy5::proxy gtest_main fmt::fmt
 )
-target_compile_options(msft_proxy_tests PRIVATE ${PROXY_STRICT_WARNING_FLAGS})
-gtest_discover_tests(msft_proxy_tests)
+target_compile_options(ngcpp_proxy_tests PRIVATE ${PROXY_STRICT_WARNING_FLAGS})
+gtest_discover_tests(ngcpp_proxy_tests)
 
 add_subdirectory(modules)

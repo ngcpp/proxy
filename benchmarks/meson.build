@@ -1,14 +1,14 @@
 benchmark(
   'ProxyBenchmarks',
   executable(
-    'msft_proxy_benchmarks',
+    'ngcpp_proxy_benchmarks',
     files(
       'proxy_creation_benchmark.cpp',
       'proxy_operation_benchmark.cpp',
       'proxy_operation_benchmark_context.cpp',
     ),
     implicit_include_directories: false,
-    dependencies: [msft_proxy5_dep, benchmark_dep],
+    dependencies: [ngcpp_proxy5_dep, benchmark_dep],
     cpp_args: cxx.get_argument_syntax() == 'msvc' ? ['/bigobj'] : [],
   ),
 )
