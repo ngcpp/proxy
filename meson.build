@@ -1,5 +1,5 @@
 project(
-  'msft_proxy5',
+  'ngcpp_proxy5',
   'cpp',
   version: '5.0.0',
   license: 'MIT',
@@ -50,7 +50,7 @@ endif
 
 inc = include_directories('include')
 
-msft_proxy5_dep = declare_dependency(
+ngcpp_proxy5_dep = declare_dependency(
   include_directories: inc,
 )
 
@@ -70,7 +70,7 @@ if pkgconfig.found()
   )
 endif
 
-meson.override_dependency(meson.project_name(), msft_proxy5_dep)
+meson.override_dependency(meson.project_name(), ngcpp_proxy5_dep)
 
 tests = get_option('tests').disable_auto_if(meson.is_subproject())
 
