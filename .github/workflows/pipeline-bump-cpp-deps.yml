@@ -37,9 +37,9 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
 
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/setup-python@v7.1.0
         with:
-          python-version: "3.14"
+          python-version: "3.15"
 
       - name: Install Meson
         run: python3 -m pip install --upgrade pip meson
