@@ -230,15 +230,17 @@ private:
       constexpr bool is_rv =
           overload_traits<O>::this_qualifier == qualifier_type::rv;
       if (proxy_typeid(self) == *cast_ctx.type_ptr) [[likely]] {
-        erased_context<true, D, O> ctx{proxy_helper::get_ptr(self)};
+        auto* ptr = proxy_helper::get_ptr(self);
         if constexpr (is_rv) {
           proxy_helper::meta_resetting_guard<
               typename std::remove_cvref_t<Self>::facade_type,
               typename std::remove_cvref_t<Self>::metadata_policy_type>
               guard{self};
-          invoke<std::decay_t<T>>(ctx, cast_ctx);
+          overload_traits<O>::template invoke<std::decay_t<T>, true, D>(
+              ptr, cast_ctx);
         } else {
-          invoke<std::decay_t<T>>(ctx, cast_ctx);
+          overload_traits<O>::template invoke<std::decay_t<T>, true, D>(
+              ptr, cast_ctx);
         }
       } else if constexpr (is_rv) {
         self.reset();

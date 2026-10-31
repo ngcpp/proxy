@@ -2,7 +2,7 @@
 
 ```cpp
 // (1)
-proxy() noexcept = default;
+proxy() noexcept;
 proxy(std::nullptr_t) noexcept;
 
 // (2)
@@ -55,8 +55,8 @@ explicit proxy(std::in_place_type_t<P>, std::initializer_list<U> il,
 Creates a new `proxy`.
 
 - `(1)` Default constructor and the constructor taking `nullptr` construct a `proxy` that does not contain a value.
-- `(2)` Copy constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. As per the `requires` clause, the copy constructor is trivial when `F::copyability == constraint_level::trivial`.
-- `(3)` Move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` is in a valid but unspecified state after move construction. As per the `requires` clause, the move constructor does not participate in overload resolution when `F::copyability == constraint_level::trivial`, so that a move construction falls back to the trivial copy constructor.
+- `(2)` Copy constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. When `F::copyability == constraint_level::trivial`, the copy constructor is defaulted. It is trivial only if the metadata storage and accessor base classes also permit trivial copy construction.
+- `(3)` Move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` is in a valid but unspecified state after move construction. As per the `requires` clause, the move constructor does not participate in overload resolution when `F::copyability == constraint_level::trivial`, so that a move construction falls back to the defaulted copy constructor.
 - `(4)` Converting copy constructor constructs a `proxy` whose contained value is a copy of that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively. `rhs` has the metadata policy of `*this`, because the metadata type of a `proxy` depends on its metadata policy (see [*ProMetadataPolicy* requirements](../ProMetadataPolicy.md)).
 - `(5)` Converting move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` does not contain a value after the conversion. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively. As per the `requires` clause, the converting move constructor does not participate in overload resolution when `F::copyability == constraint_level::trivial`, so that a conversion from an rvalue falls back to `(4)`.
 - `(6)` Let `VP` be `std::decay_t<P>`. Constructs a `proxy` whose contained value is of type `VP`, direct-non-list-initialized with `std::forward<P>(ptr)`. Participates in overload resolution only if `VP` is not a specialization of `proxy` and is a pointer-like type eligible for `proxy` (see [*ProFacade* requirements](../ProFacade.md)).

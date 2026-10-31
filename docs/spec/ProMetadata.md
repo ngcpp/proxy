@@ -2,11 +2,11 @@
 
 > Since: 5.0.0
 
-A type `M` meets the *ProMetadata* requirements of a type `T` if `M` meets the [*ProBasicMetadata* requirements](ProBasicMetadata.md), and the following expressions are well-formed and have the specified semantics.
+A type `M` meets the *ProMetadata* requirements of a type `T` if `M` meets the [*ProBasicMetadata* requirements](ProBasicMetadata.md), and the following expression is well-formed, non-throwing, and has the specified semantics.
 
-| Expressions                | Semantics                                                    |
+| Expression                 | Semantics                                                    |
 | -------------------------- | ------------------------------------------------------------ |
-| `M(std::in_place_type<T>)` | Creates an object of type `M` holding implementation-defined metadata of type `T`, shall not throw. |
+| `M(std::in_place_type<T>)` | Creates an object of type `M` holding metadata deduced from `T`. |
 
 ## See Also
 

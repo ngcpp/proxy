@@ -8,7 +8,7 @@
         F::destructibility == constraint_level::nothrow);
 ```
 
-Destroys the `proxy` object. If the `proxy` contains a value, the contained value is also destroyed. The destructor is trivial when `F::destructibility` is `constraint_level::trivial`.
+Destroys the `proxy` object. If the `proxy` contains a value, the contained value is also destroyed. When `F::destructibility == constraint_level::trivial`, the destructor is defaulted. It is trivial only if the metadata storage and accessor base classes also have trivial destructors.
 
 ## Example
 
