@@ -1,10 +1,10 @@
 test(
   'ProxyFreestandingTests',
   executable(
-    'msft_proxy_freestanding_tests',
+    'ngcpp_proxy_freestanding_tests',
     files('proxy_freestanding_tests.cpp'),
     implicit_include_directories: false,
-    dependencies: msft_proxy5_dep,
+    dependencies: ngcpp_proxy5_dep,
     override_options: {
       'werror': true,
     },

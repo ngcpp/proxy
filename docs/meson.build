@@ -31,7 +31,7 @@ foreach line : _gen.stdout().split('\n')
       ),
       extra_files: md,
       implicit_include_directories: false,
-      dependencies: [msft_proxy5_dep] + extra_deps,
+      dependencies: [ngcpp_proxy5_dep] + extra_deps,
       build_by_default: false,
     )
     examples += _ex
