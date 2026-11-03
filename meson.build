@@ -79,7 +79,6 @@ if freestanding
 else
   gtest_dep = dependency(
     'gtest_main',
-    main: true,
     required: tests,
     default_options: ['warning_level=0'],
   )
