@@ -524,6 +524,23 @@ struct BadFacade_BadReflectionType {
 };
 static_assert(!pro::facade<BadFacade_BadReflectionType>);
 
+struct FacadeWithoutAccessTypes : pro::facade_builder::build {
+  struct Convention {
+    static constexpr bool is_direct = true;
+    using dispatch_type = pro::implicit_conversion_dispatch;
+    using overload_type = void() const;
+  };
+  struct SmallPtrReflection {
+    static constexpr bool is_direct = true;
+    using reflector_type = ReflectionOfSmallPtr;
+  };
+  using convention_types = std::tuple<Convention>;
+  using reflection_types = std::tuple<SmallPtrReflection>;
+};
+static_assert(pro::proxiable<MockTrivialPtr, FacadeWithoutAccessTypes>);
+static_assert(sizeof(pro::proxy<FacadeWithoutAccessTypes>) ==
+              3 * sizeof(void*));
+
 PRO_DEF_MEM_DISPATCH(MemFoo, Foo);
 PRO_DEF_MEM_DISPATCH(MemBar, Bar);
 struct BigFacade : pro::facade_builder                                //
@@ -534,6 +551,34 @@ struct BigFacade : pro::facade_builder                                //
                    ::build {};
 static_assert(sizeof(pro::proxy<BigFacade>) ==
               3 * sizeof(void*)); // Accessors should not add paddings
+
+struct FacadeWithDefaultAccessTypes
+    : pro::facade_builder                                     //
+      ::add_convention<pro::operator_dispatch<"+">, int(int)> //
+      ::add_convention<pro::weak_dispatch<pro::operator_dispatch<"+">>,
+                       int(double)>                               //
+      ::add_convention<pro::explicit_conversion_dispatch, int()>  //
+      ::add_convention<pro::implicit_conversion_dispatch, long()> //
+      ::build {
+  using super_types = std::tuple<pro::facade_builder::add_convention<
+      pro::operator_dispatch<"+">, int(int)>::build>;
+};
+template <std::size_t I>
+using DefaultAccessType = typename std::tuple_element_t<
+    I, FacadeWithDefaultAccessTypes::convention_types>::access_type;
+static_assert(std::is_same_v<DefaultAccessType<0>, pro::operator_access<"+">>);
+static_assert(std::is_same_v<DefaultAccessType<1>, pro::operator_access<"+">>);
+static_assert(
+    std::is_same_v<DefaultAccessType<2>, pro::explicit_conversion_access>);
+static_assert(
+    std::is_same_v<DefaultAccessType<3>, pro::implicit_conversion_access>);
+using DefaultAccessSelf =
+    pro::proxy_indirect_accessor<FacadeWithDefaultAccessTypes>;
+static_assert(requires {
+  static_cast<int (DefaultAccessSelf::*)(int)>(&DefaultAccessSelf::operator+);
+  static_cast<int (DefaultAccessSelf::*)(double)>(
+      &DefaultAccessSelf::operator+);
+});
 
 // A facade-aware convention declared on a super is substituted against the
 // deriving facade, so proxiable shall reflect the substituted overload rather

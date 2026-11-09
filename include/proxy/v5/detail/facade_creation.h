@@ -31,6 +31,11 @@ consteval std::size_t max_align_of(std::size_t value) {
 
 using ptr_prototype = void* [2];
 
+template <bool IsDirect, class D, class O>
+struct legacy_conv_impl : conv_impl<IsDirect, D, O, default_access_t<D>> {};
+template <bool IsDirect, class R>
+struct legacy_refl_impl : refl_impl<IsDirect, R, default_access_t<R>> {};
+
 } // namespace detail
 
 template <class Ss, class Cs, class Rs, std::size_t MaxSize,
@@ -40,24 +45,24 @@ struct basic_facade_builder {
   template <class D, detail::extended_overload... Os>
     requires(sizeof...(Os) > 0u)
   using add_indirect_convention = basic_facade_builder<
-      Ss, detail::composite_t<Cs, detail::conv_impl<false, D, Os>...>, Rs,
-      MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>;
+      Ss, detail::composite_t<Cs, detail::legacy_conv_impl<false, D, Os>...>,
+      Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>;
   template <class D, detail::extended_overload... Os>
     requires(sizeof...(Os) > 0u)
   using add_direct_convention = basic_facade_builder<
-      Ss, detail::composite_t<Cs, detail::conv_impl<true, D, Os>...>, Rs,
+      Ss, detail::composite_t<Cs, detail::legacy_conv_impl<true, D, Os>...>, Rs,
       MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>;
   template <class D, detail::extended_overload... Os>
     requires(sizeof...(Os) > 0u)
   using add_convention = add_indirect_convention<D, Os...>;
   template <class R>
   using add_indirect_reflection = basic_facade_builder<
-      Ss, Cs, detail::composite_t<Rs, detail::refl_impl<false, R>>, MaxSize,
-      MaxAlign, Copyability, Relocatability, Destructibility>;
+      Ss, Cs, detail::composite_t<Rs, detail::legacy_refl_impl<false, R>>,
+      MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>;
   template <class R>
   using add_direct_reflection = basic_facade_builder<
-      Ss, Cs, detail::composite_t<Rs, detail::refl_impl<true, R>>, MaxSize,
-      MaxAlign, Copyability, Relocatability, Destructibility>;
+      Ss, Cs, detail::composite_t<Rs, detail::legacy_refl_impl<true, R>>,
+      MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>;
   template <class R>
   using add_reflection = add_indirect_reflection<R>;
   template <facade F, bool Unused = false>

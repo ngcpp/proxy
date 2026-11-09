@@ -17,15 +17,15 @@ The alias templates `add_reflection`, `add_indirect_reflection` and `add_direct_
 - `add_indirect_reflection` appends an implementation-defined reflection type `Refl` to `Rs`, where:
   - `Refl::is_direct` is `false`.
   - `typename Refl::reflector_type` is `R`.
-  - `typename Refl::template accessor<F>` is `typename R::template accessor<proxy_indirect_accessor<F>, R>` if applicable.
 - `add_direct_reflection` appends an implementation-defined reflection type `Refl` to `Rs`, where:
   - `Refl::is_direct` is `true`.
   - `typename Refl::reflector_type` is `R`.
-  - `typename Refl::template accessor<F>` is `typename R::template accessor<proxy<F>, R>` if applicable.
+
+For either alias, `typename Refl::access_type` is implementation-defined for the reflector types that the library uses to implement its skills. For any other `R`, it is an implementation-defined type `A` where `typename A::template accessor<Self, `[`proxy_reflection`](../proxy_reflection.md)`<R>>` is `typename R::template accessor<Self, R>`.
 
 Reflection types are deduplicated when a [`proxy`](../proxy/README.md) of the built facade is instantiated, not when they are added.
 
-*Since 5.0.0*: reflection types are appended rather than merged into `Rs`.
+*Since 5.0.0*: reflection types are appended rather than merged into `Rs`. The reflection type carries an access type (see [*ProBasicReflection* requirements](../ProBasicReflection.md)). Previously, `proxy` took the accessibility of the reflection from the member template `accessor` of `R`.
 
 ## Notes
 
@@ -92,3 +92,5 @@ int main() {
 ## See Also
 
 - [named requirements: *ProReflection*](../ProReflection.md)
+- [named requirements: *ProAccess*](../ProAccess.md)
+- [class template `proxy_reflection`](../proxy_reflection.md)

@@ -44,7 +44,8 @@ concept enabled_for = std::is_base_of_v<enabled_t<TT, Ctx...>, T>;
 
 #define PRO5D_DEF_DEPENDENT_CAST_ACCESSOR(oq, pq, ne, ...)                     \
   template <facade F, class MP, class D, template <class> class TargetFacade>  \
-  struct accessor<proxy<F, MP>, D, proxy<TargetFacade<F>, MP>() oq ne> {       \
+  struct accessor<proxy<F, MP>,                                                \
+                  proxy_operation<D, proxy<TargetFacade<F>, MP>() oq ne>> {    \
     template <facade F2>                                                       \
       requires(std::is_convertible_v<proxy<TargetFacade<F>, MP>,               \
                                      proxy<TargetFacade<F2>, MP>>)             \
@@ -60,16 +61,12 @@ concept enabled_for = std::is_base_of_v<enabled_t<TT, Ctx...>, T>;
                    MP>() oq ne>(static_cast<proxy<F, MP> pq>(*this));          \
     }                                                                          \
   }
-struct dependent_cast_dispatch_base {
-  template <class ProP, class ProD, class... ProOs>
-  struct accessor {
-    accessor() = delete;
-  };
-  PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(PRO5D_DEF_DEPENDENT_CAST_ACCESSOR)
+struct dependent_cast_access {
+  PRO5D_DEF_ACCESSOR_TEMPLATE(FREE, PRO5D_DEF_DEPENDENT_CAST_ACCESSOR)
 };
 #undef PRO5D_DEF_DEPENDENT_CAST_ACCESSOR
 
-struct view_conversion_dispatch : dependent_cast_dispatch_base {
+struct view_conversion_dispatch {
   template <class T>
   PRO5D_STATIC_CALL(auto, T& value) noexcept
     requires(requires {
@@ -84,7 +81,7 @@ struct view_conversion_dispatch : dependent_cast_dispatch_base {
 template <class F, class MP>
 using view_conversion_signature = proxy_view<F, MP>() & noexcept;
 
-struct weak_conversion_dispatch : dependent_cast_dispatch_base {
+struct weak_conversion_dispatch {
   template <class P>
   PRO5D_STATIC_CALL(auto, const P& self) noexcept
     requires(requires(const typename P::weak_type& w) {
@@ -102,6 +99,9 @@ struct weak_conversion_dispatch : dependent_cast_dispatch_base {
 template <class F, class MP>
 using weak_conversion_signature = weak_proxy<F, MP>() const noexcept;
 
+template <class FT>
+struct format_dispatch;
+
 template <template <class...> class Formatter,
           template <class...> class StringView,
           template <class...> class ParseContext,
@@ -111,27 +111,18 @@ struct format_traits {
   using overload = typename FormatContext<CharT>::iterator(
       StringView<CharT> spec, FormatContext<CharT>& fc) const;
 
-  struct dispatch {
-    template <class T, class CharT>
-    PRO5D_STATIC_CALL(auto, const T& self, StringView<CharT> spec,
-                      FormatContext<CharT>& fc)
-      requires(std::is_default_constructible_v<Formatter<T, CharT>>)
-    {
-      Formatter<T, CharT> impl;
-      {
-        ParseContext<CharT> pc{spec};
-        impl.parse(pc);
-      }
-      return impl.format(self, fc);
-    }
-
-    template <class P, class D, class... Os>
-    struct PRO5D_ENFORCE_EBO accessor : accessor<P, D, Os>... {};
-    template <class P, class D>
-    struct accessor<P, D, overload<char>> : enabled_t<Formatter, char> {};
-    template <class P, class D>
-    struct accessor<P, D, overload<wchar_t>> : enabled_t<Formatter, wchar_t> {};
+  struct access {
+    template <class Self, class... Ds>
+    struct PRO5D_ENFORCE_EBO accessor : accessor<Self, Ds>... {};
+    template <class Self, class D>
+    struct accessor<Self, proxy_operation<D, overload<char>>>
+        : enabled_t<Formatter, char> {};
+    template <class Self, class D>
+    struct accessor<Self, proxy_operation<D, overload<wchar_t>>>
+        : enabled_t<Formatter, wchar_t> {};
   };
+
+  using dispatch = format_dispatch<format_traits>;
 
   template <class CharT>
   struct formatter {
@@ -154,6 +145,26 @@ struct format_traits {
   private:
     StringView<CharT> spec_;
   };
+};
+
+template <template <class...> class Formatter,
+          template <class...> class StringView,
+          template <class...> class ParseContext,
+          template <class...> class FormatContext>
+struct format_dispatch<
+    format_traits<Formatter, StringView, ParseContext, FormatContext>> {
+  template <class T, class CharT>
+  PRO5D_STATIC_CALL(auto, const T& self, StringView<CharT> spec,
+                    FormatContext<CharT>& fc)
+    requires(std::is_default_constructible_v<Formatter<T, CharT>>)
+  {
+    Formatter<T, CharT> impl;
+    {
+      ParseContext<CharT> pc{spec};
+      impl.parse(pc);
+    }
+    return impl.format(self, fc);
+  }
 };
 
 #ifdef PRO5D_HAS_FORMAT
@@ -252,9 +263,15 @@ private:
 };
 
 #define PRO5D_DEF_PROXY_CAST_ACCESSOR(oq, pq, ne, ...)                         \
-  template <class P, class D>                                                  \
-  struct accessor<P, D, void(proxy_cast_context) oq ne>                        \
-      : proxy_cast_accessor_impl<P pq, D, void(proxy_cast_context) oq ne> {}
+  template <class Self, class D>                                               \
+  struct accessor<Self, proxy_operation<D, void(proxy_cast_context) oq ne>>    \
+      : proxy_cast_accessor_impl<Self pq, D, void(proxy_cast_context) oq ne> { \
+  }
+struct proxy_cast_access {
+  PRO5D_DEF_ACCESSOR_TEMPLATE(FREE, PRO5D_DEF_PROXY_CAST_ACCESSOR)
+};
+#undef PRO5D_DEF_PROXY_CAST_ACCESSOR
+
 struct proxy_cast_dispatch {
   template <class T>
   PRO5D_STATIC_CALL(void, T&& self, proxy_cast_context ctx) {
@@ -274,21 +291,17 @@ struct proxy_cast_dispatch {
       }
     }
   }
-  PRO5D_DEF_ACCESSOR_TEMPLATE(FREE, PRO5D_DEF_PROXY_CAST_ACCESSOR)
 };
-#undef PRO5D_DEF_PROXY_CAST_ACCESSOR
 
-struct proxy_typeid_reflector {
-  proxy_typeid_reflector() = default;
-  template <class T>
-  constexpr explicit proxy_typeid_reflector(std::in_place_type_t<T>) noexcept
-      : info(&typeid(T)) {}
-
-  template <class Self, class R>
+struct proxy_typeid_access {
+  template <class Self, class... Ds>
   struct accessor {
+    accessor() = delete;
+  };
+  template <class Self, class M>
+  struct accessor<Self, proxy_reflection<M>> {
     friend const std::type_info& proxy_typeid(const Self& self) noexcept {
-      const proxy_typeid_reflector& refl = reflect<R>(self);
-      return *refl.info;
+      return *reflect<M>(self).info;
     }
     PRO5D_DEBUG(
         accessor() noexcept { std::ignore = &pro_symbol_guard; }
@@ -296,20 +309,58 @@ struct proxy_typeid_reflector {
         private : static inline const std::type_info& pro_symbol_guard(
             const Self& self) { return proxy_typeid(self); })
   };
+};
+
+struct proxy_typeid_reflector {
+  proxy_typeid_reflector() = default;
+  template <class T>
+  constexpr explicit proxy_typeid_reflector(std::in_place_type_t<T>) noexcept
+      : info(&typeid(T)) {}
 
   const std::type_info* info;
 };
 
+struct direct_rtti_access {
+  template <class Self, class... Ds>
+  struct accessor {
+    accessor() = delete;
+  };
+  template <class Self, class M>
+  struct PRO5D_ENFORCE_EBO accessor<Self, proxy_reflection<M>>
+      : proxy_typeid_access::accessor<Self, proxy_reflection<M>>,
+        proxy_cast_access::accessor<
+            Self,
+            proxy_operation<proxy_cast_dispatch, void(proxy_cast_context) &>,
+            proxy_operation<proxy_cast_dispatch,
+                            void(proxy_cast_context) const&>,
+            proxy_operation<proxy_cast_dispatch, void(proxy_cast_context) &&>> {
+  };
+};
+
 struct direct_rtti_reflector : proxy_typeid_reflector {
   using proxy_typeid_reflector::proxy_typeid_reflector;
-
-  template <class Self, class R>
-  struct PRO5D_ENFORCE_EBO accessor
-      : proxy_typeid_reflector::accessor<Self, R>,
-        proxy_cast_dispatch::accessor<
-            Self, proxy_cast_dispatch, void(proxy_cast_context) &,
-            void(proxy_cast_context) const&, void(proxy_cast_context) &&> {};
 };
+#endif // __cpp_rtti >= 199711L
+
+template <>
+struct default_access_traits<view_conversion_dispatch>
+    : std::type_identity<dependent_cast_access> {};
+template <>
+struct default_access_traits<weak_conversion_dispatch>
+    : std::type_identity<dependent_cast_access> {};
+template <class FT>
+struct default_access_traits<format_dispatch<FT>>
+    : std::type_identity<typename FT::access> {};
+#if __cpp_rtti >= 199711L
+template <>
+struct default_access_traits<proxy_cast_dispatch>
+    : std::type_identity<proxy_cast_access> {};
+template <>
+struct default_access_traits<proxy_typeid_reflector>
+    : std::type_identity<proxy_typeid_access> {};
+template <>
+struct default_access_traits<direct_rtti_reflector>
+    : std::type_identity<direct_rtti_access> {};
 #endif // __cpp_rtti >= 199711L
 
 } // namespace detail

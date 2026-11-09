@@ -31,7 +31,7 @@ To invoke an *indirect* convention, use [`invoke`](../proxy_indirect_accessor/fr
 
 `invoke` was introduced in `4.1.0` as a replacement for the deprecated [`proxy_invoke`](../proxy_invoke.md). `proxy_invoke` is a namespace-scope function, while `invoke` is a non-member function of `proxy` found only via argument-dependent lookup.
 
-It is generally not recommended to call `invoke` directly. Using an [`accessor`](../ProAccessible.md) is usually a better option with easier and more descriptive syntax.
+It is generally not recommended to call `invoke` directly. Using an [`accessor`](../ProAccess.md) is usually a better option with easier and more descriptive syntax.
 
 ## Example
 

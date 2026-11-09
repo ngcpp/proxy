@@ -12,7 +12,7 @@ proxy_indirect_accessor<F, MP>&& operator*() && noexcept;
 const proxy_indirect_accessor<F, MP>&& operator*() const&& noexcept;
 ```
 
-These operators access the accessors of the indirect conventions, as if dereferencing the contained value.
+These operators access the accessors of the indirect conventions and reflections, as if dereferencing the contained value.
 
 - `(1)` Returns a pointer to the `proxy_indirect_accessor<F, MP>`.
 - `(2)` Returns a reference to the `proxy_indirect_accessor<F, MP>`.
