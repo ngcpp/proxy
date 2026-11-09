@@ -9,6 +9,9 @@
 #include <string>
 #include <type_traits>
 
+PRO_ENABLE_MEMBER(Size);
+PRO_ENABLE_FREE(Size);
+
 namespace proxy_traits_tests_detail {
 
 template <bool kNothrowRelocatable, bool kCopyable, bool kTrivial,
@@ -559,6 +562,10 @@ struct FacadeWithDefaultAccessTypes
                        int(double)>                               //
       ::add_convention<pro::explicit_conversion_dispatch, int()>  //
       ::add_convention<pro::implicit_conversion_dispatch, long()> //
+      ::add_convention<pro::member_dispatch<"Size">, int()>       //
+      ::add_convention<pro::weak_dispatch<pro::member_dispatch<"Size">>,
+                       int(int)>                          //
+      ::add_convention<pro::free_dispatch<"Size">, int()> //
       ::build {
   using super_types = std::tuple<pro::facade_builder::add_convention<
       pro::operator_dispatch<"+">, int(int)>::build>;
@@ -572,6 +579,9 @@ static_assert(
     std::is_same_v<DefaultAccessType<2>, pro::explicit_conversion_access>);
 static_assert(
     std::is_same_v<DefaultAccessType<3>, pro::implicit_conversion_access>);
+static_assert(std::is_same_v<DefaultAccessType<4>, pro::member_access<"Size">>);
+static_assert(std::is_same_v<DefaultAccessType<5>, pro::member_access<"Size">>);
+static_assert(std::is_same_v<DefaultAccessType<6>, pro::free_access<"Size">>);
 using DefaultAccessSelf =
     pro::proxy_indirect_accessor<FacadeWithDefaultAccessTypes>;
 static_assert(requires {

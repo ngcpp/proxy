@@ -3,6 +3,8 @@
 // Licensed under the MIT License.
 
 #include <gtest/gtest.h>
+#include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -19,6 +21,12 @@
 #if __cpp_lib_mdspan >= 202207L
 #include <mdspan>
 #endif // __cpp_lib_mdspan >= 202207L
+
+using std::to_string;
+
+PRO_ENABLE_MEMBER(ToString);
+PRO_ENABLE_FREE(to_string);
+PRO_ENABLE_FREE(ToString);
 
 namespace proxy_dispatch_tests_detail {
 
@@ -46,7 +54,18 @@ struct TestFacadeBase : pro::facade_builder //
                                          std::ostream&(std::ostream& out)> //
                         ::build {};
 
-PRO_DEF_FREE_AS_MEM_DISPATCH(FreeMemToString, std::to_string, ToString);
+struct Stringable : pro::facade_builder::build {
+  struct MemberConvention {
+    static constexpr bool is_direct = false;
+    using dispatch_type = pro::free_dispatch<"to_string">;
+    using overload_type = std::string() const;
+    using access_type = pro::member_access<"ToString">;
+  };
+  struct FreeConvention : MemberConvention {
+    using access_type = pro::free_access<"ToString">;
+  };
+  using convention_types = std::tuple<MemberConvention, FreeConvention>;
+};
 
 } // namespace proxy_dispatch_tests_detail
 
@@ -823,12 +842,10 @@ TEST(ProxyDispatchTests, TestImplciitConversion) {
 }
 
 TEST(ProxyDispatchTests, TestFreeAsMemDispatch) {
-  struct TestFacade
-      : pro::facade_builder::add_convention<detail::FreeMemToString,
-                                            std::string() const>::build {};
   int v = 123;
-  pro::proxy<TestFacade> p = &v;
+  pro::proxy<detail::Stringable> p = &v;
   ASSERT_EQ(p->ToString(), "123");
+  ASSERT_EQ(ToString(*p), "123");
 }
 
 TEST(ProxyDispatchTests, TestSuperConversion) {

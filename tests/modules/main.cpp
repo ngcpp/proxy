@@ -11,3 +11,9 @@ TEST(ProxyModuleSupportTests, TestBasic) {
   MyFoo foo;
   ASSERT_EQ(user(&foo), 42);
 }
+
+TEST(ProxyModuleSupportTests, TestFreeDispatch) {
+  MyFoo foo;
+  pro::proxy<Qux> p = &foo;
+  ASSERT_EQ(GetQux(*p), 7);
+}

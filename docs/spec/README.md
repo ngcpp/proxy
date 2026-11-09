@@ -25,9 +25,13 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`constraint_level`](constraint_level.md)                    | Defines the 4 constraint levels of a special member function |
 | [`explicit_conversion_access`](explicit_conversion_access/README.md) | Access type for explicit conversion expressions              |
 | [`explicit_conversion_dispatch`<br />`conversion_dispatch`](explicit_conversion_dispatch/README.md) | Dispatch type for explicit conversion expressions            |
+| [`free_access`](free_access.md)                              | Access type for free function call expressions               |
+| [`free_dispatch`](free_dispatch.md)                          | Dispatch type for free function call expressions             |
 | [`implicit_conversion_access`](implicit_conversion_access/README.md) | Access type for implicit conversion expressions              |
 | [`implicit_conversion_dispatch`](implicit_conversion_dispatch/README.md) | Dispatch type for implicit conversion expressions            |
 | [`is_bitwise_trivially_relocatable`](is_bitwise_trivially_relocatable.md) | Specifies whether a type is bitwise trivially relocatable    |
+| [`member_access`](member_access.md)                          | Access type for member function call expressions             |
+| [`member_dispatch`](member_dispatch.md)                      | Dispatch type for member function call expressions           |
 | [`not_implemented` ](not_implemented.md)                     | Exception thrown by `weak_dispatch` for the default implementation |
 | [`operator_access`](operator_access/README.md)               | Access type for operator expressions                         |
 | [`operator_dispatch`](operator_dispatch/README.md)           | Dispatch type for operator expressions                       |
@@ -75,6 +79,8 @@ Also included in `proxy.h`.
 | [`PRO_DEF_FREE_AS_MEM_DISPATCH` ](PRO_DEF_FREE_AS_MEM_DISPATCH.md) | Defines a dispatch type for free function call expressions with accessibility via a member function |
 | [`PRO_DEF_FREE_DISPATCH`](PRO_DEF_FREE_DISPATCH.md)          | Defines a dispatch type for free function call expressions with accessibility |
 | [`PRO_DEF_MEM_DISPATCH`](PRO_DEF_MEM_DISPATCH.md)            | Defines a dispatch type for member function call expressions with accessibility |
+| [`PRO_ENABLE_FREE`](PRO_ENABLE_FREE.md)                      | Defines the dispatch and access types for free function call expressions of a name |
+| [`PRO_ENABLE_MEMBER`](PRO_ENABLE_MEMBER.md)                  | Defines the dispatch and access types for member function call expressions of a name |
 
 ## Header `<proxy_fmt.h>`
 
@@ -88,7 +94,7 @@ Also included in `proxy.h`.
 
 | Name                                          | Description                                                  |
 | --------------------------------------------- | ------------------------------------------------------------ |
-| [*ProAccess*](ProAccess.md)                   | Specifies how a type defines member and non-member functions for `proxy`      |
+| [*ProAccess*](ProAccess.md)                   | Specifies how a type defines member and non-member functions for `proxy` |
 | [*ProBasicConvention*](ProBasicConvention.md) | Specifies that a type potentially models a "convention"      |
 | [*ProBasicFacade*](ProBasicFacade.md)         | Specifies that a type potentially models a "facade" of `proxy` |
 | [*ProBasicMetadata*](ProBasicMetadata.md)     | Specifies that a type potentially models "metadata"          |

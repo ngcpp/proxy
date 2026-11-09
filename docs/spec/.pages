@@ -12,9 +12,13 @@ nav:
     - constraint_level: constraint_level.md
     - explicit_conversion_access: explicit_conversion_access
     - explicit_conversion_dispatch<br />conversion_dispatch: explicit_conversion_dispatch
+    - free_access: free_access.md
+    - free_dispatch: free_dispatch.md
     - implicit_conversion_access: implicit_conversion_access
     - implicit_conversion_dispatch: implicit_conversion_dispatch
     - is_bitwise_trivially_relocatable: is_bitwise_trivially_relocatable.md
+    - member_access: member_access.md
+    - member_dispatch: member_dispatch.md
     - not_implemented: not_implemented.md
     - operator_access: operator_access
     - operator_dispatch: operator_dispatch
@@ -47,6 +51,8 @@ nav:
     - PRO_DEF_FREE_AS_MEM_DISPATCH: PRO_DEF_FREE_AS_MEM_DISPATCH.md
     - PRO_DEF_FREE_DISPATCH: PRO_DEF_FREE_DISPATCH.md
     - PRO_DEF_MEM_DISPATCH: PRO_DEF_MEM_DISPATCH.md
+    - PRO_ENABLE_FREE: PRO_ENABLE_FREE.md
+    - PRO_ENABLE_MEMBER: PRO_ENABLE_MEMBER.md
   - Named Requirements:
     - ProAccess: ProAccess.md
     - ProBasicConvention: ProBasicConvention.md

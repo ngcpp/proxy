@@ -80,6 +80,14 @@ template <detail::sign Sign, bool Rhs = false>
 struct operator_access;
 template <detail::sign Sign, bool Rhs = false>
 struct operator_dispatch;
+template <detail::sign Name>
+struct member_access;
+template <detail::sign Name>
+struct member_dispatch;
+template <detail::sign Name>
+struct free_access;
+template <detail::sign Name>
+struct free_dispatch;
 
 #define PRO5D_DEF_LHS_LEFT_OP_ACCESSOR(oq, pq, ne, ...)                        \
   template <class Self, class D, class R>                                      \
@@ -353,6 +361,12 @@ struct default_access_traits<explicit_conversion_dispatch>
 template <>
 struct default_access_traits<implicit_conversion_dispatch>
     : std::type_identity<implicit_conversion_access> {};
+template <sign Name>
+struct default_access_traits<member_dispatch<Name>>
+    : std::type_identity<member_access<Name>> {};
+template <sign Name>
+struct default_access_traits<free_dispatch<Name>>
+    : std::type_identity<free_access<Name>> {};
 template <class D>
   requires(!std::is_same_v<default_access_t<D>, legacy_access<D>>)
 struct default_access_traits<weak_dispatch<D>> : default_access_traits<D> {};
