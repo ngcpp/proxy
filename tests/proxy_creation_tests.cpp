@@ -933,10 +933,10 @@ TEST(ProxyCreationTests,
 
 TEST(ProxyCreationTests, TestMakeProxyShared_WeakOfSuper) {
   struct WeakSuper
-      : pro::facade_builder                                        //
-        ::support_copy<pro::constraint_level::nothrow>             //
-        ::add_convention<utils::spec::FreeToString, std::string()> //
-        ::add_skill<pro::skills::as_weak>                          //
+      : pro::facade_builder                                                //
+        ::support_copy<pro::constraint_level::nothrow>                     //
+        ::add_convention<utils::spec::FreeToString, std::string()>         //
+        ::add_skill<pro::skills::as_view>::add_skill<pro::skills::as_weak> //
         ::build {};
   struct WeakDerived
       : pro::facade_builder                                           //
@@ -944,6 +944,8 @@ TEST(ProxyCreationTests, TestMakeProxyShared_WeakOfSuper) {
         ::add_convention<pro::operator_dispatch<"+">, int(int) const> //
         ::build {};
   auto p1 = pro::make_proxy_shared<WeakDerived>(123);
+  pro::proxy_view<WeakDerived> view = p1;
+  ASSERT_EQ(ToString(*view), "123");
   pro::weak_proxy<WeakSuper> p2 = p1;
   {
     auto p3 = p2.lock();

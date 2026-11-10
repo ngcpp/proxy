@@ -54,6 +54,11 @@ struct proxy_dependent_signature {
   proxy_dependent_signature() = delete;
 };
 
+template <class D, class O>
+struct proxy_operation {};
+template <class M>
+struct proxy_reflection {};
+
 template <class F>
 concept facade = detail::basic_facade_traits<F>::applicable;
 
@@ -490,8 +495,8 @@ template <class T, class... Args>
 struct a11y_traits<std::void_t<typename T::template accessor<Args...>>, T,
                    Args...>
     : a11y_traits_impl<typename T::template accessor<Args...>> {};
-template <class ProP, class T, class... Args>
-using accessor_t = a11y_traits<void, T, ProP, T, Args...>::type;
+template <class Self, class A, class... Ds>
+using accessor_t = a11y_traits<void, A, Self, Ds...>::type;
 
 template <bool IsDirect, class R>
 struct reflection_meta {
@@ -546,50 +551,72 @@ using lifetime_meta_t = lifetime_meta_traits<MP, D, ONE, OE, C>::type;
 template <class... As>
 struct PRO5D_ENFORCE_EBO composite_accessor : As... {};
 
-template <class P, class... Rs>
-using refl_accessors_t =
-    composite_t<composite_accessor<>,
-                accessor_t<P, typename Rs::reflector_type>...>;
+template <class T, class F, class MP>
+struct descriptor_substitution_traits : std::type_identity<T> {};
+template <class D, class O, class F, class MP>
+struct descriptor_substitution_traits<proxy_operation<D, O>, F, MP>
+    : std::type_identity<proxy_operation<D, substituted_overload_t<O, F, MP>>> {
+};
+template <class T, class F, class MP>
+using substituted_descriptor_t = descriptor_substitution_traits<T, F, MP>::type;
 
-template <class D, class... Os>
-struct conv_group;
-template <class G, class P, class F, class MP>
-struct conv_accessor_traits;
-template <class D, class... Os, class P, class F, class MP>
-struct conv_accessor_traits<conv_group<D, Os...>, P, F, MP>
+template <class A, class... Ds>
+struct access_group;
+template <class G, class Self, class F, class MP>
+struct access_group_accessor_traits;
+template <class A, class... Ds, class Self, class F, class MP>
+struct access_group_accessor_traits<access_group<A, Ds...>, Self, F, MP>
     : std::type_identity<
-          accessor_t<P, D, substituted_overload_t<Os, F, MP>...>> {};
-template <class P, class F, class MP, class... Gs>
-using conv_accessors_t =
-    composite_t<composite_accessor<>,
-                typename conv_accessor_traits<Gs, P, F, MP>::type...>;
+          accessor_t<Self, A, substituted_descriptor_t<Ds, F, MP>...>> {};
+template <class Self, class F, class MP, class... Gs>
+using accessors_t =
+    composite_t<composite_accessor<>, typename access_group_accessor_traits<
+                                          Gs, Self, F, MP>::type...>;
 
-template <class G, class D>
-struct conv_group_match_traits : inapplicable_traits {};
-template <class D, class... Os>
-struct conv_group_match_traits<conv_group<D, Os...>, D> : applicable_traits {};
+template <class G, class A>
+struct access_group_match_traits : inapplicable_traits {};
+template <class A, class... Ds>
+struct access_group_match_traits<access_group<A, Ds...>, A>
+    : applicable_traits {};
 
 template <class G1, class G2>
-struct conv_group_merge_traits : std::type_identity<G1> {};
-template <class D, class... Os1, class... Os2>
-struct conv_group_merge_traits<conv_group<D, Os1...>, conv_group<D, Os2...>>
+struct access_group_merge_traits : std::type_identity<G1> {};
+template <class A, class... Ds1, class... Ds2>
+struct access_group_merge_traits<access_group<A, Ds1...>,
+                                 access_group<A, Ds2...>>
     : specialization_type_traits<
-          conv_group, merge_tuples_t<std::tuple<Os1...>, std::tuple<Os2...>>,
-          D> {};
+          access_group, merge_tuples_t<std::tuple<Ds1...>, std::tuple<Ds2...>>,
+          A> {};
 
 template <class O, class I>
-struct conv_groups_reduction;
-template <class... Gs, class D, class... Os>
-  requires(conv_group_match_traits<Gs, D>::applicable || ...)
-struct conv_groups_reduction<std::tuple<Gs...>, conv_group<D, Os...>>
-    : std::type_identity<std::tuple<typename conv_group_merge_traits<
-          Gs, conv_group<D, Os...>>::type...>> {};
+struct access_groups_reduction;
+template <class... Gs, class A, class... Ds>
+  requires(access_group_match_traits<Gs, A>::applicable || ...)
+struct access_groups_reduction<std::tuple<Gs...>, access_group<A, Ds...>>
+    : std::type_identity<std::tuple<typename access_group_merge_traits<
+          Gs, access_group<A, Ds...>>::type...>> {};
 template <class... Gs, class I>
-struct conv_groups_reduction<std::tuple<Gs...>, I>
+struct access_groups_reduction<std::tuple<Gs...>, I>
     : std::type_identity<std::tuple<Gs..., I>> {};
 template <class... Gss>
-using conv_groups_merge_t =
-    flattening_merge_t<reduction_t<conv_groups_reduction>, Gss...>;
+using access_groups_merge_t =
+    flattening_merge_t<reduction_t<access_groups_reduction>, Gss...>;
+
+template <class T>
+struct access_traits : std::type_identity<void> {};
+template <class T>
+  requires(requires { typename T::access_type; })
+struct access_traits<T> : std::type_identity<typename T::access_type> {};
+template <class T>
+using access_t = access_traits<T>::type;
+
+template <class C>
+using conv_access_group_t =
+    access_group<access_t<C>, proxy_operation<typename C::dispatch_type,
+                                              typename C::overload_type>>;
+template <class R>
+using refl_access_group_t =
+    access_group<access_t<R>, proxy_reflection<typename R::reflector_type>>;
 
 template <class O, class I, class T>
 struct first_containing_reduction : std::type_identity<O> {};
@@ -876,14 +903,10 @@ struct proxy_super_traits_impl
           merge_tuples_t<typename proxy_traits<Fs, MP>::dependent_convs...>, F,
           MP> {
   using super_dependent_convs = typename proxy_super_traits_impl::convs;
-  using super_indirect_conv_groups = conv_groups_merge_t<
-      typename proxy_traits<Fs, MP>::indirect_conv_groups...>;
-  using super_direct_conv_groups =
-      conv_groups_merge_t<typename proxy_traits<Fs, MP>::direct_conv_groups...>;
-  using super_indirect_refls =
-      merge_tuples_t<typename proxy_traits<Fs, MP>::indirect_refls...>;
-  using super_direct_refls =
-      merge_tuples_t<typename proxy_traits<Fs, MP>::direct_refls...>;
+  using super_indirect_access_groups = access_groups_merge_t<
+      typename proxy_traits<Fs, MP>::indirect_access_groups...>;
+  using super_direct_access_groups = access_groups_merge_t<
+      typename proxy_traits<Fs, MP>::direct_access_groups...>;
   using super_meta = composite_t<std::tuple<proxy_meta<Fs, MP>...>,
                                  typename proxy_super_traits_impl::conv_meta>;
 
@@ -901,17 +924,12 @@ struct proxy_super_traits_impl
 template <class F, class MP, class... Cs>
 struct proxy_conv_traits_impl : conv_traits_impl<F, MP, Cs...> {
   using self_conv_meta = typename proxy_conv_traits_impl::conv_meta;
-  using self_indirect_conv_groups = composite_t<
+  using self_indirect_conv_groups =
+      composite_t<std::tuple<>, std::conditional_t<Cs::is_direct, void,
+                                                   conv_access_group_t<Cs>>...>;
+  using self_direct_conv_groups = composite_t<
       std::tuple<>,
-      std::conditional_t<Cs::is_direct, void,
-                         conv_group<typename Cs::dispatch_type,
-                                    typename Cs::overload_type>>...>;
-  using self_direct_conv_groups =
-      composite_t<std::tuple<>,
-                  std::conditional_t<Cs::is_direct,
-                                     conv_group<typename Cs::dispatch_type,
-                                                typename Cs::overload_type>,
-                                     void>...>;
+      std::conditional_t<Cs::is_direct, conv_access_group_t<Cs>, void>...>;
   using self_dependent_convs = composite_t<
       std::tuple<>,
       std::conditional_t<
@@ -929,10 +947,12 @@ struct proxy_conv_traits_impl : conv_traits_impl<F, MP, Cs...> {
 };
 template <class F, class... Rs>
 struct facade_refl_traits_impl {
-  using self_indirect_refls =
-      composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void, Rs>...>;
-  using self_direct_refls =
-      composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, Rs, void>...>;
+  using self_indirect_refl_groups =
+      composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void,
+                                                   refl_access_group_t<Rs>>...>;
+  using self_direct_refl_groups = composite_t<
+      std::tuple<>,
+      std::conditional_t<Rs::is_direct, refl_access_group_t<Rs>, void>...>;
   using refl_meta = std::tuple<
       reflection_meta<Rs::is_direct, typename Rs::reflector_type>...>;
 
@@ -956,29 +976,22 @@ struct proxy_traits
                        MP>,
       specialization_t<facade_refl_traits_impl, typename F::reflection_types,
                        F> {
-  using indirect_conv_groups =
-      conv_groups_merge_t<typename proxy_traits::super_indirect_conv_groups,
-                          typename proxy_traits::self_indirect_conv_groups>;
-  using direct_conv_groups =
-      conv_groups_merge_t<typename proxy_traits::super_direct_conv_groups,
-                          typename proxy_traits::self_direct_conv_groups>;
+  using indirect_access_groups =
+      access_groups_merge_t<typename proxy_traits::super_indirect_access_groups,
+                            typename proxy_traits::self_indirect_conv_groups,
+                            typename proxy_traits::self_indirect_refl_groups>;
+  using direct_access_groups =
+      access_groups_merge_t<typename proxy_traits::super_direct_access_groups,
+                            typename proxy_traits::self_direct_conv_groups,
+                            typename proxy_traits::self_direct_refl_groups>;
   using dependent_convs =
       merge_tuples_t<typename proxy_traits::super_dependent_convs,
                      typename proxy_traits::self_dependent_convs>;
-  using indirect_refls =
-      merge_tuples_t<typename proxy_traits::super_indirect_refls,
-                     typename proxy_traits::self_indirect_refls>;
-  using direct_refls = merge_tuples_t<typename proxy_traits::super_direct_refls,
-                                      typename proxy_traits::self_direct_refls>;
   using indirect_accessor =
-      composite_t<specialization_t<conv_accessors_t, indirect_conv_groups,
-                                   proxy_indirect_accessor<F, MP>, F, MP>,
-                  specialization_t<refl_accessors_t, indirect_refls,
-                                   proxy_indirect_accessor<F, MP>>>;
-  using direct_accessor = composite_t<
-      specialization_t<conv_accessors_t, direct_conv_groups, proxy<F, MP>, F,
-                       MP>,
-      specialization_t<refl_accessors_t, direct_refls, proxy<F, MP>>>;
+      specialization_t<accessors_t, indirect_access_groups,
+                       proxy_indirect_accessor<F, MP>, F, MP>;
+  using direct_accessor =
+      specialization_t<accessors_t, direct_access_groups, proxy<F, MP>, F, MP>;
   using meta_base = specialization_t<
       proxy_meta_base_t,
       composite_t<
@@ -1604,33 +1617,39 @@ private:
   F f_;
 };
 
-#define PRO5D_DEF_CAST_ACCESSOR(oq, pq, ne, ...)                               \
-  template <class P, class D, class T>                                         \
-  struct accessor<P, D, T() oq ne> {                                           \
-    PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(operator T)                        \
-    explicit(Expl) operator T() oq ne {                                        \
-      return invoke<D, T() oq ne>(static_cast<P pq>(*this));                   \
-    }                                                                          \
-  }
-template <bool Expl>
-struct cast_dispatch_base {
-  PRO5D_DEF_ACCESSOR_TEMPLATE(
-      MEM, PRO5D_DEF_CAST_ACCESSOR,
-      operator typename overload_traits<ProOs>::return_type)
-};
-#undef PRO5D_DEF_CAST_ACCESSOR
-
-template <bool IsDirect, class D, class O>
+template <bool IsDirect, class D, class O, class A>
 struct conv_impl {
   static constexpr bool is_direct = IsDirect;
   using dispatch_type = D;
   using overload_type = O;
+  using access_type = A;
 };
-template <bool IsDirect, class R>
+template <bool IsDirect, class R, class A>
 struct refl_impl {
   static constexpr bool is_direct = IsDirect;
   using reflector_type = R;
+  using access_type = A;
 };
+template <class Self, class... Ds>
+struct legacy_accessor_traits {};
+template <class Self, class D, class... Os>
+  requires(requires { typename D::template accessor<Self, D, Os...>; })
+struct legacy_accessor_traits<Self, proxy_operation<D, Os>...>
+    : std::type_identity<typename D::template accessor<Self, D, Os...>> {};
+template <class Self, class R>
+  requires(requires { typename R::template accessor<Self, R>; })
+struct legacy_accessor_traits<Self, proxy_reflection<R>>
+    : std::type_identity<typename R::template accessor<Self, R>> {};
+template <class T>
+struct legacy_access {
+  template <class Self, class... Ds>
+  using accessor = typename legacy_accessor_traits<Self, Ds...>::type;
+};
+template <class T>
+struct default_access_traits : std::type_identity<legacy_access<T>> {};
+template <class T>
+using default_access_t = default_access_traits<T>::type;
+
 template <class Ss, class Cs, class Rs, std::size_t MaxSize,
           std::size_t MaxAlign, constraint_level Copyability,
           constraint_level Relocatability, constraint_level Destructibility>
@@ -1677,24 +1696,36 @@ using observer_refl_types =
 template <facade... Fs>
 using observer_super_types = std::tuple<observer_facade<Fs>...>;
 
-template <class P>
-auto weak_lock_impl(const P& self) noexcept
-  requires(requires {
-    { self.lock() } noexcept;
-  })
-{
-  if constexpr (std::is_constructible_v<bool, decltype(self.lock())>) {
-    return converter{
-        [&self]<class F, class MP>(
-            std::in_place_type_t<proxy<F, MP>>) noexcept -> proxy<F, MP> {
-          auto strong = self.lock();
-          return strong ? proxy<F, MP>{std::move(strong)} : proxy<F, MP>{};
-        }};
-  } else {
-    return self.lock();
+struct weak_lock_dispatch {
+  template <class P>
+  PRO5D_STATIC_CALL(auto, const P& self) noexcept
+    requires(requires {
+      { self.lock() } noexcept;
+    })
+  {
+    if constexpr (std::is_constructible_v<bool, decltype(self.lock())>) {
+      return converter{
+          [&self]<class F, class MP>(
+              std::in_place_type_t<proxy<F, MP>>) noexcept -> proxy<F, MP> {
+            auto strong = self.lock();
+            return strong ? proxy<F, MP>{std::move(strong)} : proxy<F, MP>{};
+          }};
+    } else {
+      return self.lock();
+    }
   }
-}
-PRO5_DEF_FREE_AS_MEM_DISPATCH(weak_mem_lock, weak_lock_impl, lock);
+};
+struct weak_lock_access {
+  template <class Self, class Descriptor>
+  struct accessor;
+  template <class Self, class D, class R>
+  struct accessor<Self, proxy_operation<D, R() const noexcept>> {
+    PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(lock)
+    R lock() const noexcept {
+      return invoke<D, R() const noexcept>(static_cast<const Self&>(*this));
+    }
+  };
+};
 
 template <class WF, class MP>
 using weak_lock_signature =
@@ -1722,8 +1753,9 @@ struct weak_facade
           detail::specialization_t<detail::weak_super_types,
                                    typename F::super_types>,
           std::tuple<detail::conv_impl<
-              true, detail::weak_mem_lock,
-              proxy_dependent_signature<detail::weak_lock_signature>>>,
+              true, detail::weak_lock_dispatch,
+              proxy_dependent_signature<detail::weak_lock_signature>,
+              detail::weak_lock_access>>,
           std::tuple<>, F::max_size, F::max_align, F::copyability,
           F::relocatability, F::destructibility> {
   using strong_type = F;

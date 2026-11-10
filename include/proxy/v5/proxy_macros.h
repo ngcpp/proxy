@@ -53,23 +53,34 @@
   macro(const&&, const&&, noexcept, __VA_ARGS__);
 
 #define PRO5D_DEF_AGGREGATE_MEM_ACCESSOR_BODY(...)                             \
-  using accessor<ProP, ProD, ProOs>::__VA_ARGS__...;
+  using accessor<ProSelf, ProDs>::__VA_ARGS__...;
 #define PRO5D_DEF_AGGREGATE_FREE_ACCESSOR_BODY(...)
 #define PRO5D_DEF_ACCESSOR_TEMPLATE(type, macro, ...)                          \
-  template <class ProP, class ProD, class... ProOs>                            \
+  template <class ProSelf, class... ProDs>                                     \
   struct PRO5D_ENFORCE_EBO accessor {                                          \
     accessor() = delete;                                                       \
   };                                                                           \
-  template <class ProP, class ProD, class... ProOs>                            \
-    requires(sizeof...(ProOs) > 1u &&                                          \
-             (::std::is_constructible_v<accessor<ProP, ProD, ProOs>> && ...))  \
-  struct accessor<ProP, ProD, ProOs...> : accessor<ProP, ProD, ProOs>... {     \
+  template <class ProSelf, class... ProDs>                                     \
+    requires(sizeof...(ProDs) > 1u &&                                          \
+             (::std::is_constructible_v<accessor<ProSelf, ProDs>> && ...))     \
+  struct accessor<ProSelf, ProDs...> : accessor<ProSelf, ProDs>... {           \
     PRO5D_DEF_AGGREGATE_##type##_ACCESSOR_BODY(__VA_ARGS__)                    \
   };                                                                           \
   PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(macro, __VA_ARGS__)
 
 #define PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(...)                           \
   PRO5D_DEBUG(accessor() noexcept { ::std::ignore = &accessor::__VA_ARGS__; })
+
+#define PRO5D_DEF_MEM_ACCESSOR(oq, pq, ne, ...)                                \
+  template <class ProSelf, class ProD, class ProR, class... ProArgs>           \
+  struct accessor<ProSelf, proxy_operation<ProD, ProR(ProArgs...) oq ne>> {    \
+    PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(__VA_ARGS__)                       \
+    ProR __VA_ARGS__(ProArgs... pro_args) oq ne {                              \
+      return invoke<ProD, ProR(ProArgs...) oq ne>(                             \
+          static_cast<ProSelf pq>(*this),                                      \
+          ::std::forward<ProArgs>(pro_args)...);                               \
+    }                                                                          \
+  }
 
 #define PRO5D_EXPAND_IMPL(x) x
 
@@ -78,7 +89,23 @@
   PRO5D_EXPAND_IMPL(                                                           \
       PRO5D_EXPAND_MACRO_IMPL(macro, __VA_ARGS__, 3, 2)(__VA_ARGS__))
 
-#define PRO5D_DEF_MEM_ACCESSOR(oq, pq, ne, ...)                                \
+#define PRO5D_DEF_LEGACY_AGGREGATE_MEM_ACCESSOR_BODY(...)                      \
+  using accessor<ProP, ProD, ProOs>::__VA_ARGS__...;
+#define PRO5D_DEF_LEGACY_AGGREGATE_FREE_ACCESSOR_BODY(...)
+#define PRO5D_DEF_LEGACY_ACCESSOR_TEMPLATE(type, macro, ...)                   \
+  template <class ProP, class ProD, class... ProOs>                            \
+  struct PRO5D_ENFORCE_EBO accessor {                                          \
+    accessor() = delete;                                                       \
+  };                                                                           \
+  template <class ProP, class ProD, class... ProOs>                            \
+    requires(sizeof...(ProOs) > 1u &&                                          \
+             (::std::is_constructible_v<accessor<ProP, ProD, ProOs>> && ...))  \
+  struct accessor<ProP, ProD, ProOs...> : accessor<ProP, ProD, ProOs>... {     \
+    PRO5D_DEF_LEGACY_AGGREGATE_##type##_ACCESSOR_BODY(__VA_ARGS__)             \
+  };                                                                           \
+  PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(macro, __VA_ARGS__)
+
+#define PRO5D_DEF_LEGACY_MEM_ACCESSOR(oq, pq, ne, ...)                         \
   template <class ProP, class ProD, class ProR, class... ProArgs>              \
   struct accessor<ProP, ProD, ProR(ProArgs...) oq ne> {                        \
     PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(__VA_ARGS__)                       \
@@ -87,22 +114,7 @@
           static_cast<ProP pq>(*this), ::std::forward<ProArgs>(pro_args)...);  \
     }                                                                          \
   }
-#define PRO5D_DEF_MEM_DISPATCH_IMPL(name, impl, func)                          \
-  struct name {                                                                \
-    template <class ProT, class... ProArgs>                                    \
-    PRO5D_STATIC_CALL(decltype(auto), ProT&& pro_self, ProArgs&&... pro_args)  \
-    PRO5D_DIRECT_FUNC_IMPL(::std::forward<ProT>(pro_self).impl(                \
-        ::std::forward<ProArgs>(pro_args)...))                                 \
-        PRO5D_DEF_ACCESSOR_TEMPLATE(MEM, PRO5D_DEF_MEM_ACCESSOR, func)         \
-  }
-#define PRO5D_DEF_MEM_DISPATCH_2(name, impl)                                   \
-  PRO5D_DEF_MEM_DISPATCH_IMPL(name, impl, impl)
-#define PRO5D_DEF_MEM_DISPATCH_3(name, impl, func)                             \
-  PRO5D_DEF_MEM_DISPATCH_IMPL(name, impl, func)
-#define PRO5_DEF_MEM_DISPATCH(name, ...)                                       \
-  PRO5D_EXPAND_MACRO(PRO5D_DEF_MEM_DISPATCH, name, __VA_ARGS__)
-
-#define PRO5D_DEF_FREE_ACCESSOR(oq, pq, ne, ...)                               \
+#define PRO5D_DEF_LEGACY_FREE_ACCESSOR(oq, pq, ne, ...)                        \
   template <class ProP, class ProD, class ProR, class... ProArgs>              \
   struct accessor<ProP, ProD, ProR(ProArgs...) oq ne> {                        \
     friend ProR __VA_ARGS__(ProP pq pro_self, ProArgs... pro_args) ne {        \
@@ -121,13 +133,32 @@
       }                                                                      \
     ) \
   }
+
+#define PRO5D_DEF_MEM_DISPATCH_IMPL(name, impl, func)                          \
+  struct name {                                                                \
+    template <class ProT, class... ProArgs>                                    \
+    PRO5D_STATIC_CALL(decltype(auto), ProT&& pro_self, ProArgs&&... pro_args)  \
+    PRO5D_DIRECT_FUNC_IMPL(::std::forward<ProT>(pro_self).impl(                \
+        ::std::forward<ProArgs>(pro_args)...))                                 \
+        PRO5D_DEF_LEGACY_ACCESSOR_TEMPLATE(MEM, PRO5D_DEF_LEGACY_MEM_ACCESSOR, \
+                                           func)                               \
+  }
+#define PRO5D_DEF_MEM_DISPATCH_2(name, impl)                                   \
+  PRO5D_DEF_MEM_DISPATCH_IMPL(name, impl, impl)
+#define PRO5D_DEF_MEM_DISPATCH_3(name, impl, func)                             \
+  PRO5D_DEF_MEM_DISPATCH_IMPL(name, impl, func)
+#define PRO5_DEF_MEM_DISPATCH(name, ...)                                       \
+  PRO5D_EXPAND_MACRO(PRO5D_DEF_MEM_DISPATCH, name, __VA_ARGS__)
+
 #define PRO5D_DEF_FREE_DISPATCH_IMPL(name, impl, func)                         \
   struct name {                                                                \
     template <class ProT, class... ProArgs>                                    \
     PRO5D_STATIC_CALL(decltype(auto), ProT&& pro_self, ProArgs&&... pro_args)  \
     PRO5D_DIRECT_FUNC_IMPL(impl(::std::forward<ProT>(pro_self),                \
                                 ::std::forward<ProArgs>(pro_args)...))         \
-        PRO5D_DEF_ACCESSOR_TEMPLATE(FREE, PRO5D_DEF_FREE_ACCESSOR, func)       \
+        PRO5D_DEF_LEGACY_ACCESSOR_TEMPLATE(FREE,                               \
+                                           PRO5D_DEF_LEGACY_FREE_ACCESSOR,     \
+                                           func)                               \
   }
 #define PRO5D_DEF_FREE_DISPATCH_2(name, impl)                                  \
   PRO5D_DEF_FREE_DISPATCH_IMPL(name, impl, impl)
@@ -142,7 +173,8 @@
     PRO5D_STATIC_CALL(decltype(auto), ProT&& pro_self, ProArgs&&... pro_args)  \
     PRO5D_DIRECT_FUNC_IMPL(impl(::std::forward<ProT>(pro_self),                \
                                 ::std::forward<ProArgs>(pro_args)...))         \
-        PRO5D_DEF_ACCESSOR_TEMPLATE(MEM, PRO5D_DEF_MEM_ACCESSOR, func)         \
+        PRO5D_DEF_LEGACY_ACCESSOR_TEMPLATE(MEM, PRO5D_DEF_LEGACY_MEM_ACCESSOR, \
+                                           func)                               \
   }
 #define PRO5D_DEF_FREE_AS_MEM_DISPATCH_2(name, impl)                           \
   PRO5D_DEF_FREE_AS_MEM_DISPATCH_IMPL(name, impl, impl)

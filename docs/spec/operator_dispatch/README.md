@@ -11,7 +11,9 @@ template <string-literal Sign, bool Rhs = false>
 class operator_dispatch;
 ```
 
-Class template `operator_dispatch` is a [dispatch](../ProDispatch.md) type for operator expressions. `Sign` represents the sign of operator (SOP) as a string literal (e.g., `"+"` for operator `+`). `Rhs` specifies whether the [`proxy`](../proxy/README.md) operand is on the right-hand side of a binary operator.
+Class template `operator_dispatch` is a [dispatch](../ProDispatch.md) type for operator expressions. `Sign` represents the sign of operator (SOP) as a string literal (e.g., `"+"` for operator `+`). `Rhs` specifies whether the [`proxy`](../proxy/README.md) operand is on the right-hand side of a binary operator. A convention of `operator_dispatch<Sign, Rhs>` added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md) has the access type [`operator_access<Sign, Rhs>`](../operator_access/README.md).
+
+*Since 5.0.0*: the accessibility is provided by `operator_access`. Previously, `operator_dispatch` provided the accessibility via its member template `accessor`.
 
 ## Supported SOPs
 
@@ -113,12 +115,6 @@ Let `self` be the operand of [`proxy`](../proxy/README.md), and `other` and `oth
 | (constructor) [nothrow]          | constructs an `operator_dispatch` object |
 | [`operator()`](operator_call.md) | invokes the dispatch                     |
 
-## Member Types
-
-| Name                      | Description                       |
-| ------------------------- | --------------------------------- |
-| [`accessor`](accessor.md) | provides accessibility to `proxy` |
-
 ## Example
 
 ```cpp
@@ -147,4 +143,5 @@ int main() {
 
 ## See Also
 
+- [class template `operator_access`](../operator_access/README.md)
 - [class `conversion_dispatch`](../explicit_conversion_dispatch/README.md)

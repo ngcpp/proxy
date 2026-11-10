@@ -23,13 +23,18 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`basic_facade_builder`<br />`facade_builder`](basic_facade_builder/README.md) | Provides capability to build a facade type at compile-time   |
 | [`compact_metadata`<br />`inline_metadata`](compact_metadata.md) | The metadata policies provided by the library                |
 | [`constraint_level`](constraint_level.md)                    | Defines the 4 constraint levels of a special member function |
-| [`explicit_conversion_dispatch`<br />`conversion_dispatch`](explicit_conversion_dispatch/README.md) | Dispatch type for explicit conversion expressions with accessibility |
-| [`implicit_conversion_dispatch`](implicit_conversion_dispatch/README.md) | Dispatch type for implicit conversion expressions with accessibility |
+| [`explicit_conversion_access`](explicit_conversion_access/README.md) | Access type for explicit conversion expressions              |
+| [`explicit_conversion_dispatch`<br />`conversion_dispatch`](explicit_conversion_dispatch/README.md) | Dispatch type for explicit conversion expressions            |
+| [`implicit_conversion_access`](implicit_conversion_access/README.md) | Access type for implicit conversion expressions              |
+| [`implicit_conversion_dispatch`](implicit_conversion_dispatch/README.md) | Dispatch type for implicit conversion expressions            |
 | [`is_bitwise_trivially_relocatable`](is_bitwise_trivially_relocatable.md) | Specifies whether a type is bitwise trivially relocatable    |
 | [`not_implemented` ](not_implemented.md)                     | Exception thrown by `weak_dispatch` for the default implementation |
-| [`operator_dispatch`](operator_dispatch/README.md)           | Dispatch type for operator expressions with accessibility    |
+| [`operator_access`](operator_access/README.md)               | Access type for operator expressions                         |
+| [`operator_dispatch`](operator_dispatch/README.md)           | Dispatch type for operator expressions                       |
 | [`proxy_dependent_signature`](proxy_dependent_signature.md)  | Specifies a proxy-dependent signature template               |
 | [`proxy_indirect_accessor`](proxy_indirect_accessor/README.md) | Provides indirection accessibility for `proxy`               |
+| [`proxy_operation`](proxy_operation.md)                      | Describes an operation of `proxy` for an accessor            |
+| [`proxy_reflection`](proxy_reflection.md)                    | Describes a reflection of `proxy` for an accessor            |
 | [`proxy_view`<br />`observer_facade`](proxy_view.md)         | Non-owning `proxy` optimized for raw pointer types           |
 | [`proxy`](proxy/README.md)                                   | Wraps a pointer object matching specified facade             |
 | [`weak_dispatch`](weak_dispatch/README.md)                   | Weak dispatch type with a default implementation that throws `not_implemented` |
@@ -83,7 +88,7 @@ Also included in `proxy.h`.
 
 | Name                                          | Description                                                  |
 | --------------------------------------------- | ------------------------------------------------------------ |
-| [*ProAccessible*](ProAccessible.md)           | Specifies that a type provides accessibility to `proxy`      |
+| [*ProAccess*](ProAccess.md)                   | Specifies how a type defines member and non-member functions for `proxy`      |
 | [*ProBasicConvention*](ProBasicConvention.md) | Specifies that a type potentially models a "convention"      |
 | [*ProBasicFacade*](ProBasicFacade.md)         | Specifies that a type potentially models a "facade" of `proxy` |
 | [*ProBasicMetadata*](ProBasicMetadata.md)     | Specifies that a type potentially models "metadata"          |

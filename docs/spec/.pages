@@ -10,13 +10,18 @@ nav:
     - basic_facade_builder<br />facade_builder: basic_facade_builder
     - compact_metadata<br />inline_metadata: compact_metadata.md
     - constraint_level: constraint_level.md
+    - explicit_conversion_access: explicit_conversion_access
     - explicit_conversion_dispatch<br />conversion_dispatch: explicit_conversion_dispatch
+    - implicit_conversion_access: implicit_conversion_access
     - implicit_conversion_dispatch: implicit_conversion_dispatch
     - is_bitwise_trivially_relocatable: is_bitwise_trivially_relocatable.md
     - not_implemented: not_implemented.md
+    - operator_access: operator_access
     - operator_dispatch: operator_dispatch
     - proxy_dependent_signature: proxy_dependent_signature.md
     - proxy_indirect_accessor: proxy_indirect_accessor
+    - proxy_operation: proxy_operation.md
+    - proxy_reflection: proxy_reflection.md
     - proxy_view<br />observer_facade: proxy_view.md
     - proxy: proxy
     - weak_dispatch: weak_dispatch
@@ -43,7 +48,7 @@ nav:
     - PRO_DEF_FREE_DISPATCH: PRO_DEF_FREE_DISPATCH.md
     - PRO_DEF_MEM_DISPATCH: PRO_DEF_MEM_DISPATCH.md
   - Named Requirements:
-    - ProAccessible: ProAccessible.md
+    - ProAccess: ProAccess.md
     - ProBasicConvention: ProBasicConvention.md
     - ProBasicFacade: ProBasicFacade.md
     - ProBasicMetadata: ProBasicMetadata.md

@@ -41,9 +41,9 @@ There shall be a convention type `Conv` defined in the convention types of `F` o
 
 ## Notes
 
-It is generally not recommended to call `proxy_invoke` directly. Using an [`accessor`](ProAccessible.md) is usually a better option with easier and more descriptive syntax. If the facade type `F` is defined with the recommended facilities, it has full accessibility support. Specifically, when
+It is generally not recommended to call `proxy_invoke` directly. Using an [`accessor`](ProAccess.md) is usually a better option with easier and more descriptive syntax. If the facade type `F` is defined with the recommended facilities, it has full accessibility support. Specifically, when
 
-- `D` is defined via [macro `PRO_DEF_MEM_DISPATCH`](PRO_DEF_MEM_DISPATCH.md), [macro `PRO_DEF_FREE_DISPATCH`](PRO_DEF_FREE_DISPATCH.md), or is a specialization of either [`operator_dispatch`](operator_dispatch/README.md) or [`conversion_dispatch`](explicit_conversion_dispatch/README.md), and
+- `D` is defined via [macro `PRO_DEF_MEM_DISPATCH`](PRO_DEF_MEM_DISPATCH.md), [macro `PRO_DEF_FREE_DISPATCH`](PRO_DEF_FREE_DISPATCH.md) or [macro `PRO_DEF_FREE_AS_MEM_DISPATCH`](PRO_DEF_FREE_AS_MEM_DISPATCH.md), or is a specialization of [`operator_dispatch`](operator_dispatch/README.md), or is either [`explicit_conversion_dispatch`](explicit_conversion_dispatch/README.md) or [`implicit_conversion_dispatch`](implicit_conversion_dispatch/README.md), and
 - the convention type `Conv` is defined via [`facade_builder`](basic_facade_builder/README.md).
 
 ## Example
