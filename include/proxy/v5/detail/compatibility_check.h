@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_DETAIL_COMPATIBILITY_CHECK_H_
-#define MSFT_PROXY_V5_DETAIL_COMPATIBILITY_CHECK_H_
+#ifndef NGCPP_PROXY_V5_DETAIL_COMPATIBILITY_CHECK_H_
+#define NGCPP_PROXY_V5_DETAIL_COMPATIBILITY_CHECK_H_
 
 #if (defined(_MSVC_LANG) ? _MSVC_LANG : __cplusplus) < 202002L
 #error "Proxy requires C++20 or later."
@@ -33,4 +33,4 @@ static_assert(sizeof(derived) == sizeof(char),
        // !__has_include(<ptrauth.h>))
 #endif // __has_feature
 
-#endif // MSFT_PROXY_V5_DETAIL_COMPATIBILITY_CHECK_H_
+#endif // NGCPP_PROXY_V5_DETAIL_COMPATIBILITY_CHECK_H_

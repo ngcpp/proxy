@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef _MSFT_PROXY_TEST_UTILS_
-#define _MSFT_PROXY_TEST_UTILS_
+#ifndef _NGCPP_PROXY_TEST_UTILS_
+#define _NGCPP_PROXY_TEST_UTILS_
 
 #include <exception>
 #include <proxy/proxy.h>
@@ -169,4 +169,4 @@ private:
 
 } // namespace utils
 
-#endif // _MSFT_PROXY_TEST_UTILS_
+#endif // _NGCPP_PROXY_TEST_UTILS_

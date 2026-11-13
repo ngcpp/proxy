@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_DETAIL_PROXY_CREATION_H_
-#define MSFT_PROXY_V5_DETAIL_PROXY_CREATION_H_
+#ifndef NGCPP_PROXY_V5_DETAIL_PROXY_CREATION_H_
+#define NGCPP_PROXY_V5_DETAIL_PROXY_CREATION_H_
 
 #include <initializer_list>
 #include <memory>
@@ -444,4 +444,4 @@ constexpr proxy<F, MP> make_proxy_shared(std::initializer_list<U> il,
 
 } // namespace pro::inline v5
 
-#endif // MSFT_PROXY_V5_DETAIL_PROXY_CREATION_H_
+#endif // NGCPP_PROXY_V5_DETAIL_PROXY_CREATION_H_
