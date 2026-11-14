@@ -19,6 +19,8 @@
 
 #include "utils.h"
 
+PRO_ENABLE_MEMBER(at);
+
 namespace proxy_invocation_tests_detail {
 
 template <class... Os>
@@ -77,11 +79,10 @@ struct Container
                           FreeAppendSignatureTraits<T>::template Type>> //
       ::build {};
 
-PRO_DEF_MEM_DISPATCH(MemAt, at, at);
-
 struct ResourceDictionary
-    : pro::facade_builder                                           //
-      ::add_convention<pro::weak_dispatch<MemAt>, std::string(int)> //
+    : pro::facade_builder //
+      ::add_convention<pro::weak_dispatch<pro::member_dispatch<"at">>,
+                       std::string(int)> //
       ::build {};
 
 template <class F, class T>
