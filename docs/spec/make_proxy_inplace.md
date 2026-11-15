@@ -27,7 +27,7 @@ proxy<F, MP> make_proxy_inplace(std::initializer_list<U> il, Args&&... args)
     requires(std::is_constructible_v<T, std::initializer_list<U>&, Args...>);
 ```
 
-Let `MP` be the [metadata policy](ProMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
+Let `MP` be the [metadata policy](ProxyMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
 
 `(1)` Creates a `proxy<F>` object containing a value `p` of type *inplace-ptr&lt;*`std::decay_t`*&gt;*, where `*p` is direct-non-list-initialized with `std::forward<T>(value)`.
 

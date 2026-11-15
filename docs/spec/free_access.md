@@ -12,9 +12,9 @@ template <string-literal Name>
 struct free_access;
 ```
 
-Class template `free_access` is an access type that defines free functions for [`proxy`](proxy/README.md). It meets the [*ProAccess* requirements](ProAccess.md) of applicable types. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_FREE(name)`](PRO_ENABLE_FREE.md) defines the specialization `free_access<"name">`, whose functions are named `name`.
+Class template `free_access` is an access type that defines free functions for [`proxy`](proxy/README.md). It meets the [*ProxyAccess* requirements](ProxyAccess.md) of applicable types. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_FREE(name)`](PRO_ENABLE_FREE.md) defines the specialization `free_access<"name">`, whose functions are named `name`.
 
-`free_access<Name>` is the access type of the conventions of [`free_dispatch<Name>`](free_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](ProDispatch.md) type, and a reflection can name it with any reflector type. The direct, or the indirect, conventions and reflections whose access type is `free_access<Name>` share an accessor (see [*ProAccess* requirements](ProAccess.md)), so their functions participate in overload resolution together.
+`free_access<Name>` is the access type of the conventions of [`free_dispatch<Name>`](free_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](ProxyDispatch.md) type, and a reflection can name it with any reflector type. The direct, or the indirect, conventions and reflections whose access type is `free_access<Name>` share an accessor (see [*ProxyAccess* requirements](ProxyAccess.md)), so their functions participate in overload resolution together.
 
 ## Member Template `accessor`
 
@@ -45,7 +45,7 @@ struct accessor<Self, proxy_reflection<M>> {
 };
 ```
 
-Each type in `Ds` is a *descriptor* (see [*ProAccess* requirements](ProAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProOverload*](ProOverload.md). The functions are friend functions defined in the accessor, which [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) finds when `Self` is an associated class of the arguments.
+Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](ProxyAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProxyOverload*](ProxyOverload.md). The functions are friend functions defined in the accessor, which [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) finds when `Self` is an associated class of the arguments.
 
 `(1)` The default implementation of `accessor` is not constructible.
 

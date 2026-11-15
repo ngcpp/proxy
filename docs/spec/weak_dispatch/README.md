@@ -10,7 +10,7 @@ template <class D>
 struct weak_dispatch : D;
 ```
 
-Class template `weak_dispatch<D>` extends an existing [dispatch](../ProDispatch.md) type `D` and offers a default implementation of `operator()` that throws [`not_implemented`](../not_implemented.md) when a convention is not implemented in `D`.
+Class template `weak_dispatch<D>` extends an existing [dispatch](../ProxyDispatch.md) type `D` and offers a default implementation of `operator()` that throws [`not_implemented`](../not_implemented.md) when a convention is not implemented in `D`.
 
 When `D` is a dispatch type provided by the library, [`basic_facade_builder`](../basic_facade_builder/add_convention.md) assigns the same access type to the conventions of `weak_dispatch<D>` and `D`, so their overloads participate in overload resolution together. For other dispatch types, the builder adapts the `accessor` member template inherited from `D` separately for `weak_dispatch<D>` and `D`.
 
@@ -61,4 +61,4 @@ int main() {
 
 ## See Also
 
-- [named requirements *ProDispatch*](../ProDispatch.md)
+- [named requirements *ProxyDispatch*](../ProxyDispatch.md)

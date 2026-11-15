@@ -21,7 +21,7 @@ There shall be a convention type `Conv` defined in the convention types of `F` o
 
 - `Conv::is_direct` is `false`, and
 - `typename Conv::dispatch_type` is `D`, and
-- [`substituted-overload`](../ProOverload.md)`<typename Conv::overload_type, F, MP>` is `O`.
+- [`substituted-overload`](../ProxyOverload.md)`<typename Conv::overload_type, F, MP>` is `O`.
 
 This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy_indirect_accessor<F, MP>` is an associated class of the arguments.
 
@@ -31,7 +31,7 @@ A `proxy_indirect_accessor<F, MP>` is obtained by dereferencing a [`proxy<F, MP>
 
 `invoke` was introduced in `4.1.0` as a replacement for the deprecated [`proxy_invoke`](../proxy_invoke.md). `proxy_invoke` is a namespace-scope function, while `invoke` is a non-member function of `proxy_indirect_accessor` found only via argument-dependent lookup.
 
-It is generally not recommended to call `invoke` directly. Using an [`accessor`](../ProAccess.md) is usually a better option with easier and more descriptive syntax.
+It is generally not recommended to call `invoke` directly. Using an [`accessor`](../ProxyAccess.md) is usually a better option with easier and more descriptive syntax.
 
 ## Example
 

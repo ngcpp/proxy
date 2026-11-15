@@ -1,12 +1,12 @@
-# Named requirements: *ProBasicFacade*
+# Named requirements: *ProxyBasicFacade*
 
-A type `F` meets the *ProBasicFacade* requirements if the following expressions are well-formed and have the specified semantics.
+A type `F` meets the *ProxyBasicFacade* requirements if the following expressions are well-formed and have the specified semantics.
 
 | Expressions                                    | Semantics                                                    |
 | ---------------------------------------------- | ------------------------------------------------------------ |
-| `typename F::super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Ss`. Each type `S` in `Ss` shall meet the *ProBasicFacade* requirements, and shall be no more conservative than `F`, that is: `F::max_size <= S::max_size`, `F::max_align <= S::max_align`, `F::copyability >= S::copyability`, `F::relocatability >= S::relocatability`, and `F::destructibility >= S::destructibility`. |
-| `typename F::convention_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Cs`. Each type `C` in `Cs` shall meet the [*ProBasicConvention* requirements](ProBasicConvention.md). |
-| `typename F::reflection_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Rs`. Each type `R` in `Rs` shall meet the [*ProBasicReflection* requirements](ProBasicReflection.md). |
+| `typename F::super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Ss`. Each type `S` in `Ss` shall meet the *ProxyBasicFacade* requirements, and shall be no more conservative than `F`, that is: `F::max_size <= S::max_size`, `F::max_align <= S::max_align`, `F::copyability >= S::copyability`, `F::relocatability >= S::relocatability`, and `F::destructibility >= S::destructibility`. |
+| `typename F::convention_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Cs`. Each type `C` in `Cs` shall meet the [*ProxyBasicConvention* requirements](ProxyBasicConvention.md). |
+| `typename F::reflection_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Rs`. Each type `R` in `Rs` shall meet the [*ProxyBasicReflection* requirements](ProxyBasicReflection.md). |
 | `F::max_size`                                  | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type `std::size_t` that defines the maximum size of a pointer type. Shall be greater than `0` and a multiple of `F::max_align`. |
 | `F::max_align`                                 | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type `std::size_t` that defines the maximum alignment of a pointer type. Shall be a power of `2`. |
 | `F::copyability`                               | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required copyability of a pointer type. |

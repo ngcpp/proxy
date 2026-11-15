@@ -1,6 +1,6 @@
-# Named requirements: *ProDispatch*
+# Named requirements: *ProxyDispatch*
 
-A type `D` meets the *ProDispatch* requirements of types `T` and  `O` if `O` meets the [*ProOverload* requirements](ProOverload.md), and the following expressions are well-formed and have the specified semantics (let `R` be return type of `O`, `Args...` be the argument types of `O`. `args...` denotes values of type `Args...`, `v` denotes a value of type `T`, `cv` denotes a value of type `const T`).
+A type `D` meets the *ProxyDispatch* requirements of types `T` and  `O` if `O` meets the [*ProxyOverload* requirements](ProxyOverload.md), and the following expressions are well-formed and have the specified semantics (let `R` be return type of `O`, `Args...` be the argument types of `O`. `args...` denotes values of type `Args...`, `v` denotes a value of type `T`, `cv` denotes a value of type `const T`).
 
 | Expressions | Semantics                                       |
 | ----------- | ----------------------------------------------- |
@@ -23,4 +23,4 @@ A type `D` meets the *ProDispatch* requirements of types `T` and  `O` if `O` mee
 
 ## See Also
 
-- [*ProConvention* requirements](ProConvention.md)
+- [*ProxyConvention* requirements](ProxyConvention.md)

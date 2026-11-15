@@ -1,19 +1,19 @@
-# Named requirements: *ProFacade*
+# Named requirements: *ProxyFacade*
 
-A type `F` meets the *ProFacade* requirements of a type `P` and a type `MP`, where `MP` meets the [*ProMetadataPolicy* requirements](ProMetadataPolicy.md), if `F` meets the [*ProBasicFacade* requirements](ProBasicFacade.md), and the following expressions are well-formed and have the specified semantics.
+A type `F` meets the *ProxyFacade* requirements of a type `P` and a type `MP`, where `MP` meets the [*ProxyMetadataPolicy* requirements](ProxyMetadataPolicy.md), if `F` meets the [*ProxyBasicFacade* requirements](ProxyBasicFacade.md), and the following expressions are well-formed and have the specified semantics.
 
 | Expressions                                    | Semantics                                                    |
 | ---------------------------------------------- | ------------------------------------------------------------ |
-| `typename F::super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Ss`. Each type `S` in `Ss` shall meet the *ProFacade* requirements of `P` and `MP`. |
-| `typename F::convention_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Cs`. Each type `C` in `Cs` shall meet the [*ProConvention* requirements](ProConvention.md) of `P` and `MP`. |
-| `typename F::reflection_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Rs`. Each type `R` in `Rs` shall meet the [*ProReflection* requirements](ProReflection.md) of `P`. |
+| `typename F::super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Ss`. Each type `S` in `Ss` shall meet the *ProxyFacade* requirements of `P` and `MP`. |
+| `typename F::convention_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Cs`. Each type `C` in `Cs` shall meet the [*ProxyConvention* requirements](ProxyConvention.md) of `P` and `MP`. |
+| `typename F::reflection_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Rs`. Each type `R` in `Rs` shall meet the [*ProxyReflection* requirements](ProxyReflection.md) of `P`. |
 | `F::max_size`                                  | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type `std::size_t` that shall be greater than or equal to `sizeof(P)`. |
 | `F::max_align`                                 | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type `std::size_t` that shall be greater than or equal to `alignof(P)`. |
 | `F::copyability`                               | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required copyability of `P`. |
 | `F::relocatability`                            | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required relocatability of `P`. |
 | `F::destructibility`                           | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required destructibility of `P`. |
 
-*Since 5.0.0*: let `Cs` be the conventions of `F` and of every super of `F`, reachable via `typename F::super_types` transitively. Each type `C` in `Cs` whose `typename C::overload_type` is a specialization of [`proxy_dependent_signature`](proxy_dependent_signature.md) shall also meet the [*ProConvention* requirements](ProConvention.md) of `P` with [`substituted-overload`](ProOverload.md)`<typename C::overload_type, F, MP>` in place of `typename C::overload_type`. Among the types in `Cs` sharing `is_direct` and `dispatch_type`, distinct `overload_type`s shall substitute to distinct overloads.
+*Since 5.0.0*: let `Cs` be the conventions of `F` and of every super of `F`, reachable via `typename F::super_types` transitively. Each type `C` in `Cs` whose `typename C::overload_type` is a specialization of [`proxy_dependent_signature`](proxy_dependent_signature.md) shall also meet the [*ProxyConvention* requirements](ProxyConvention.md) of `P` with [`substituted-overload`](ProxyOverload.md)`<typename C::overload_type, F, MP>` in place of `typename C::overload_type`. Among the types in `Cs` sharing `is_direct` and `dispatch_type`, distinct `overload_type`s shall substitute to distinct overloads.
 
 *Since 4.0.2*: `P` shall be a pointer-like type eligible for `proxy`. A type `P` is eligible if the following condition is satisfied:
 
@@ -37,4 +37,4 @@ Relocatability is defined as *move-construct an object and then destroy the orig
 ## See Also
 
 - [concept `proxiable`](proxiable.md)
-- [*ProBasicFacade* requirements](ProBasicFacade.md)
+- [*ProxyBasicFacade* requirements](ProxyBasicFacade.md)

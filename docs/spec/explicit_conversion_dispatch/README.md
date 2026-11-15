@@ -11,7 +11,7 @@ class explicit_conversion_dispatch;
 using conversion_dispatch = explicit_conversion_dispatch;
 ```
 
-Class `explicit_conversion_dispatch` models a [dispatch](../ProDispatch.md) type for explicit type conversion expressions. A convention of `explicit_conversion_dispatch` added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md) has the access type [`explicit_conversion_access`](../explicit_conversion_access/README.md). `conversion_dispatch` is an alias of `explicit_conversion_dispatch`.
+Class `explicit_conversion_dispatch` models a [dispatch](../ProxyDispatch.md) type for explicit type conversion expressions. A convention of `explicit_conversion_dispatch` added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md) has the access type [`explicit_conversion_access`](../explicit_conversion_access/README.md). `conversion_dispatch` is an alias of `explicit_conversion_dispatch`.
 
 *Since 5.0.0*: the accessibility is provided by `explicit_conversion_access`. Previously, `explicit_conversion_dispatch` provided the accessibility via its member template `accessor`.
 

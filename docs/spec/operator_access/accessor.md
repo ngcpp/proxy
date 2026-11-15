@@ -10,7 +10,7 @@ struct accessor {
 
 `(1)` The default implementation of `accessor` is not constructible.
 
-For different `Sign` and `Rhs`, `operator_access<Sign, Rhs>::accessor` has different specializations. `sop` denotes the sign of operator of each specialization. Each type in `Ds` is a *descriptor* (see [*ProAccess* requirements](../ProAccess.md)), and an operation is described by [`proxy_operation`](../proxy_operation.md)`<D, O>`, where `D` is a [dispatch](../ProDispatch.md) type and `O` is an [overload](../ProOverload.md) type.
+For different `Sign` and `Rhs`, `operator_access<Sign, Rhs>::accessor` has different specializations. `sop` denotes the sign of operator of each specialization. Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](../ProxyAccess.md)), and an operation is described by [`proxy_operation`](../proxy_operation.md)`<D, O>`, where `D` is a [dispatch](../ProxyDispatch.md) type and `O` is an [overload](../ProxyOverload.md) type.
 
 ## Left-Hand-Side Operand Specializations
 
@@ -25,7 +25,7 @@ struct accessor<Self, Ds...> : accessor<Self, Ds>... {
 
 `(2)` When `sizeof...(Ds)` is greater than `1`, and `accessor<Self, Ds>...` are default-constructible types, inherits all `accessor<Self, Ds>...` types and `using` their `operator sop`.
 
-When `Rhs` is `false`, the other specializations are defined as follows, where `sizeof...(Ds)` is `1` and the only type in `Ds` is `proxy_operation<D, O>`, with `O` qualified with `cv ref noex`. When `O` matches none of the specializations for `Sign`, such as `R()` for `"/"`, the default implementation `(1)` applies, so `operator_access<Sign, false>` provides no accessor (see [*ProAccess* requirements](../ProAccess.md)).
+When `Rhs` is `false`, the other specializations are defined as follows, where `sizeof...(Ds)` is `1` and the only type in `Ds` is `proxy_operation<D, O>`, with `O` qualified with `cv ref noex`. When `O` matches none of the specializations for `Sign`, such as `R()` for `"/"`, the default implementation `(1)` applies, so `operator_access<Sign, false>` provides no accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)).
 
 ### Unary & Binary SOPs
 

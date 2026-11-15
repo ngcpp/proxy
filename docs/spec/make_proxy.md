@@ -31,7 +31,7 @@ template <facade F, class T, class MP = compact_metadata, class U, class... Args
 proxy<F, MP> make_proxy(std::initializer_list<U> il, Args&&... args);  // freestanding-deleted
 ```
 
-Let `MP` be the [metadata policy](ProMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
+Let `MP` be the [metadata policy](ProxyMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
 
 `(1)` Equivalent to `return make-proxy-internal<F, compact_metadata, std::decay_t<T>>(std::forward<T>(value))`.
 

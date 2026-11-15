@@ -12,7 +12,7 @@ template <string-literal Name>
 struct free_dispatch;
 ```
 
-Class template `free_dispatch` is a [dispatch](ProDispatch.md) type for free function call expressions. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_FREE(name)`](PRO_ENABLE_FREE.md) defines the specialization `free_dispatch<"name">`, which calls the free function `name` with its operand as the first argument.
+Class template `free_dispatch` is a [dispatch](ProxyDispatch.md) type for free function call expressions. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_FREE(name)`](PRO_ENABLE_FREE.md) defines the specialization `free_dispatch<"name">`, which calls the free function `name` with its operand as the first argument.
 
 A convention of `free_dispatch<Name>` added via [`basic_facade_builder`](basic_facade_builder/add_convention.md) has the access type [`free_access<Name>`](free_access.md).
 

@@ -20,7 +20,7 @@ template <facade F, class T, class MP = compact_metadata, class Alloc, class U, 
 proxy<F, MP> allocate_proxy(const Alloc& alloc, std::initializer_list<U> il, Args&&... args);  // freestanding-deleted
 ```
 
-Let `MP` be the [metadata policy](ProMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
+Let `MP` be the [metadata policy](ProxyMetadataPolicy.md) of the created `proxy`, which is [`compact_metadata`](compact_metadata.md) for `(1)`.
 
 `(1)` Creates a `proxy<F>` object containing a value `p` of type *allocated-ptr&lt;*`std::decay_t<T>`*, Alloc&gt;*, where `*p` is direct-non-list-initialized with `std::forward<T>(value)`.
 
