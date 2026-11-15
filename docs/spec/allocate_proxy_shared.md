@@ -53,9 +53,9 @@ The implementation of *strong-compact-ptr* may vary depending on the definition 
 
 #include <proxy/proxy.h>
 
-struct RttiAware : pro::facade_builder                            //
-                   ::support_copy<pro::constraint_level::nothrow> //
-                   ::add_skill<pro::skills::rtti>                 //
+struct RttiAware : pro::facade_builder                                //
+                   ::support_copy<pro::lifetime_requirement::nothrow> //
+                   ::add_skill<pro::skills::rtti>                     //
                    ::build {};
 
 int main() {

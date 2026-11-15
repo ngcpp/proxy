@@ -48,9 +48,9 @@ struct Stringable {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::trivial;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::trivial;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 
 int main() {

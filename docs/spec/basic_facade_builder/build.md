@@ -20,9 +20,9 @@ Specifies a [facade](../facade.md) type deduced from the template parameters of 
 | -------------------------------------- | ------------------------------------------------------------ |
 | `max_size` [static] [constexpr]        | `MaxSize == default-size ? sizeof(void*) * 2u : MaxSize`     |
 | `max_align` [static] [constexpr]       | `MaxAlign == default-size ? alignof(void*) : MaxAlign`       |
-| `copyability` [static] [constexpr]     | `Copyability == default-cl ? constraint_level::none : Copyability` |
-| `relocatability` [static] [constexpr]  | `Relocatability == default-cl ? constraint_level::trivial : Relocatability` |
-| `destructibility` [static] [constexpr] | `Destructibility == default-cl ? constraint_level::nothrow : Destructibility` |
+| `copyability` [static] [constexpr]     | `Copyability == default-lr ? lifetime_requirement::none : Copyability` |
+| `relocatability` [static] [constexpr]  | `Relocatability == default-lr ? lifetime_requirement::trivial : Relocatability` |
+| `destructibility` [static] [constexpr] | `Destructibility == default-lr ? lifetime_requirement::nothrow : Destructibility` |
 
 ## Notes
 
@@ -40,16 +40,17 @@ The default values of the member constants are based on our engineering practice
 struct DefaultBase : pro::facade_builder //
                      ::build {};
 
-struct CopyableBase : pro::facade_builder                               //
-                      ::support_copy<pro::constraint_level::nontrivial> //
+struct CopyableBase : pro::facade_builder                                  //
+                      ::support_copy<pro::lifetime_requirement::supported> //
                       ::build {};
 
-struct TrivialBase : pro::facade_builder                                   //
-                     ::support_copy<pro::constraint_level::trivial>        //
-                     ::support_relocation<pro::constraint_level::trivial>  //
-                     ::support_destruction<pro::constraint_level::trivial> //
-                     ::restrict_layout<sizeof(void*)>                      //
-                     ::build {};
+struct TrivialBase
+    : pro::facade_builder                                       //
+      ::support_copy<pro::lifetime_requirement::trivial>        //
+      ::support_relocation<pro::lifetime_requirement::trivial>  //
+      ::support_destruction<pro::lifetime_requirement::trivial> //
+      ::restrict_layout<sizeof(void*)>                          //
+      ::build {};
 
 int main() {
   static_assert(!std::is_copy_constructible_v<pro::proxy<DefaultBase>>);
