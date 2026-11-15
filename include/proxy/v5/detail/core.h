@@ -1581,9 +1581,9 @@ template <class R, facade F, class MP>
 }
 
 template <facade F>
-struct observer_facade;
+struct view_facade;
 template <facade F, class MP = compact_metadata>
-using proxy_view = proxy<observer_facade<F>, MP>;
+using proxy_view = proxy<view_facade<F>, MP>;
 
 template <facade F>
 struct weak_facade;
@@ -1690,18 +1690,18 @@ private:
 };
 
 template <class C>
-struct observer_conv_traits : std::type_identity<void> {};
+struct view_conv_traits : std::type_identity<void> {};
 template <class C>
   requires(!C::is_direct)
-struct observer_conv_traits<C> : std::type_identity<C> {};
+struct view_conv_traits<C> : std::type_identity<C> {};
 template <class... Cs>
-using observer_conv_types =
-    composite_t<std::tuple<>, typename observer_conv_traits<Cs>::type...>;
+using view_conv_types =
+    composite_t<std::tuple<>, typename view_conv_traits<Cs>::type...>;
 template <class... Rs>
-using observer_refl_types =
+using view_refl_types =
     composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void, Rs>...>;
 template <facade... Fs>
-using observer_super_types = std::tuple<observer_facade<Fs>...>;
+using view_super_types = std::tuple<view_facade<Fs>...>;
 
 struct weak_lock_dispatch {
   template <class P>
@@ -1743,13 +1743,13 @@ using weak_super_types = std::tuple<weak_facade<Fs>...>;
 } // namespace detail
 
 template <facade F>
-struct observer_facade
+struct view_facade
     : detail::facade_impl<
-          detail::specialization_t<detail::observer_super_types,
+          detail::specialization_t<detail::view_super_types,
                                    typename F::super_types>,
-          detail::specialization_t<detail::observer_conv_types,
+          detail::specialization_t<detail::view_conv_types,
                                    typename F::convention_types>,
-          detail::specialization_t<detail::observer_refl_types,
+          detail::specialization_t<detail::view_refl_types,
                                    typename F::reflection_types>,
           sizeof(void*), alignof(void*), constraint_level::trivial,
           constraint_level::trivial, constraint_level::trivial> {};

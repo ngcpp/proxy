@@ -39,7 +39,7 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`proxy_indirect_accessor`](proxy_indirect_accessor/README.md) | Provides indirection accessibility for `proxy`               |
 | [`proxy_operation`](proxy_operation.md)                      | Describes an operation of `proxy` for an accessor            |
 | [`proxy_reflection`](proxy_reflection.md)                    | Describes a reflection of `proxy` for an accessor            |
-| [`proxy_view`<br />`observer_facade`](proxy_view.md)         | Non-owning `proxy` optimized for raw pointer types           |
+| [`proxy_view`<br />`view_facade`](proxy_view.md)             | Non-owning `proxy` optimized for raw pointer types           |
 | [`proxy`](proxy/README.md)                                   | Wraps a pointer object matching specified facade             |
 | [`weak_dispatch`](weak_dispatch/README.md)                   | Weak dispatch type with a default implementation that throws `not_implemented` |
 | [`weak_proxy`<br />`weak_facade`](weak_proxy.md)             | `proxy` with weak ownership                                  |

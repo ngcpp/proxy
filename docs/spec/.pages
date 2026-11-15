@@ -26,7 +26,7 @@ nav:
     - proxy_indirect_accessor: proxy_indirect_accessor
     - proxy_operation: proxy_operation.md
     - proxy_reflection: proxy_reflection.md
-    - proxy_view<br />observer_facade: proxy_view.md
+    - proxy_view<br />view_facade: proxy_view.md
     - proxy: proxy
     - weak_dispatch: weak_dispatch
     - weak_proxy<br />weak_facade: weak_proxy.md
