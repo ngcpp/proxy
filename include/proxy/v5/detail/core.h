@@ -255,6 +255,11 @@ struct proxy_helper {
     proxy<F, MP>& p_;
   };
 
+  template <class F, class MP>
+  static const typename MP::template storage<proxy_meta<F, MP>>&
+      get_meta_storage(const proxy<F, MP>& p) noexcept {
+    return p.meta_;
+  }
   template <class M, class F, class MP>
   static const M& get_meta(const proxy<F, MP>& p) noexcept {
     assert(p.meta_);
@@ -1137,8 +1142,6 @@ class proxy : public detail::proxy_traits<F, MP>::direct_accessor,
   static_assert(detail::is_metadata_policy_well_formed<MP>(),
                 "the metadata policy is not well-formed");
 
-  template <facade F2, class MP2>
-  friend class proxy;
   friend struct detail::proxy_helper;
 
 public:
@@ -1454,13 +1457,15 @@ private:
     PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
       if constexpr (F2::copyability == constraint_level::trivial) {
-        std::uninitialized_copy_n(rhs.ptr_, F2::max_size, ptr_);
+        std::uninitialized_copy_n(
+            static_cast<const std::byte*>(detail::proxy_helper::get_ptr(rhs)),
+            F2::max_size, ptr_);
       } else {
         invoke<detail::copy_dispatch,
                void(void*) const noexcept(
                    F::copyability == constraint_level::nothrow)>(rhs, ptr_);
       }
-      meta_ = rhs.meta_;
+      meta_ = detail::proxy_helper::get_meta_storage(rhs);
     } else {
       meta_.reset();
     }
@@ -1470,16 +1475,18 @@ private:
     PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
       detail::proxy_helper::meta_resetting_guard<F2, MP> guard{rhs};
+      void* rhs_ptr = detail::proxy_helper::get_ptr(rhs);
       if constexpr (F2::relocatability == constraint_level::trivial) {
-        std::uninitialized_copy_n(rhs.ptr_, F2::max_size, ptr_);
+        std::uninitialized_copy_n(static_cast<std::byte*>(rhs_ptr),
+                                  F2::max_size, ptr_);
       } else {
         detail::proxy_helper::get_meta<detail::invocation_meta<
             MP, true, detail::relocate_dispatch,
             void(void*) &&
                 noexcept(F::relocatability == constraint_level::nothrow)>>(rhs)
-            .function(rhs.ptr_, ptr_);
+            .function(rhs_ptr, ptr_);
       }
-      meta_ = std::as_const(rhs.meta_);
+      meta_ = detail::proxy_helper::get_meta_storage(rhs);
     } else {
       meta_.reset();
     }
