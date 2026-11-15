@@ -137,8 +137,18 @@ struct free_dispatch {
       return invoke<D, R(int) oq ne>(static_cast<Self pq>(*this), 0);          \
     }                                                                          \
   }
-#define PRO5D_DEF_LHS_BINARY_OP_ACCESSOR PRO5D_DEF_MEM_ACCESSOR
-#define PRO5D_DEF_LHS_ALL_OP_ACCESSOR PRO5D_DEF_MEM_ACCESSOR
+#define PRO5D_DEF_LHS_BINARY_OP_ACCESSOR(oq, pq, ne, ...)                      \
+  template <class Self, class D, class R, class Arg>                           \
+  struct accessor<Self, proxy_operation<D, R(Arg) oq ne>> {                    \
+    PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(__VA_ARGS__)                       \
+    R __VA_ARGS__(Arg arg) oq ne {                                             \
+      return invoke<D, R(Arg) oq ne>(static_cast<Self pq>(*this),              \
+                                     std::forward<Arg>(arg));                  \
+    }                                                                          \
+  }
+#define PRO5D_DEF_LHS_ALL_OP_ACCESSOR(oq, pq, ne, ...)                         \
+  PRO5D_DEF_LHS_LEFT_OP_ACCESSOR(oq, pq, ne, __VA_ARGS__);                     \
+  PRO5D_DEF_LHS_BINARY_OP_ACCESSOR(oq, pq, ne, __VA_ARGS__)
 #define PRO5D_LHS_LEFT_OP_DISPATCH_BODY_IMPL(...)                              \
   template <class T>                                                           \
   PRO5D_STATIC_CALL(decltype(auto), T&& self)                                  \
@@ -304,7 +314,11 @@ struct operator_dispatch<"()", false> {
 };
 template <>
 struct operator_access<"[]", false> {
+#if __cpp_multidimensional_subscript >= 202110L
   PRO5D_DEF_ACCESSOR_TEMPLATE(MEM, PRO5D_DEF_MEM_ACCESSOR, operator[])
+#else
+  PRO5D_DEF_ACCESSOR_TEMPLATE(MEM, PRO5D_DEF_LHS_BINARY_OP_ACCESSOR, operator[])
+#endif // __cpp_multidimensional_subscript >= 202110L
 };
 template <>
 struct operator_dispatch<"[]", false> {

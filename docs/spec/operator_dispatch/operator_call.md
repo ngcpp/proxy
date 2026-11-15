@@ -30,7 +30,7 @@ template <class T, class Arg>
 
 ### Binary SOPs
 
-When `Sign` is one of `"/"`, `"%"`, `"=="`, `"!="`, `">"`, `"<"`, `">="`, `"<="`, `"<=>"`, `"&&"`, `"||"`, `"|"`, `"^"`, `"<<"`, `">>"`, `"+="`, `"-="`, `"*="`, `"/="`, `"&="`, `"|="`, `"^="`, `"<<="`, `">>="`, `","`, `"->*"`,
+When `Sign` is one of `"/"`, `"%"`, `"=="`, `"!="`, `">"`, `"<"`, `">="`, `"<="`, `"<=>"`, `"&&"`, `"||"`, `"|"`, `"^"`, `"<<"`, `">>"`, `"+="`, `"-="`, `"*="`, `"/="`, `"%="`, `"&="`, `"|="`, `"^="`, `"<<="`, `">>="`, `","`, `"->*"`,
 
 ```cpp
 // (3)
@@ -98,25 +98,25 @@ When `Sign` is `"[]"`,
 
 ```cpp
 // (8) (until C++23)
-template <class T, class... Args>
-/* see below */ operator()(T&& self, Args&&... args) const
-    noexcept(noexcept(std::forward<T>(self)[std::forward<Args>(args)...]))
-    requires(requires { std::forward<T>(self)[std::forward<Args>(args)...]; });
-
-// (9) (since C++23)
 template <class T, class Arg>
 /* see below */ operator()(T&& self, Arg&& arg) const
     noexcept(noexcept(std::forward<T>(self)[std::forward<Arg>(arg)]))
     requires(requires { std::forward<T>(self)[std::forward<Arg>(arg)]; });
+
+// (9) (since C++23)
+template <class T, class... Args>
+/* see below */ operator()(T&& self, Args&&... args) const
+    noexcept(noexcept(std::forward<T>(self)[std::forward<Args>(args)...]))
+    requires(requires { std::forward<T>(self)[std::forward<Args>(args)...]; });
 ```
 
-`(8)` Returns `std::forward<T>(self)[std::forward<Args>(args)...]`. Requires the [multidimensional subscript feature](https://en.cppreference.com/w/cpp/language/operators#Array_subscript_operator) in C++23.
+`(8)` Returns `std::forward<T>(self)[std::forward<Arg>(arg)]`.
 
-`(9)` Returns `std::forward<T>(self)[std::forward<Arg>(arg)]`.
+`(9)` Returns `std::forward<T>(self)[std::forward<Args>(args)...]`. Requires the [multidimensional subscript feature](https://en.cppreference.com/w/cpp/language/operators#Array_subscript_operator) in C++23.
 
 ## Right-Hand-Side Operand Specializations
 
-When `Sign` is one of `"+"`, `"-"`, `"*"`, `"/"`, `"%"`, `"=="`, `"!="`, `">"`, `"<"`, `">="`, `"<="`, `"<=>"`, `"&&"`, `"||"`, `"&"`, `"|"`, `"^"`, `"<<"`, `">>"`, `"+="`, `"-="`, `"*="`, `"/="`, `"&="`, `"|="`, `"^="`, `"<<="`, `">>="`, `","`, `"->*"`, and `Rhs` is `true`,
+When `Sign` is one of `"+"`, `"-"`, `"*"`, `"/"`, `"%"`, `"=="`, `"!="`, `">"`, `"<"`, `">="`, `"<="`, `"<=>"`, `"&&"`, `"||"`, `"&"`, `"|"`, `"^"`, `"<<"`, `">>"`, `"+="`, `"-="`, `"*="`, `"/="`, `"%="`, `"&="`, `"|="`, `"^="`, `"<<="`, `">>="`, `","`, `"->*"`, and `Rhs` is `true`,
 
 ```cpp
 // (10)
