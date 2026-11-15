@@ -91,6 +91,6 @@ int main() {
 ```
 
 - (1) This is a traditional header rather than a module. It should be declared in global fragment (after `module` and before `export module`).
-- (2) This makes all `PRO_DEF_` macros available. This header file contains only some macros and are therefore very fast to compile.
+- (2) This makes all macros of the library, such as `PRO_DEF_MEM_DISPATCH` and `PRO_ENABLE_MEMBER`, available. This header file contains only some macros and are therefore very fast to compile.
 - (3) `import proxy.v5;` makes all public interfaces from `pro::v5` namespace available in the current translation unit.
 - (4) As of 2025-05-11, clangd requires the accessor struct to be either `export`-ed, or be declared within an `extern "C++"` block, in order to have auto completion working.

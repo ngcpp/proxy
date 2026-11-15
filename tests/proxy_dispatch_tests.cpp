@@ -2,7 +2,10 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <string>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 #if defined(_MSC_VER) && !defined(__clang__)
@@ -19,6 +22,11 @@
 #if __cpp_lib_mdspan >= 202207L
 #include <mdspan>
 #endif // __cpp_lib_mdspan >= 202207L
+
+PRO_ENABLE_MEMBER(size);
+PRO_ENABLE_MEMBER(IsEmpty);
+PRO_ENABLE_FREE(empty);
+PRO_ENABLE_FREE(Size);
 
 namespace proxy_dispatch_tests_detail {
 
@@ -47,6 +55,30 @@ struct TestFacadeBase : pro::facade_builder //
                         ::build {};
 
 PRO_DEF_FREE_AS_MEM_DISPATCH(FreeMemToString, std::to_string, ToString);
+
+struct IndependentAccessFacade {
+  struct MemberDispatchAsFree {
+    static constexpr bool is_direct = false;
+    using dispatch_type = pro::member_dispatch<"size">;
+    using overload_type = std::size_t() const noexcept;
+    using access_type = pro::free_access<"Size">;
+  };
+  struct FreeDispatchAsMember {
+    static constexpr bool is_direct = false;
+    using dispatch_type = pro::free_dispatch<"empty">;
+    using overload_type = bool() const;
+    using access_type = pro::member_access<"IsEmpty">;
+  };
+  using super_types = std::tuple<>;
+  using convention_types =
+      std::tuple<MemberDispatchAsFree, FreeDispatchAsMember>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::trivial;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
 
 } // namespace proxy_dispatch_tests_detail
 
@@ -829,6 +861,16 @@ TEST(ProxyDispatchTests, TestFreeAsMemDispatch) {
   int v = 123;
   pro::proxy<TestFacade> p = &v;
   ASSERT_EQ(p->ToString(), "123");
+}
+
+TEST(ProxyDispatchTests, TestNamedDispatchWithIndependentAccess) {
+  std::string s = "hello";
+  pro::proxy<detail::IndependentAccessFacade> p = &s;
+  ASSERT_EQ(Size(*p), 5u);
+  ASSERT_FALSE(p->IsEmpty());
+  s.clear();
+  ASSERT_EQ(Size(*p), 0u);
+  ASSERT_TRUE(p->IsEmpty());
 }
 
 TEST(ProxyDispatchTests, TestSuperConversion) {

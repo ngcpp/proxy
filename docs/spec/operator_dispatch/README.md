@@ -35,7 +35,7 @@ Type conversion expressions, although using `operator` syntax, do not have a spe
 
 ## Specializations
 
-Let `self` be the operand of [`proxy`](../proxy/README.md), and `other` and `others...` be the other operand(s) in the expression of an operator. `operator_dispatch` has the following specializations for various expressions:
+Let `self` be the operand of [`proxy`](../proxy/README.md), and `other` and `others...` be the other operand(s) in the expression of an operator. `operator_dispatch` has the following specializations for various expressions. Instantiating `operator_dispatch` with any other `Sign` and `Rhs` is ill-formed.
 
 | Specializations                   | Expressions             |
 | --------------------------------- | ----------------------- |

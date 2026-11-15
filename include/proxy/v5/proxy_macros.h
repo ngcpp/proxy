@@ -70,6 +70,11 @@
 
 #define PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(...)                           \
   PRO5D_DEBUG(accessor() noexcept { ::std::ignore = &accessor::__VA_ARGS__; })
+#define PRO5D_GEN_DEBUG_SYMBOL_FOR_FREE_ACCESSOR(ret, name, params, args)      \
+  PRO5D_DEBUG(                                                                 \
+      accessor() noexcept { ::std::ignore = &pro_symbol_guard; }               \
+                                                                               \
+      private : static ret pro_symbol_guard params { return name args; })
 
 #define PRO5D_DEF_MEM_ACCESSOR(oq, pq, ne, ...)                                \
   template <class ProSelf, class ProD, class ProR, class... ProArgs>           \
@@ -80,6 +85,62 @@
           static_cast<ProSelf pq>(*this),                                      \
           ::std::forward<ProArgs>(pro_args)...);                               \
     }                                                                          \
+  }
+
+#define PRO5D_DEF_FREE_ACCESSOR(oq, pq, ne, name)                              \
+  template <class ProSelf, class ProD, class ProR, class... ProArgs>           \
+  struct accessor<ProSelf, proxy_operation<ProD, ProR(ProArgs...) oq ne>> {    \
+    friend ProR name(ProSelf pq pro_self, ProArgs... pro_args) ne {            \
+      return invoke<ProD, ProR(ProArgs...) oq ne>(                             \
+          static_cast<ProSelf pq>(pro_self),                                   \
+          ::std::forward<ProArgs>(pro_args)...);                               \
+    }                                                                          \
+    PRO5D_GEN_DEBUG_SYMBOL_FOR_FREE_ACCESSOR(                                  \
+        ProR, name, (ProSelf pq pro_self, ProArgs... pro_args),                \
+        (static_cast<ProSelf pq>(pro_self),                                    \
+         ::std::forward<ProArgs>(pro_args)...))                                \
+  }
+
+#define PRO5_ENABLE_MEMBER(name)                                               \
+  template <>                                                                  \
+  struct pro::v5::member_dispatch<#name> {                                     \
+    template <class ProT, class... ProArgs>                                    \
+    PRO5D_STATIC_CALL(decltype(auto), ProT&& pro_self, ProArgs&&... pro_args)  \
+    PRO5D_DIRECT_FUNC_IMPL(::std::forward<ProT>(pro_self).name(                \
+        ::std::forward<ProArgs>(pro_args)...))                                 \
+  };                                                                           \
+  template <>                                                                  \
+  struct pro::v5::member_access<#name> {                                       \
+    PRO5D_DEF_ACCESSOR_TEMPLATE(MEM, PRO5D_DEF_MEM_ACCESSOR, name)             \
+    template <class ProSelf, class ProM>                                       \
+    struct accessor<ProSelf, proxy_reflection<ProM>> {                         \
+      PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(name)                            \
+      const ProM& name() const noexcept {                                      \
+        return reflect<ProM>(static_cast<const ProSelf&>(*this));              \
+      }                                                                        \
+    };                                                                         \
+  }
+
+#define PRO5_ENABLE_FREE(name)                                                 \
+  template <>                                                                  \
+  struct pro::v5::free_dispatch<#name> {                                       \
+    template <class ProT, class... ProArgs>                                    \
+    PRO5D_STATIC_CALL(decltype(auto), ProT&& pro_self, ProArgs&&... pro_args)  \
+    PRO5D_DIRECT_FUNC_IMPL(name(::std::forward<ProT>(pro_self),                \
+                                ::std::forward<ProArgs>(pro_args)...))         \
+  };                                                                           \
+  template <>                                                                  \
+  struct pro::v5::free_access<#name> {                                         \
+    PRO5D_DEF_ACCESSOR_TEMPLATE(FREE, PRO5D_DEF_FREE_ACCESSOR, name)           \
+    template <class ProSelf, class ProM>                                       \
+    struct accessor<ProSelf, proxy_reflection<ProM>> {                         \
+      friend const ProM& name(const ProSelf& pro_self) noexcept {              \
+        return reflect<ProM>(pro_self);                                        \
+      }                                                                        \
+      PRO5D_GEN_DEBUG_SYMBOL_FOR_FREE_ACCESSOR(const ProM&, name,              \
+                                               (const ProSelf& pro_self),      \
+                                               (pro_self))                     \
+    };                                                                         \
   }
 
 #define PRO5D_EXPAND_IMPL(x) x
@@ -122,16 +183,10 @@
           static_cast<ProP pq>(pro_self),                                      \
           ::std::forward<ProArgs>(pro_args)...);                               \
     }                                                                          \
-    PRO5D_DEBUG(                                                             \
-      accessor() noexcept { ::std::ignore = &pro_symbol_guard; }             \
-                                                                             \
-    private:                                                                 \
-      static inline ProR pro_symbol_guard(ProP pq pro_self,                  \
-                                          ProArgs... pro_args) {             \
-        return __VA_ARGS__(static_cast<ProP pq>(pro_self),                   \
-            ::std::forward<ProArgs>(pro_args)...);                           \
-      }                                                                      \
-    ) \
+    PRO5D_GEN_DEBUG_SYMBOL_FOR_FREE_ACCESSOR(                                  \
+        ProR, __VA_ARGS__, (ProP pq pro_self, ProArgs... pro_args),            \
+        (static_cast<ProP pq>(pro_self),                                       \
+         ::std::forward<ProArgs>(pro_args)...))                                \
   }
 
 #define PRO5D_DEF_MEM_DISPATCH_IMPL(name, impl, func)                          \
@@ -233,5 +288,21 @@ stick to a specific major version of the Proxy library.")
 #define PRO_DEF_FREE_AS_MEM_DISPATCH(name, ...)                                \
   PRO5_DEF_FREE_AS_MEM_DISPATCH(name, __VA_ARGS__)
 #endif // PRO_DEF_FREE_AS_MEM_DISPATCH
+
+#ifdef PRO_ENABLE_MEMBER
+#undef PRO_ENABLE_MEMBER
+#define PRO_ENABLE_MEMBER(...)                                                 \
+  PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(PRO_ENABLE_MEMBER, PRO5_ENABLE_MEMBER)
+#else
+#define PRO_ENABLE_MEMBER PRO5_ENABLE_MEMBER
+#endif // PRO_ENABLE_MEMBER
+
+#ifdef PRO_ENABLE_FREE
+#undef PRO_ENABLE_FREE
+#define PRO_ENABLE_FREE(...)                                                   \
+  PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(PRO_ENABLE_FREE, PRO5_ENABLE_FREE)
+#else
+#define PRO_ENABLE_FREE PRO5_ENABLE_FREE
+#endif // PRO_ENABLE_FREE
 
 #endif // MSFT_PROXY_V5_PROXY_MACROS_H_

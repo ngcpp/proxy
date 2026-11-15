@@ -15,8 +15,8 @@ namespace detail {
 
 template <std::size_t N>
 struct sign {
-  consteval sign(const char (&str)[N + 1]) {
-    if (str[N] != '\0') {
+  consteval sign(const char (&str)[N]) {
+    if (str[N - 1u] != '\0') {
       PRO5D_UNREACHABLE();
     }
     for (std::size_t i = 0; i < N; ++i) {
@@ -26,8 +26,10 @@ struct sign {
 
   char value[N];
 };
-template <std::size_t N>
-sign(const char (&str)[N]) -> sign<N - 1u>;
+
+// Delays the assertion to instantiation for compilers without CWG2518.
+template <sign V>
+inline constexpr bool dependent_false = false;
 
 // When std::reference_constructs_from_temporary_v (C++23) is not available, we
 // fall back to a conservative approximation that disallows binding a temporary
@@ -77,9 +79,39 @@ struct cast_access_base {
 } // namespace detail
 
 template <detail::sign Sign, bool Rhs = false>
-struct operator_access;
+struct operator_access {
+  static_assert(detail::dependent_false<Sign>,
+                "unsupported Sign or Rhs for operator_access");
+};
 template <detail::sign Sign, bool Rhs = false>
-struct operator_dispatch;
+struct operator_dispatch {
+  static_assert(detail::dependent_false<Sign>,
+                "unsupported Sign or Rhs for operator_dispatch");
+};
+template <detail::sign Name>
+struct member_access {
+  static_assert(detail::dependent_false<Name>,
+                "PRO_ENABLE_MEMBER(name) must precede any use of "
+                "member_access<\"name\">");
+};
+template <detail::sign Name>
+struct member_dispatch {
+  static_assert(detail::dependent_false<Name>,
+                "PRO_ENABLE_MEMBER(name) must precede any use of "
+                "member_dispatch<\"name\">");
+};
+template <detail::sign Name>
+struct free_access {
+  static_assert(detail::dependent_false<Name>,
+                "PRO_ENABLE_FREE(name) must precede any use of "
+                "free_access<\"name\">");
+};
+template <detail::sign Name>
+struct free_dispatch {
+  static_assert(detail::dependent_false<Name>,
+                "PRO_ENABLE_FREE(name) must precede any use of "
+                "free_dispatch<\"name\">");
+};
 
 #define PRO5D_DEF_LHS_LEFT_OP_ACCESSOR(oq, pq, ne, ...)                        \
   template <class Self, class D, class R>                                      \
@@ -353,6 +385,12 @@ struct default_access_traits<explicit_conversion_dispatch>
 template <>
 struct default_access_traits<implicit_conversion_dispatch>
     : std::type_identity<implicit_conversion_access> {};
+template <sign Name>
+struct default_access_traits<member_dispatch<Name>>
+    : std::type_identity<member_access<Name>> {};
+template <sign Name>
+struct default_access_traits<free_dispatch<Name>>
+    : std::type_identity<free_access<Name>> {};
 template <class D>
   requires(!std::is_same_v<default_access_t<D>, legacy_access<D>>)
 struct default_access_traits<weak_dispatch<D>> : default_access_traits<D> {};

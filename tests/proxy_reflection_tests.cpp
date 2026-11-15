@@ -3,12 +3,17 @@
 // Licensed under the MIT License.
 
 #include "utils.h"
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <memory>
 #include <proxy/proxy.h>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <typeinfo>
+
+PRO_ENABLE_MEMBER(GetTypeInfo);
+PRO_ENABLE_FREE(GetTypeInfo);
 
 namespace proxy_reflection_tests_detail {
 
@@ -102,6 +107,28 @@ struct TestDescriptionFacade {
   static constexpr auto destructibility = pro::constraint_level::nothrow;
 };
 
+template <bool IsDirect, class A>
+struct TypeInfoReflection {
+  static constexpr bool is_direct = IsDirect;
+  using reflector_type = TypeInfoReflector;
+  using access_type = A;
+};
+
+struct TestNamedAccessFacade {
+  using super_types = std::tuple<>;
+  using convention_types = std::tuple<>;
+  using reflection_types =
+      std::tuple<TypeInfoReflection<true, pro::member_access<"GetTypeInfo">>,
+                 TypeInfoReflection<false, pro::member_access<"GetTypeInfo">>,
+                 TypeInfoReflection<true, pro::free_access<"GetTypeInfo">>,
+                 TypeInfoReflection<false, pro::free_access<"GetTypeInfo">>>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::trivial;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+
 } // namespace proxy_reflection_tests_detail
 
 namespace detail = proxy_reflection_tests_detail;
@@ -160,4 +187,15 @@ TEST(ProxyReflectionTests, TestSharedAccess) {
       pro::make_proxy_view<detail::TestDescriptionFacade>(value);
   ASSERT_EQ(pv->Describe(), std::to_string(value));
   ASSERT_STREQ(pv->GetTypeName(), typeid(double).name());
+}
+
+TEST(ProxyReflectionTests, TestNamedAccess) {
+  int foo = 123;
+  pro::proxy<detail::TestNamedAccessFacade> p = &foo;
+  static_assert(noexcept(p.GetTypeInfo()));
+  static_assert(noexcept(GetTypeInfo(*p)));
+  ASSERT_STREQ(p.GetTypeInfo().info->name(), typeid(int*).name());
+  ASSERT_STREQ(p->GetTypeInfo().info->name(), typeid(int).name());
+  ASSERT_STREQ(GetTypeInfo(p).info->name(), typeid(int*).name());
+  ASSERT_STREQ(GetTypeInfo(*p).info->name(), typeid(int).name());
 }
