@@ -6,7 +6,7 @@ template <constraint_level CL>
 using support_destruction = basic_facade_builder</* see below */>;
 ```
 
-The alias template `support_destruction` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds destruction support to the template parameters. After the operation, `Destructibility` becomes `std::max(Destructibility, CL)`. The expression inside `requires` is equivalent to `CL` is a defined enumerator of `constraint_level`.
+The alias template `support_destruction` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds destruction support to the template parameters. After the operation, `Destructibility` becomes `std::max(Destructibility, CL)`. The expression inside `requires` is equivalent to `CL` is a defined enumerator of `constraint_level`.
 
 ## Notes
 

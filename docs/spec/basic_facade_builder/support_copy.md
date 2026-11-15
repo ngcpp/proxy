@@ -6,7 +6,7 @@ template <constraint_level CL>
 using support_copy = basic_facade_builder</* see below */>;
 ```
 
-The alias template `support_copy` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds copyability support to the template parameters. After the operation, `Copyability` becomes `std::max(Copyability, CL)`. The expression inside `requires` is equivalent to `CL` is a defined enumerator of `constraint_level`.
+The alias template `support_copy` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds copyability support to the template parameters. After the operation, `Copyability` becomes `std::max(Copyability, CL)`. The expression inside `requires` is equivalent to `CL` is a defined enumerator of `constraint_level`.
 
 ## Notes
 
