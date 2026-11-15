@@ -12,7 +12,6 @@ import proxy.v5;
 
 extern "C++" {
 PRO_ENABLE_MEMBER(GetFoo);
-PRO_ENABLE_FREE(GetQux);
 PRO_DEF_FREE_DISPATCH(FreeGetBar, GetBar);
 PRO_DEF_FREE_AS_MEM_DISPATCH(FreeGetBaz, GetBaz);
 }

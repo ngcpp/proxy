@@ -294,7 +294,7 @@ stick to a specific major version of the Proxy library.")
 #define PRO_ENABLE_MEMBER(...)                                                 \
   PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(PRO_ENABLE_MEMBER, PRO5_ENABLE_MEMBER)
 #else
-#define PRO_ENABLE_MEMBER(name) PRO5_ENABLE_MEMBER(name)
+#define PRO_ENABLE_MEMBER PRO5_ENABLE_MEMBER
 #endif // PRO_ENABLE_MEMBER
 
 #ifdef PRO_ENABLE_FREE
@@ -302,7 +302,7 @@ stick to a specific major version of the Proxy library.")
 #define PRO_ENABLE_FREE(...)                                                   \
   PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(PRO_ENABLE_FREE, PRO5_ENABLE_FREE)
 #else
-#define PRO_ENABLE_FREE(name) PRO5_ENABLE_FREE(name)
+#define PRO_ENABLE_FREE PRO5_ENABLE_FREE
 #endif // PRO_ENABLE_FREE
 
 #endif // MSFT_PROXY_V5_PROXY_MACROS_H_

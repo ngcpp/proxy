@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <list>
 #include <map>
+#include <memory>
 #include <ranges>
 #include <sstream>
 #include <string>
@@ -18,8 +19,6 @@
 #include <proxy/proxy.h>
 
 #include "utils.h"
-
-PRO_ENABLE_MEMBER(at);
 
 namespace proxy_invocation_tests_detail {
 
@@ -79,10 +78,11 @@ struct Container
                           FreeAppendSignatureTraits<T>::template Type>> //
       ::build {};
 
+PRO_DEF_MEM_DISPATCH(MemAt, at, at);
+
 struct ResourceDictionary
-    : pro::facade_builder //
-      ::add_convention<pro::weak_dispatch<pro::member_dispatch<"at">>,
-                       std::string(int)> //
+    : pro::facade_builder                                           //
+      ::add_convention<pro::weak_dispatch<MemAt>, std::string(int)> //
       ::build {};
 
 template <class F, class T>
@@ -160,7 +160,44 @@ PRO_DEF_FREE_DISPATCH(FreeDump, Dump);
 PRO_DEF_FREE_DISPATCH(FreeInvoke, std::invoke, Invoke);
 PRO_DEF_FREE_AS_MEM_DISPATCH(MemInvoke, std::invoke, Invoke);
 
+struct TypeRecorder {
+  template <class... Args>
+  void Record(Args&&...) {
+    *types = GetTypeIndices<std::decay_t<Args>...>();
+  }
+
+  std::vector<std::type_index>* types;
+};
+
+template <class... Args>
+void Record(TypeRecorder& recorder, Args&&... args) {
+  recorder.Record(std::forward<Args>(args)...);
+}
+
+struct QualifiedGetter {
+  int Get() & noexcept { return 0; }
+  int Get() const& noexcept { return 1; }
+  int Get() && noexcept { return 2; }
+  int Get() const&& noexcept { return 3; }
+};
+
+struct Resource {};
+
+long UseCount(const std::shared_ptr<Resource>& resource) noexcept {
+  return resource.use_count();
+}
+
 } // namespace proxy_invocation_tests_detail
+
+using proxy_invocation_tests_detail::Dump;
+
+PRO_ENABLE_MEMBER(Record);
+PRO_ENABLE_FREE(Record);
+PRO_ENABLE_MEMBER(Get);
+PRO_ENABLE_FREE(Dump);
+PRO_ENABLE_MEMBER(at);
+PRO5_ENABLE_MEMBER(use_count);
+PRO5_ENABLE_FREE(UseCount);
 
 namespace detail = proxy_invocation_tests_detail;
 
@@ -369,6 +406,52 @@ TEST(ProxyInvocationTests, TestOverloadResolution_FreeAsMem) {
   ASSERT_EQ(side_effect, (detail::GetTypeIndices<std::string, int>()));
 }
 
+TEST(ProxyInvocationTests, TestOverloadResolution_NamedMember) {
+  struct OverloadedRecorder
+      : pro::facade_builder //
+        ::add_convention<pro::member_dispatch<"Record">, void(int),
+                         void(double), void(const char*), void(char*),
+                         void(std::string, int)> //
+        ::build {};
+  std::vector<std::type_index> side_effect;
+  detail::TypeRecorder recorder{&side_effect};
+  pro::proxy<OverloadedRecorder> p = &recorder;
+  p->Record(123);
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<int>());
+  p->Record(1.23);
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<double>());
+  char foo[2];
+  p->Record(foo);
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<char*>());
+  p->Record("lalala");
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<const char*>());
+  p->Record("lalala", 0);
+  ASSERT_EQ(side_effect, (detail::GetTypeIndices<std::string, int>()));
+}
+
+TEST(ProxyInvocationTests, TestOverloadResolution_NamedFree) {
+  struct OverloadedRecorder
+      : pro::facade_builder //
+        ::add_convention<pro::free_dispatch<"Record">, void(int), void(double),
+                         void(const char*), void(char*),
+                         void(std::string, int)> //
+        ::build {};
+  std::vector<std::type_index> side_effect;
+  detail::TypeRecorder recorder{&side_effect};
+  pro::proxy<OverloadedRecorder> p = &recorder;
+  Record(*p, 123);
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<int>());
+  Record(*p, 1.23);
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<double>());
+  char foo[2];
+  Record(*p, foo);
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<char*>());
+  Record(*p, "lalala");
+  ASSERT_EQ(side_effect, detail::GetTypeIndices<const char*>());
+  Record(*p, "lalala", 0);
+  ASSERT_EQ(side_effect, (detail::GetTypeIndices<std::string, int>()));
+}
+
 TEST(ProxyInvocationTests, TestNoexcept) {
   std::vector<std::type_index> side_effect;
   auto p = pro::make_proxy<detail::Callable<void(int) noexcept, void(double)>>(
@@ -395,6 +478,28 @@ TEST(ProxyInvocationTests, TestMemberDispatchDefault) {
   std::vector<std::string> container1{"hello", "world", "!"};
   std::list<std::string> container2{"hello", "world"};
   pro::proxy<detail::ResourceDictionary> p = &container1;
+  ASSERT_EQ(p->at(0), "hello");
+  p = &container2;
+  {
+    bool exception_thrown = false;
+    try {
+      p->at(0);
+    } catch (const pro::not_implemented&) {
+      exception_thrown = true;
+    }
+    ASSERT_TRUE(exception_thrown);
+  }
+}
+
+TEST(ProxyInvocationTests, TestNamedMemberDispatchDefault) {
+  struct TestFacade
+      : pro::facade_builder //
+        ::add_convention<pro::weak_dispatch<pro::member_dispatch<"at">>,
+                         std::string(int)> //
+        ::build {};
+  std::vector<std::string> container1{"hello", "world", "!"};
+  std::list<std::string> container2{"hello", "world"};
+  pro::proxy<TestFacade> p = &container1;
   ASSERT_EQ(p->at(0), "hello");
   p = &container2;
   {
@@ -486,4 +591,56 @@ TEST(ProxyInvocationTests, TestQualifiedConvention_Free) {
   p = pro::make_proxy<TestFacade>(123);
   ASSERT_EQ(Dump(*std::move(std::as_const(p))),
             "is_const=true, is_ref=false, value=123");
+}
+
+TEST(ProxyInvocationTests, TestQualifiedConvention_NamedMember) {
+  struct TestFacade
+      : pro::facade_builder //
+        ::add_convention<pro::member_dispatch<"Get">, int() &, int() const&,
+                         int() && noexcept, int() const&&> //
+        ::build {};
+
+  pro::proxy<TestFacade> p =
+      pro::make_proxy<TestFacade, detail::QualifiedGetter>();
+  static_assert(!noexcept((*p).Get()));
+  static_assert(noexcept((*std::move(p)).Get()));
+  ASSERT_EQ((*p).Get(), 0);
+  ASSERT_EQ((*std::as_const(p)).Get(), 1);
+  ASSERT_EQ((*std::move(p)).Get(), 2);
+  p = pro::make_proxy<TestFacade, detail::QualifiedGetter>();
+  ASSERT_EQ((*std::move(std::as_const(p))).Get(), 3);
+}
+
+TEST(ProxyInvocationTests, TestQualifiedConvention_NamedFree) {
+  struct TestFacade
+      : pro::facade_builder //
+        ::add_convention<pro::free_dispatch<"Dump">, std::string() &,
+                         std::string() const&, std::string() && noexcept,
+                         std::string() const&&> //
+        ::build {};
+
+  pro::proxy<TestFacade> p = pro::make_proxy<TestFacade>(123);
+  static_assert(!noexcept(Dump(*p)));
+  static_assert(noexcept(Dump(*std::move(p))));
+  ASSERT_EQ(Dump(*p), "is_const=false, is_ref=true, value=123");
+  ASSERT_EQ(Dump(*std::as_const(p)), "is_const=true, is_ref=true, value=123");
+  ASSERT_EQ(Dump(*std::move(p)), "is_const=false, is_ref=false, value=123");
+  p = pro::make_proxy<TestFacade>(123);
+  ASSERT_EQ(Dump(*std::move(std::as_const(p))),
+            "is_const=true, is_ref=false, value=123");
+}
+
+TEST(ProxyInvocationTests, TestDirectConvention_Named) {
+  struct TestFacade : pro::facade_builder //
+                      ::add_direct_convention<pro::member_dispatch<"use_count">,
+                                              long() const noexcept> //
+                      ::add_direct_convention<pro::free_dispatch<"UseCount">,
+                                              long() const noexcept> //
+                      ::build {};
+
+  std::shared_ptr<detail::Resource> resource =
+      std::make_shared<detail::Resource>();
+  pro::proxy<TestFacade> p = resource;
+  ASSERT_EQ(p.use_count(), 2);
+  ASSERT_EQ(UseCount(p), 2);
 }

@@ -4,12 +4,15 @@
 
 #include "utils.h"
 #include <array>
+#include <concepts>
 #include <proxy/proxy.h>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 
+PRO_ENABLE_MEMBER(Foo);
 PRO_ENABLE_MEMBER(Size);
+PRO_ENABLE_FREE(Foo);
 PRO_ENABLE_FREE(Size);
 
 namespace proxy_traits_tests_detail {
@@ -527,7 +530,7 @@ struct BadFacade_BadReflectionType {
 };
 static_assert(!pro::facade<BadFacade_BadReflectionType>);
 
-struct FacadeWithoutAccessTypes : pro::facade_builder::build {
+struct FacadeWithoutAccessTypes {
   struct Convention {
     static constexpr bool is_direct = true;
     using dispatch_type = pro::implicit_conversion_dispatch;
@@ -537,8 +540,14 @@ struct FacadeWithoutAccessTypes : pro::facade_builder::build {
     static constexpr bool is_direct = true;
     using reflector_type = ReflectionOfSmallPtr;
   };
+  using super_types = std::tuple<>;
   using convention_types = std::tuple<Convention>;
   using reflection_types = std::tuple<SmallPtrReflection>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::trivial;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
 };
 static_assert(pro::proxiable<MockTrivialPtr, FacadeWithoutAccessTypes>);
 static_assert(sizeof(pro::proxy<FacadeWithoutAccessTypes>) ==
@@ -555,6 +564,17 @@ struct BigFacade : pro::facade_builder                                //
 static_assert(sizeof(pro::proxy<BigFacade>) ==
               3 * sizeof(void*)); // Accessors should not add paddings
 
+struct NamedBigFacade
+    : pro::facade_builder                                              //
+      ::add_convention<pro::member_dispatch<"Foo">, void(), void(int)> //
+      ::add_convention<pro::free_dispatch<"Foo">, void(), void(int)>   //
+      ::add_direct_convention<pro::member_dispatch<"Foo">, void(),
+                              void(int)> //
+      ::add_direct_convention<pro::free_dispatch<"Foo">, void(),
+                              void(int)> //
+      ::build {};
+static_assert(sizeof(pro::proxy<NamedBigFacade>) == 3 * sizeof(void*));
+
 struct FacadeWithDefaultAccessTypes
     : pro::facade_builder                                     //
       ::add_convention<pro::operator_dispatch<"+">, int(int)> //
@@ -563,11 +583,14 @@ struct FacadeWithDefaultAccessTypes
       ::add_convention<pro::explicit_conversion_dispatch, int()>  //
       ::add_convention<pro::implicit_conversion_dispatch, long()> //
       ::add_convention<pro::member_dispatch<"Size">, int()>       //
-      ::add_convention<pro::free_dispatch<"Size">, int()>         //
-      ::build {
-  using super_types = std::tuple<pro::facade_builder::add_convention<
-      pro::operator_dispatch<"+">, int(int)>::build>;
-};
+      ::add_convention<pro::weak_dispatch<pro::member_dispatch<"Size">>,
+                       int(double)>                       //
+      ::add_convention<pro::free_dispatch<"Size">, int()> //
+      ::add_convention<pro::weak_dispatch<pro::free_dispatch<"Size">>,
+                       int(double)> //
+      ::add_facade<pro::facade_builder::add_convention<
+          pro::operator_dispatch<"+">, int(int)>::build> //
+      ::build {};
 template <std::size_t I>
 using DefaultAccessType = typename std::tuple_element_t<
     I, FacadeWithDefaultAccessTypes::convention_types>::access_type;
@@ -578,13 +601,19 @@ static_assert(
 static_assert(
     std::is_same_v<DefaultAccessType<3>, pro::implicit_conversion_access>);
 static_assert(std::is_same_v<DefaultAccessType<4>, pro::member_access<"Size">>);
-static_assert(std::is_same_v<DefaultAccessType<5>, pro::free_access<"Size">>);
+static_assert(std::is_same_v<DefaultAccessType<5>, pro::member_access<"Size">>);
+static_assert(std::is_same_v<DefaultAccessType<6>, pro::free_access<"Size">>);
+static_assert(std::is_same_v<DefaultAccessType<7>, pro::free_access<"Size">>);
 using DefaultAccessSelf =
     pro::proxy_indirect_accessor<FacadeWithDefaultAccessTypes>;
-static_assert(requires {
+static_assert(requires(DefaultAccessSelf& self) {
   static_cast<int (DefaultAccessSelf::*)(int)>(&DefaultAccessSelf::operator+);
   static_cast<int (DefaultAccessSelf::*)(double)>(
       &DefaultAccessSelf::operator+);
+  static_cast<int (DefaultAccessSelf::*)()>(&DefaultAccessSelf::Size);
+  static_cast<int (DefaultAccessSelf::*)(double)>(&DefaultAccessSelf::Size);
+  { Size(self) } -> std::same_as<int>;
+  { Size(self, 1.0) } -> std::same_as<int>;
 });
 
 // A facade-aware convention declared on a super is substituted against the
