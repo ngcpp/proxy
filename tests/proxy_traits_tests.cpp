@@ -616,6 +616,71 @@ static_assert(requires(DefaultAccessSelf& self) {
   { Size(self, 1.0) } -> std::same_as<int>;
 });
 
+struct AnyArgumentDispatch {
+  template <class T, class... Args>
+  int operator()(T&, Args&&...) const noexcept {
+    return 0;
+  }
+};
+template <class A, class O>
+struct AnyArgumentConvention {
+  static constexpr bool is_direct = false;
+  using dispatch_type = AnyArgumentDispatch;
+  using overload_type = O;
+  using access_type = A;
+};
+template <class A, class... Os>
+struct AnyArgumentFacade {
+  using super_types = std::tuple<>;
+  using convention_types = std::tuple<AnyArgumentConvention<A, Os>...>;
+  using reflection_types = std::tuple<>;
+  static constexpr std::size_t max_size = 2 * sizeof(void*);
+  static constexpr std::size_t max_align = alignof(void*);
+  static constexpr auto copyability = pro::constraint_level::none;
+  static constexpr auto relocatability = pro::constraint_level::trivial;
+  static constexpr auto destructibility = pro::constraint_level::nothrow;
+};
+template <class A, class... Os>
+using AnyArgumentSelf =
+    pro::proxy_indirect_accessor<AnyArgumentFacade<A, Os...>>;
+template <class T, class... Args>
+concept HasOperatorPlus =
+    requires(T& self, Args... args) { self.operator+(args...); };
+template <class T, class... Args>
+concept HasOperatorSlash =
+    requires(T& self, Args... args) { self.operator/(args...); };
+template <class T, class... Args>
+concept HasOperatorSubscript =
+    requires(T& self, Args... args) { self.operator[](args...); };
+using PlusAccess = pro::operator_access<"+">;
+using SlashAccess = pro::operator_access<"/">;
+using SubscriptAccess = pro::operator_access<"[]">;
+
+static_assert(HasOperatorPlus<AnyArgumentSelf<PlusAccess, int(), int(int)>>);
+static_assert(
+    HasOperatorPlus<AnyArgumentSelf<PlusAccess, int(), int(int)>, int>);
+static_assert(
+    !HasOperatorPlus<AnyArgumentSelf<PlusAccess, int(int, int)>, int, int>);
+static_assert(
+    !HasOperatorPlus<AnyArgumentSelf<PlusAccess, int(), int(int, int)>>);
+static_assert(HasOperatorSlash<AnyArgumentSelf<SlashAccess, int(int)>, int>);
+static_assert(!HasOperatorSlash<AnyArgumentSelf<SlashAccess, int()>>);
+static_assert(
+    !HasOperatorSlash<AnyArgumentSelf<SlashAccess, int(int, int)>, int, int>);
+static_assert(
+    !HasOperatorSlash<AnyArgumentSelf<SlashAccess, int(int), int()>, int>);
+static_assert(
+    HasOperatorSubscript<AnyArgumentSelf<SubscriptAccess, int(int)>, int>);
+#if __cpp_multidimensional_subscript >= 202110L
+static_assert(HasOperatorSubscript<AnyArgumentSelf<SubscriptAccess, int()>>);
+static_assert(HasOperatorSubscript<
+              AnyArgumentSelf<SubscriptAccess, int(int, int)>, int, int>);
+#else
+static_assert(!HasOperatorSubscript<AnyArgumentSelf<SubscriptAccess, int()>>);
+static_assert(!HasOperatorSubscript<
+              AnyArgumentSelf<SubscriptAccess, int(int, int)>, int, int>);
+#endif // __cpp_multidimensional_subscript >= 202110L
+
 // A facade-aware convention declared on a super is substituted against the
 // deriving facade, so proxiable shall reflect the substituted overload rather
 // than only the one the super was checked with.
