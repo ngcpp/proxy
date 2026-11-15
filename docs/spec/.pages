@@ -55,14 +55,14 @@ nav:
     - PRO_ENABLE_MEMBER: PRO_ENABLE_MEMBER.md
   - Named Requirements:
     - ProxyAccess: ProxyAccess.md
-    - ProxyBasicConvention: ProxyBasicConvention.md
     - ProxyBasicFacade: ProxyBasicFacade.md
     - ProxyBasicMetadata: ProxyBasicMetadata.md
+    - ProxyBasicOperation: ProxyBasicOperation.md
     - ProxyBasicReflection: ProxyBasicReflection.md
-    - ProxyConvention: ProxyConvention.md
     - ProxyDispatch: ProxyDispatch.md
     - ProxyFacade: ProxyFacade.md
     - ProxyMetadata: ProxyMetadata.md
     - ProxyMetadataPolicy: ProxyMetadataPolicy.md
-    - ProxyOverload: ProxyOverload.md
+    - ProxyOperation: ProxyOperation.md
     - ProxyReflection: ProxyReflection.md
+    - ProxySignature: ProxySignature.md

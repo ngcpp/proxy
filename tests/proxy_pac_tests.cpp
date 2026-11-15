@@ -51,7 +51,7 @@ void BitwiseCopy(pro::proxy<F>& from, pro::proxy<F>& to) {
               sizeof(from));
 }
 
-// No conventions and a nothrow destructor: a single signed destroy invoker
+// No operations and a nothrow destructor: a single signed destroy invoker
 // lives inline in the proxy.
 struct DefaultFacade : pro::facade_builder::build {};
 static_assert(IsInlineMetaPreferred<DefaultFacade>);

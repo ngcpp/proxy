@@ -34,9 +34,9 @@ struct TestThrowingDestructionFacade
       ::support_destruction<pro::lifetime_requirement::supported> //
       ::build {};
 
-struct TestRttiFacade : pro::facade_builder                           //
-                        ::add_direct_reflection<utils::RttiReflector> //
-                        ::add_facade<TestFacade>                      //
+struct TestRttiFacade : pro::facade_builder                          //
+                        ::add_direct_reflection<utils::RttiMetadata> //
+                        ::add_facade<TestFacade>                     //
                         ::build {};
 
 // Additional static asserts for super conversion
@@ -1402,7 +1402,7 @@ TEST(ProxyLifetimeTests, TestSwap_PrefersRelocation) {
   ASSERT_EQ(ToString(*p2), "111");
 }
 
-TEST(ProxyLifetimeTests, Test_DirectConvension_Lvalue) {
+TEST(ProxyLifetimeTests, Test_DirectOperation_Lvalue) {
   utils::LifetimeTracker tracker;
   std::vector<utils::LifetimeOperation> expected_ops;
   {
@@ -1423,7 +1423,7 @@ TEST(ProxyLifetimeTests, Test_DirectConvension_Lvalue) {
   ASSERT_TRUE(tracker.GetOperations() == expected_ops);
 }
 
-TEST(ProxyLifetimeTests, Test_DirectConvension_Rvalue) {
+TEST(ProxyLifetimeTests, Test_DirectOperation_Rvalue) {
   utils::LifetimeTracker tracker;
   std::vector<utils::LifetimeOperation> expected_ops;
   {
@@ -1443,7 +1443,7 @@ TEST(ProxyLifetimeTests, Test_DirectConvension_Rvalue) {
   ASSERT_TRUE(tracker.GetOperations() == expected_ops);
 }
 
-TEST(ProxyLifetimeTests, Test_DirectConvension_Rvalue_Exception) {
+TEST(ProxyLifetimeTests, Test_DirectOperation_Rvalue_Exception) {
   utils::LifetimeTracker tracker;
   std::vector<utils::LifetimeOperation> expected_ops;
   {
@@ -1506,9 +1506,9 @@ TEST(ProxyLifetimeTests, Test_CopySubstitution_MixedMetaStorage) {
                  ::support_relocation<pro::lifetime_requirement::trivial>  //
                  ::support_destruction<pro::lifetime_requirement::trivial> //
                  ::build {};
-  struct Derived : pro::facade_builder                           //
-                   ::add_direct_reflection<utils::RttiReflector> //
-                   ::add_facade<Super>                           //
+  struct Derived : pro::facade_builder                          //
+                   ::add_direct_reflection<utils::RttiMetadata> //
+                   ::add_facade<Super>                          //
                    ::build {};
   static_assert(pro::detail::specialization_of<
                 pro::compact_metadata::storage<

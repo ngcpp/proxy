@@ -22,24 +22,24 @@
 
 namespace proxy_invocation_tests_detail {
 
-template <class... Os>
+template <class... Ss>
 struct MovableCallable
     : pro::facade_builder                                   //
-      ::add_convention<pro::operator_dispatch<"()">, Os...> //
+      ::add_convention<pro::operator_dispatch<"()">, Ss...> //
       ::build {};
 
-template <class... Os>
+template <class... Ss>
 struct Callable : pro::facade_builder                                  //
                   ::support_copy<pro::lifetime_requirement::supported> //
-                  ::add_facade<MovableCallable<Os...>>                 //
+                  ::add_facade<MovableCallable<Ss...>>                 //
                   ::build {};
 
-template <class... Os>
+template <class... Ss>
 struct WeakCallable
     : pro::facade_builder                                  //
       ::support_copy<pro::lifetime_requirement::supported> //
       ::add_convention<pro::weak_dispatch<pro::operator_dispatch<"()">>,
-                       Os...> //
+                       Ss...> //
       ::build {};
 
 PRO_DEF_FREE_DISPATCH(FreeSize, std::ranges::size, Size);
@@ -271,7 +271,7 @@ TEST(ProxyInvocationTests, TestMultipleDispatches_Duplicated) {
 }
 
 TEST(ProxyInvocationTests, TestSuper_Duplicated) {
-  // Adding the same super twice, and redeclaring a convention that the super
+  // Adding the same super twice, and redeclaring an operation that the super
   // already provides, must not affect the metadata.
   struct DuplicatedIterable
       : pro::facade_builder                                        //
@@ -294,8 +294,8 @@ TEST(ProxyInvocationTests, TestSuper_Duplicated) {
 }
 
 TEST(ProxyInvocationTests, TestSuper_Overlapping) {
-  // Two unrelated supers sharing a convention: the shared accessor must remain
-  // unambiguous, and both supers' conventions must be reachable.
+  // Two unrelated supers sharing an operation: the shared accessor must remain
+  // unambiguous, and both supers' operations must be reachable.
   struct Sized : pro::facade_builder                                        //
                  ::add_convention<detail::FreeSize, std::size_t() noexcept> //
                  ::build {};
@@ -550,7 +550,7 @@ TEST(ProxyInvocationTests, TestObserverDispatch) {
   ASSERT_EQ(ToString(*p), "123");
 }
 
-TEST(ProxyInvocationTests, TestQualifiedConvention_Member) {
+TEST(ProxyInvocationTests, TestQualifiedOperation_Member) {
   struct TestFacade
       : pro::facade_builder //
         ::add_convention<pro::operator_dispatch<"()">, int() &, int() const&,
@@ -574,7 +574,7 @@ TEST(ProxyInvocationTests, TestQualifiedConvention_Member) {
   ASSERT_EQ((*std::move(std::as_const(p)))(), 3);
 }
 
-TEST(ProxyInvocationTests, TestQualifiedConvention_Free) {
+TEST(ProxyInvocationTests, TestQualifiedOperation_Free) {
   struct TestFacade
       : pro::facade_builder //
         ::add_convention<detail::FreeDump, std::string() &,
@@ -593,7 +593,7 @@ TEST(ProxyInvocationTests, TestQualifiedConvention_Free) {
             "is_const=true, is_ref=false, value=123");
 }
 
-TEST(ProxyInvocationTests, TestQualifiedConvention_NamedMember) {
+TEST(ProxyInvocationTests, TestQualifiedOperation_NamedMember) {
   struct TestFacade
       : pro::facade_builder //
         ::add_convention<pro::member_dispatch<"Get">, int() &, int() const&,
@@ -611,7 +611,7 @@ TEST(ProxyInvocationTests, TestQualifiedConvention_NamedMember) {
   ASSERT_EQ((*std::move(std::as_const(p))).Get(), 3);
 }
 
-TEST(ProxyInvocationTests, TestQualifiedConvention_NamedFree) {
+TEST(ProxyInvocationTests, TestQualifiedOperation_NamedFree) {
   struct TestFacade
       : pro::facade_builder //
         ::add_convention<pro::free_dispatch<"Dump">, std::string() &,
@@ -630,7 +630,7 @@ TEST(ProxyInvocationTests, TestQualifiedConvention_NamedFree) {
             "is_const=true, is_ref=false, value=123");
 }
 
-TEST(ProxyInvocationTests, TestDirectConvention_Named) {
+TEST(ProxyInvocationTests, TestDirectOperation_Named) {
   struct TestFacade : pro::facade_builder //
                       ::add_direct_convention<pro::member_dispatch<"use_count">,
                                               long() const noexcept> //

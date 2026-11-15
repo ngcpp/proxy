@@ -16,7 +16,7 @@ Let `p` be a value of type `proxy<F, MP>`, `ptr` be the contained value of `p` (
 
 ## Notes
 
-A view of a super exposes the conventions and reflections of that super. It observes the same object as `p` without taking ownership, exactly as `proxy_view<F, MP>` does.
+A view of a super exposes the operations and reflections of that super. It observes the same object as `p` without taking ownership, exactly as `proxy_view<F, MP>` does.
 
 `as_view` is useful when a certain context does not take ownership of a `proxy` object. Similar to [`std::unique_ptr::get`](https://en.cppreference.com/w/cpp/memory/unique_ptr/get), [`std::shared_ptr::get`](https://en.cppreference.com/w/cpp/memory/shared_ptr/get) and the [borrowing mechanism in Rust](https://doc.rust-lang.org/rust-by-example/scope/borrow.html).
 

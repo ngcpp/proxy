@@ -18,45 +18,45 @@ enum LifetimeModelType {
   kStrongCompact
 };
 
-struct LifetimeModelReflector {
-  LifetimeModelReflector() = default;
+struct LifetimeModelMetadata {
+  LifetimeModelMetadata() = default;
   template <class T>
-  constexpr explicit LifetimeModelReflector(
+  constexpr explicit LifetimeModelMetadata(
       std::in_place_type_t<pro::detail::inplace_ptr<T>>) noexcept
       : Type(LifetimeModelType::kInplace) {}
   template <class T, class Alloc>
-  constexpr explicit LifetimeModelReflector(
+  constexpr explicit LifetimeModelMetadata(
       std::in_place_type_t<pro::detail::wide_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kWide) {}
   template <class T, class Alloc>
-  constexpr explicit LifetimeModelReflector(
+  constexpr explicit LifetimeModelMetadata(
       std::in_place_type_t<pro::detail::compact_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kCompact) {
     static_assert(sizeof(pro::detail::compact_ptr<T, Alloc>) == sizeof(void*));
   }
   template <class T, class Alloc>
-  constexpr explicit LifetimeModelReflector(
+  constexpr explicit LifetimeModelMetadata(
       std::in_place_type_t<pro::detail::shared_compact_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kSharedCompact) {
     static_assert(sizeof(pro::detail::shared_compact_ptr<T, Alloc>) ==
                   sizeof(void*));
   }
   template <class T, class Alloc>
-  constexpr explicit LifetimeModelReflector(
+  constexpr explicit LifetimeModelMetadata(
       std::in_place_type_t<pro::detail::strong_compact_ptr<T, Alloc>>) noexcept
       : Type(LifetimeModelType::kStrongCompact) {
     static_assert(sizeof(pro::detail::strong_compact_ptr<T, Alloc>) ==
                   sizeof(void*));
   }
   template <class T>
-  constexpr explicit LifetimeModelReflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit LifetimeModelMetadata(std::in_place_type_t<T>) noexcept
       : Type(LifetimeModelType::kNone) {}
 
-  template <class Self, class R>
+  template <class Self, class M>
   struct accessor {
     LifetimeModelType GetLifetimeType() const noexcept {
-      const LifetimeModelReflector& refl =
-          reflect<R>(static_cast<const Self&>(*this));
+      const LifetimeModelMetadata& refl =
+          reflect<M>(static_cast<const Self&>(*this));
       return refl.Type;
     }
   };
@@ -69,7 +69,7 @@ struct TestLargeStringable
       ::add_convention<utils::spec::FreeToString, std::string()> //
       ::support_relocation<pro::lifetime_requirement::supported> //
       ::support_copy<pro::lifetime_requirement::supported>       //
-      ::add_direct_reflection<LifetimeModelReflector>            //
+      ::add_direct_reflection<LifetimeModelMetadata>             //
       ::build {};
 
 struct TestSmallStringable : pro::facade_builder               //
@@ -165,7 +165,7 @@ struct TestSharedStringable
       ::support_relocation<pro::lifetime_requirement::nothrow>   //
       ::support_copy<pro::lifetime_requirement::nothrow>         //
       ::add_convention<utils::spec::FreeToString, std::string()> //
-      ::add_direct_reflection<LifetimeModelReflector>            //
+      ::add_direct_reflection<LifetimeModelMetadata>             //
       ::build {};
 
 struct TestWeakSharedStringable : pro::facade_builder                //

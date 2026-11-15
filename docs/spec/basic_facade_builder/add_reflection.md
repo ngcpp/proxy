@@ -1,31 +1,31 @@
 # `basic_facade_builder::add_reflection`<br />`basic_facade_builder::add_direct_reflection`<br />`basic_facade_builder::add_indirect_reflection`
 
 ```cpp
-template <class R>
-using add_reflection = add_indirect_reflection<R>;
+template <class M>
+using add_reflection = add_indirect_reflection<M>;
 
-template <class R>
+template <class M>
 using add_indirect_reflection = basic_facade_builder</* see below */>;
 
-template <class R>
+template <class M>
 using add_direct_reflection = basic_facade_builder</* see below */>;
 ```
 
-The alias templates `add_reflection`, `add_indirect_reflection` and `add_direct_reflection` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add reflection types to the template parameters. Specifically,
+The alias templates `add_reflection`, `add_indirect_reflection` and `add_direct_reflection` of `basic_facade_builder<Fs, Os, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add reflection types to the template parameters. Specifically,
 
 - `add_reflection` is equivalent to `add_indirect_reflection`.
 - `add_indirect_reflection` appends an implementation-defined reflection type `Refl` to `Rs`, where:
   - `Refl::is_direct` is `false`.
-  - `typename Refl::reflector_type` is `R`.
+  - `typename Refl::metadata_type` is `M`.
 - `add_direct_reflection` appends an implementation-defined reflection type `Refl` to `Rs`, where:
   - `Refl::is_direct` is `true`.
-  - `typename Refl::reflector_type` is `R`.
+  - `typename Refl::metadata_type` is `M`.
 
-For either alias, `typename Refl::access_type` is implementation-defined for the reflector types that the library uses to implement its skills. For any other `R`, it is an implementation-defined type `A` where `typename A::template accessor<Self, `[`proxy_reflection`](../proxy_reflection.md)`<R>>` is `typename R::template accessor<Self, R>`.
+For either alias, `typename Refl::access_type` is implementation-defined for the metadata types that the library uses to implement its skills. For any other `M`, it is an implementation-defined type `A` where `typename A::template accessor<Self, `[`proxy_reflection`](../proxy_reflection.md)`<M>>` is `typename M::template accessor<Self, M>`.
 
 Reflection types are deduplicated when a [`proxy`](../proxy/README.md) of the built facade is instantiated, not when they are added.
 
-*Since 5.0.0*: reflection types are appended rather than merged into `Rs`. The reflection type carries an access type (see [*ProxyBasicReflection* requirements](../ProxyBasicReflection.md)). Previously, `proxy` took the accessibility of the reflection from the member template `accessor` of `R`.
+*Since 5.0.0*: reflection types are appended rather than merged into `Rs`. The reflection type carries an access type (see [*ProxyBasicReflection* requirements](../ProxyBasicReflection.md)). Previously, `proxy` took the accessibility of the reflection from the member template `accessor` of `M`.
 
 ## Notes
 
@@ -39,22 +39,22 @@ Adding duplicate reflection types is well-defined, whether done directly via `ad
 
 #include <proxy/proxy.h>
 
-struct LayoutReflector {
+struct LayoutMetadata {
 public:
-  LayoutReflector() = default;
+  LayoutMetadata() = default;
   template <class T>
-  constexpr explicit LayoutReflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit LayoutMetadata(std::in_place_type_t<T>) noexcept
       : Size(sizeof(T)), Align(alignof(T)) {}
 
-  template <class P, class R>
+  template <class P, class M>
   struct accessor {
     friend std::size_t SizeOf(const P& self) noexcept {
-      const LayoutReflector& refl = reflect<R>(self);
+      const LayoutMetadata& refl = reflect<M>(self);
       return refl.Size;
     }
 
     friend std::size_t AlignOf(const P& self) noexcept {
-      const LayoutReflector& refl = reflect<R>(self);
+      const LayoutMetadata& refl = reflect<M>(self);
       return refl.Align;
     }
   };
@@ -62,9 +62,9 @@ public:
   std::size_t Size, Align;
 };
 
-struct LayoutAware : pro::facade_builder                        //
-                     ::add_direct_reflection<LayoutReflector>   //
-                     ::add_indirect_reflection<LayoutReflector> //
+struct LayoutAware : pro::facade_builder                       //
+                     ::add_direct_reflection<LayoutMetadata>   //
+                     ::add_indirect_reflection<LayoutMetadata> //
                      ::build {};
 
 int main() {

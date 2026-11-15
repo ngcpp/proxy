@@ -39,12 +39,12 @@ namespace skills {
 template <class FB>
 using fmt_format = typename FB::template add_convention<
     detail::fmt_format_traits::dispatch,
-    detail::fmt_format_traits::overload<char>>;
+    detail::fmt_format_traits::signature<char>>;
 
 template <class FB>
 using fmt_wformat = typename FB::template add_convention<
     detail::fmt_format_traits::dispatch,
-    detail::fmt_format_traits::overload<wchar_t>>;
+    detail::fmt_format_traits::signature<wchar_t>>;
 
 } // namespace skills
 

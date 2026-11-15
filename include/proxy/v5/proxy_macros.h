@@ -38,7 +38,7 @@
     return __VA_ARGS__;                                                        \
   }
 
-#define PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(macro, ...)                         \
+#define PRO5D_DEF_SIGNATURE_SPECIALIZATIONS(macro, ...)                        \
   macro(, &, , __VA_ARGS__);                                                   \
   macro(, &, noexcept, __VA_ARGS__);                                           \
   macro(&, &, , __VA_ARGS__);                                                  \
@@ -66,7 +66,7 @@
   struct accessor<ProSelf, ProDs...> : accessor<ProSelf, ProDs>... {           \
     PRO5D_DEF_AGGREGATE_##type##_ACCESSOR_BODY(__VA_ARGS__)                    \
   };                                                                           \
-  PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(macro, __VA_ARGS__)
+  PRO5D_DEF_SIGNATURE_SPECIALIZATIONS(macro, __VA_ARGS__)
 
 #define PRO5D_GEN_DEBUG_SYMBOL_FOR_MEM_ACCESSOR(...)                           \
   PRO5D_DEBUG(accessor() noexcept { ::std::ignore = &accessor::__VA_ARGS__; })
@@ -151,20 +151,20 @@
       PRO5D_EXPAND_MACRO_IMPL(macro, __VA_ARGS__, 3, 2)(__VA_ARGS__))
 
 #define PRO5D_DEF_LEGACY_AGGREGATE_MEM_ACCESSOR_BODY(...)                      \
-  using accessor<ProP, ProD, ProOs>::__VA_ARGS__...;
+  using accessor<ProP, ProD, ProSs>::__VA_ARGS__...;
 #define PRO5D_DEF_LEGACY_AGGREGATE_FREE_ACCESSOR_BODY(...)
 #define PRO5D_DEF_LEGACY_ACCESSOR_TEMPLATE(type, macro, ...)                   \
-  template <class ProP, class ProD, class... ProOs>                            \
+  template <class ProP, class ProD, class... ProSs>                            \
   struct PRO5D_ENFORCE_EBO accessor {                                          \
     accessor() = delete;                                                       \
   };                                                                           \
-  template <class ProP, class ProD, class... ProOs>                            \
-    requires(sizeof...(ProOs) > 1u &&                                          \
-             (::std::is_constructible_v<accessor<ProP, ProD, ProOs>> && ...))  \
-  struct accessor<ProP, ProD, ProOs...> : accessor<ProP, ProD, ProOs>... {     \
+  template <class ProP, class ProD, class... ProSs>                            \
+    requires(sizeof...(ProSs) > 1u &&                                          \
+             (::std::is_constructible_v<accessor<ProP, ProD, ProSs>> && ...))  \
+  struct accessor<ProP, ProD, ProSs...> : accessor<ProP, ProD, ProSs>... {     \
     PRO5D_DEF_LEGACY_AGGREGATE_##type##_ACCESSOR_BODY(__VA_ARGS__)             \
   };                                                                           \
-  PRO5D_DEF_OVERLOAD_SPECIALIZATIONS(macro, __VA_ARGS__)
+  PRO5D_DEF_SIGNATURE_SPECIALIZATIONS(macro, __VA_ARGS__)
 
 #define PRO5D_DEF_LEGACY_MEM_ACCESSOR(oq, pq, ne, ...)                         \
   template <class ProP, class ProD, class ProR, class... ProArgs>              \

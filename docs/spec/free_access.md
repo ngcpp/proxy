@@ -14,7 +14,7 @@ struct free_access;
 
 Class template `free_access` is an access type that defines free functions for [`proxy`](proxy/README.md). It meets the [*ProxyAccess* requirements](ProxyAccess.md) of applicable types. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_FREE(name)`](PRO_ENABLE_FREE.md) defines the specialization `free_access<"name">`, whose functions are named `name`.
 
-`free_access<Name>` is the access type of the conventions of [`free_dispatch<Name>`](free_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](ProxyDispatch.md) type, and a reflection can name it with any reflector type. The direct, or the indirect, conventions and reflections whose access type is `free_access<Name>` share an accessor (see [*ProxyAccess* requirements](ProxyAccess.md)), so their functions participate in overload resolution together.
+`free_access<Name>` is the access type of the operations of [`free_dispatch<Name>`](free_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). An operation can also name it as its access type with any other [dispatch](ProxyDispatch.md) type, and a reflection can name it with any metadata type. The direct, or the indirect, operations and reflections whose access type is `free_access<Name>` share an accessor (see [*ProxyAccess* requirements](ProxyAccess.md)), so their functions participate in overload resolution together.
 
 ## Member Template `accessor`
 
@@ -45,13 +45,13 @@ struct accessor<Self, proxy_reflection<M>> {
 };
 ```
 
-Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](ProxyAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProxyOverload*](ProxyOverload.md). The functions are friend functions defined in the accessor, which [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) finds when `Self` is an associated class of the arguments.
+Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](ProxyAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProxySignature*](ProxySignature.md). The functions are friend functions defined in the accessor, which [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) finds when `Self` is an associated class of the arguments.
 
 `(1)` The default implementation of `accessor` is not constructible.
 
 `(2)` When `sizeof...(Ds)` is greater than `1`, and `accessor<Self, Ds>...` are default-constructible, inherits all `accessor<Self, Ds>...` types.
 
-`(3)` When `sizeof...(Ds)` is `1` and the only type in `Ds` is [`proxy_operation`](proxy_operation.md)`<D, R(Args...) cv ref noex>`, provides a function `name(Self cv <ref ? ref : &>, Args...)` with the same *noex* specifier as the overload type. It is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(self), std::forward<Args>(args)...)`.
+`(3)` When `sizeof...(Ds)` is `1` and the only type in `Ds` is [`proxy_operation`](proxy_operation.md)`<D, R(Args...) cv ref noex>`, provides a function `name(Self cv <ref ? ref : &>, Args...)` with the same *noex* specifier as the signature type. It is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(self), std::forward<Args>(args)...)`.
 
 `(4)` When `sizeof...(Ds)` is `1` and the only type in `Ds` is [`proxy_reflection`](proxy_reflection.md)`<M>`, provides a function `name(const Self&)`. It is equivalent to `return reflect<M>(self)`.
 
@@ -71,16 +71,16 @@ struct Square {
 PRO_ENABLE_MEMBER(Area);
 PRO_ENABLE_FREE(Area);
 
-struct AreaConvention {
+struct AreaOperation {
   static constexpr bool is_direct = false;
   using dispatch_type = pro::member_dispatch<"Area">;
-  using overload_type = int() const noexcept;
+  using signature_type = int() const noexcept;
   using access_type = pro::free_access<"Area">;
 };
 
 struct Shape {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<AreaConvention>;
+  using operation_types = std::tuple<AreaOperation>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);

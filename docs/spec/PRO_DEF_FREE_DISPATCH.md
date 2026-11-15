@@ -29,13 +29,13 @@ struct dispatch_name {
     return func_name(std::forward<T>(self), std::forward<Args>(args)...);
   }
 
-  template <class P, class D, class... Os>
+  template <class P, class D, class... Ss>
   struct accessor {
     accessor() = delete;
   };
-  template <class P, class D, class... Os>
-      requires(sizeof...(Os) > 1u && (std::is_constructible_v<accessor<P, D, Os>> && ...))
-  struct accessor<P, D, Os...> : accessor<P, D, Os>... {};
+  template <class P, class D, class... Ss>
+      requires(sizeof...(Ss) > 1u && (std::is_constructible_v<accessor<P, D, Ss>> && ...))
+  struct accessor<P, D, Ss...> : accessor<P, D, Ss>... {};
   template <class P, class D, class R, class... Args>
   struct accessor<P, D, R(Args...) cv ref noex> {
     friend R accessibility_func_name(P cv <ref ? ref : &> self, Args... args) noex {

@@ -223,8 +223,8 @@ namespace detail = proxy_metadata_policy_tests_detail;
 
 TEST(ProxyMetadataPolicyTests, TestMinimalMetadata) {
   using Proxy = pro::proxy<detail::Derived, detail::MinimalMetadata>;
-  using ConsumeOverload = int() && noexcept;
-  using FailOverload = void() &&;
+  using ConsumeSignature = int() && noexcept;
+  using FailSignature = void() &&;
   int destructions = 0;
   {
     Proxy p1 = std::make_shared<detail::Value>(1, destructions);
@@ -254,9 +254,9 @@ TEST(ProxyMetadataPolicyTests, TestMinimalMetadata) {
     ASSERT_FALSE(super);
     ASSERT_EQ(destructions, 1);
     ASSERT_FALSE(weak.lock());
-    ASSERT_EQ((invoke<detail::Consume, ConsumeOverload>(std::move(copy))), 1);
+    ASSERT_EQ((invoke<detail::Consume, ConsumeSignature>(std::move(copy))), 1);
     ASSERT_FALSE(copy);
-    ASSERT_THROW((invoke<detail::Fail, FailOverload>(std::move(moved))),
+    ASSERT_THROW((invoke<detail::Fail, FailSignature>(std::move(moved))),
                  std::runtime_error);
     ASSERT_FALSE(moved);
     ASSERT_EQ(destructions, 2);

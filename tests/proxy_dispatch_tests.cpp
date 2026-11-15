@@ -60,17 +60,17 @@ struct IndependentAccessFacade {
   struct MemberDispatchAsFree {
     static constexpr bool is_direct = false;
     using dispatch_type = pro::member_dispatch<"size">;
-    using overload_type = std::size_t() const noexcept;
+    using signature_type = std::size_t() const noexcept;
     using access_type = pro::free_access<"Size">;
   };
   struct FreeDispatchAsMember {
     static constexpr bool is_direct = false;
     using dispatch_type = pro::free_dispatch<"empty">;
-    using overload_type = bool() const;
+    using signature_type = bool() const;
     using access_type = pro::member_access<"IsEmpty">;
   };
   using super_types = std::tuple<>;
-  using convention_types =
+  using operation_types =
       std::tuple<MemberDispatchAsFree, FreeDispatchAsMember>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);

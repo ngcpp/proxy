@@ -1,12 +1,12 @@
 # Named requirements: *ProxyDispatch*
 
-A type `D` meets the *ProxyDispatch* requirements of types `T` and  `O` if `O` meets the [*ProxyOverload* requirements](ProxyOverload.md), and the following expressions are well-formed and have the specified semantics (let `R` be return type of `O`, `Args...` be the argument types of `O`. `args...` denotes values of type `Args...`, `v` denotes a value of type `T`, `cv` denotes a value of type `const T`).
+A type `D` meets the *ProxyDispatch* requirements of types `T` and  `S` if `S` meets the [*ProxySignature* requirements](ProxySignature.md), and the following expressions are well-formed and have the specified semantics (let `R` be return type of `S`, `Args...` be the argument types of `S`. `args...` denotes values of type `Args...`, `v` denotes a value of type `T`, `cv` denotes a value of type `const T`).
 
 | Expressions | Semantics                                       |
 | ----------- | ----------------------------------------------- |
 | `D()`       | Creates an object of type `D`, shall not throw. |
 
-| Definitions of `O`            | Expressions                                                  | Semantics                                                    |
+| Definitions of `S`            | Expressions                                                  | Semantics                                                    |
 | ----------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | `R(Args...)`                  | [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), v, std::forward<Args>(args)...)` | Invokes dispatch type `D` with an lvalue reference of type `T` and `args...`, may throw. |
 | `R(Args...) noexcept`         | [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), v, std::forward<Args>(args)...)` | Invokes dispatch type `D` with an lvalue reference of type `T` and `args...`, shall not throw. |
@@ -23,4 +23,4 @@ A type `D` meets the *ProxyDispatch* requirements of types `T` and  `O` if `O` m
 
 ## See Also
 
-- [*ProxyConvention* requirements](ProxyConvention.md)
+- [*ProxyOperation* requirements](ProxyOperation.md)

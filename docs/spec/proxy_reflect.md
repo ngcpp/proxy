@@ -8,18 +8,18 @@
 
 ```cpp
 // (1)
-template <class R, facade F, class MP>
-const R& proxy_reflect(const proxy_indirect_accessor<F, MP>& p) noexcept;
+template <class M, facade F, class MP>
+const M& proxy_reflect(const proxy_indirect_accessor<F, MP>& p) noexcept;
 
 // (2)
-template <class R, facade F, class MP>
-const R& proxy_reflect(const proxy<F, MP>& p) noexcept;
+template <class M, facade F, class MP>
+const M& proxy_reflect(const proxy<F, MP>& p) noexcept;
 ```
 
 Acquires reflection information of a contained type.
 
-- `(1)` Let `P` be the contained type of the `proxy` object associated to `p`. Returns a `const` reference of `R` direct-non-list-initialized with [`std::in_place_type<typename std::pointer_traits<P>::element_type>`](https://en.cppreference.com/w/cpp/utility/in_place).
-- `(2)` Let `P` be the contained type of `p`. Returns a `const` reference of `R` direct-non-list-initialized with [`std::in_place_type<P>`](https://en.cppreference.com/w/cpp/utility/in_place). The behavior is undefined if `p` does not contain a value.
+- `(1)` Let `P` be the contained type of the `proxy` object associated to `p`. Returns a `const` reference of `M` direct-non-list-initialized with [`std::in_place_type<typename std::pointer_traits<P>::element_type>`](https://en.cppreference.com/w/cpp/utility/in_place).
+- `(2)` Let `P` be the contained type of `p`. Returns a `const` reference of `M` direct-non-list-initialized with [`std::in_place_type<P>`](https://en.cppreference.com/w/cpp/utility/in_place). The behavior is undefined if `p` does not contain a value.
 
 The reference obtained from `proxy_reflect()` may be invalidated if `p` is subsequently modified.
 
@@ -36,18 +36,18 @@ This function is useful when only metadata deduced from a type is needed. While 
 
 #include <proxy/proxy.h>
 
-class CopyabilityReflector {
+class CopyabilityMetadata {
 public:
-  CopyabilityReflector() = default;
+  CopyabilityMetadata() = default;
   template <class T>
-  constexpr explicit CopyabilityReflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit CopyabilityMetadata(std::in_place_type_t<T>) noexcept
       : copyable_(std::is_copy_constructible_v<T>) {}
 
-  template <class P, class R>
+  template <class P, class M>
   struct accessor {
     bool IsCopyable() const noexcept {
-      const CopyabilityReflector& self =
-          pro::proxy_reflect<R>(static_cast<const P&>(*this));
+      const CopyabilityMetadata& self =
+          pro::proxy_reflect<M>(static_cast<const P&>(*this));
       return self.copyable_;
     }
   };
@@ -56,8 +56,8 @@ private:
   bool copyable_;
 };
 
-struct CopyabilityAware : pro::facade_builder                           //
-                          ::add_direct_reflection<CopyabilityReflector> //
+struct CopyabilityAware : pro::facade_builder                          //
+                          ::add_direct_reflection<CopyabilityMetadata> //
                           ::build {};
 
 int main() {
