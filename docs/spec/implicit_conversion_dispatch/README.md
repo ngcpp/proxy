@@ -32,9 +32,9 @@ struct Runnable : pro::facade_builder                                    //
                   ::build {};
 
 struct CopyableRunnable
-    : pro::facade_builder                               //
-      ::support_copy<pro::constraint_level::nontrivial> //
-      ::add_facade<Runnable>                            //
+    : pro::facade_builder                                  //
+      ::support_copy<pro::lifetime_requirement::supported> //
+      ::add_facade<Runnable>                               //
       ::add_direct_convention<pro::implicit_conversion_dispatch,
                               pro::proxy<Runnable>() const&,
                               pro::proxy<Runnable>() &&> //

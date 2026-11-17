@@ -23,7 +23,7 @@ template <class T>
 struct Iterator
     : pro::facade_builder                                                    //
       ::add_skill<pro::skills::direct_rtti>                                  //
-      ::support_relocation<pro::constraint_level::nothrow>                   //
+      ::support_relocation<pro::lifetime_requirement::nothrow>               //
       ::restrict_layout<4 * sizeof(void*)>                                   //
       ::add_direct_convention<pro::operator_dispatch<"++">, void() noexcept> //
       ::add_direct_convention<
@@ -52,9 +52,9 @@ TEST(ProxyRegressionTests, TestUnexpectedCompilerWarning) {
   struct MyTrivialFacade
       : pro::facade_builder                                                  //
         ::add_convention<pro::operator_dispatch<"()">, void(), void() const> //
-        ::support_copy<pro::constraint_level::trivial>                       //
-        ::support_relocation<pro::constraint_level::trivial>                 //
-        ::support_destruction<pro::constraint_level::trivial>                //
+        ::support_copy<pro::lifetime_requirement::trivial>                   //
+        ::support_relocation<pro::lifetime_requirement::trivial>             //
+        ::support_destruction<pro::lifetime_requirement::trivial>            //
         ::build {};
   int side_effect = 0;
   pro::proxy<MyTrivialFacade> p =

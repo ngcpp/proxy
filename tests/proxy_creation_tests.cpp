@@ -67,8 +67,8 @@ struct LifetimeModelReflector {
 struct TestLargeStringable
     : pro::facade_builder                                        //
       ::add_convention<utils::spec::FreeToString, std::string()> //
-      ::support_relocation<pro::constraint_level::nontrivial>    //
-      ::support_copy<pro::constraint_level::nontrivial>          //
+      ::support_relocation<pro::lifetime_requirement::supported> //
+      ::support_copy<pro::lifetime_requirement::supported>       //
       ::add_direct_reflection<LifetimeModelReflector>            //
       ::build {};
 
@@ -162,8 +162,8 @@ struct SfinaeUnsafeFacade
 
 struct TestSharedStringable
     : pro::facade_builder                                        //
-      ::support_relocation<pro::constraint_level::nothrow>       //
-      ::support_copy<pro::constraint_level::nothrow>             //
+      ::support_relocation<pro::lifetime_requirement::nothrow>   //
+      ::support_copy<pro::lifetime_requirement::nothrow>         //
       ::add_convention<utils::spec::FreeToString, std::string()> //
       ::add_direct_reflection<LifetimeModelReflector>            //
       ::build {};
@@ -934,7 +934,7 @@ TEST(ProxyCreationTests,
 TEST(ProxyCreationTests, TestMakeProxyShared_WeakOfSuper) {
   struct WeakSuper
       : pro::facade_builder                                                //
-        ::support_copy<pro::constraint_level::nothrow>                     //
+        ::support_copy<pro::lifetime_requirement::nothrow>                 //
         ::add_convention<utils::spec::FreeToString, std::string()>         //
         ::add_skill<pro::skills::as_view>::add_skill<pro::skills::as_weak> //
         ::build {};
@@ -962,7 +962,7 @@ TEST(ProxyCreationTests, TestMakeProxyShared_WeakOfSuper) {
 TEST(ProxyCreationTests, TestMakeProxyShared_WeakOfSuperWithoutSkill) {
   struct WeakSuper
       : pro::facade_builder                                        //
-        ::support_copy<pro::constraint_level::nothrow>             //
+        ::support_copy<pro::lifetime_requirement::nothrow>         //
         ::add_convention<utils::spec::FreeToString, std::string()> //
         ::build {};
   struct WeakDerived

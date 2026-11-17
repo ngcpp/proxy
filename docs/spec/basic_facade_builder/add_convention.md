@@ -46,9 +46,9 @@ struct BasicStringable : pro::facade_builder                                 //
                          ::add_convention<FreeToString, std::string() const> //
                          ::build {};
 
-struct Stringable : pro::facade_builder                               //
-                    ::add_facade<BasicStringable>                     //
-                    ::support_copy<pro::constraint_level::nontrivial> //
+struct Stringable : pro::facade_builder                                  //
+                    ::add_facade<BasicStringable>                        //
+                    ::support_copy<pro::lifetime_requirement::supported> //
                     ::add_direct_convention<pro::conversion_dispatch,
                                             pro::proxy<BasicStringable>() &&> //
                     ::build {};

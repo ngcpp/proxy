@@ -14,8 +14,8 @@ namespace pro::inline v5 {
 namespace detail {
 
 template <std::size_t N>
-struct sign {
-  consteval sign(const char (&str)[N]) {
+struct id {
+  consteval id(const char (&str)[N]) {
     if (str[N - 1u] != '\0') {
       PRO5D_UNREACHABLE();
     }
@@ -28,7 +28,7 @@ struct sign {
 };
 
 // Delays the assertion to instantiation for compilers without CWG2518.
-template <sign V>
+template <id V>
 inline constexpr bool dependent_false = false;
 
 // When std::reference_constructs_from_temporary_v (C++23) is not available, we
@@ -78,35 +78,35 @@ struct cast_access_base {
 
 } // namespace detail
 
-template <detail::sign Sign, bool Rhs = false>
+template <detail::id Sign, bool Rhs = false>
 struct operator_access {
   static_assert(detail::dependent_false<Sign>,
                 "unsupported Sign or Rhs for operator_access");
 };
-template <detail::sign Sign, bool Rhs = false>
+template <detail::id Sign, bool Rhs = false>
 struct operator_dispatch {
   static_assert(detail::dependent_false<Sign>,
                 "unsupported Sign or Rhs for operator_dispatch");
 };
-template <detail::sign Name>
+template <detail::id Name>
 struct member_access {
   static_assert(detail::dependent_false<Name>,
                 "PRO_ENABLE_MEMBER(name) must precede any use of "
                 "member_access<\"name\">");
 };
-template <detail::sign Name>
+template <detail::id Name>
 struct member_dispatch {
   static_assert(detail::dependent_false<Name>,
                 "PRO_ENABLE_MEMBER(name) must precede any use of "
                 "member_dispatch<\"name\">");
 };
-template <detail::sign Name>
+template <detail::id Name>
 struct free_access {
   static_assert(detail::dependent_false<Name>,
                 "PRO_ENABLE_FREE(name) must precede any use of "
                 "free_access<\"name\">");
 };
-template <detail::sign Name>
+template <detail::id Name>
 struct free_dispatch {
   static_assert(detail::dependent_false<Name>,
                 "PRO_ENABLE_FREE(name) must precede any use of "
@@ -390,7 +390,7 @@ struct weak_dispatch : D {
 
 namespace detail {
 
-template <sign Sign, bool Rhs>
+template <id Sign, bool Rhs>
 struct default_access_traits<operator_dispatch<Sign, Rhs>>
     : std::type_identity<operator_access<Sign, Rhs>> {};
 template <>
@@ -399,10 +399,10 @@ struct default_access_traits<explicit_conversion_dispatch>
 template <>
 struct default_access_traits<implicit_conversion_dispatch>
     : std::type_identity<implicit_conversion_access> {};
-template <sign Name>
+template <id Name>
 struct default_access_traits<member_dispatch<Name>>
     : std::type_identity<member_access<Name>> {};
-template <sign Name>
+template <id Name>
 struct default_access_traits<free_dispatch<Name>>
     : std::type_identity<free_access<Name>> {};
 template <class D>

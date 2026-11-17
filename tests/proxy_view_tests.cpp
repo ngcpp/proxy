@@ -160,10 +160,10 @@ TEST(ProxyViewTests, TestSubstitution_FromValue) {
       : pro::facade_builder                                              //
         ::add_convention<utils::spec::FreeToString, std::string() const> //
         ::build {};
-  struct TestFacade2 : pro::facade_builder                               //
-                       ::support_copy<pro::constraint_level::nontrivial> //
-                       ::add_facade<TestFacade1>                         //
-                       ::add_skill<pro::skills::as_view>                 //
+  struct TestFacade2 : pro::facade_builder                                  //
+                       ::support_copy<pro::lifetime_requirement::supported> //
+                       ::add_facade<TestFacade1>                            //
+                       ::add_skill<pro::skills::as_view>                    //
                        ::build {};
   pro::proxy<TestFacade2> p1 = pro::make_proxy<TestFacade2>(123);
   pro::proxy_view<TestFacade2> p2 = p1;

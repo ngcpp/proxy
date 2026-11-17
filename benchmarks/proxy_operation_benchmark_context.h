@@ -17,7 +17,7 @@ struct InvocationTestFacade : pro::facade_builder                   //
                               ::build {};
 
 struct NothrowRelocatableInvocationTestFacade : InvocationTestFacade {
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
 };
 
 struct InvocationTestBase {

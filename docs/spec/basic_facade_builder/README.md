@@ -8,21 +8,21 @@ The definitions of `basic_facade_builder` and `facade_builder` make use of the f
 
 ```cpp
 constexpr std::size_t default-size = std::numeric_limits<std::size_t>::max(); // exposition only
-constexpr constraint_level default-cl = static_cast<constraint_level>(
-    std::numeric_limits<std::underlying_type_t<constraint_level>>::min()); // exposition only
+constexpr lifetime_requirement default-lr = static_cast<lifetime_requirement>(
+    std::numeric_limits<std::underlying_type_t<lifetime_requirement>>::min()); // exposition only
 ```
 
-Given a [facade](../facade.md) type `F`, any meaningful value of `F::max_size` and `F::max_align` is less than *default-size*; any meaningful value of `F::copyability`, `F::relocatability`, and `F::destructibility` is greater than *default-cl*.
+Given a [facade](../facade.md) type `F`, any meaningful value of `F::max_size` and `F::max_align` is less than *default-size*; any meaningful value of `F::copyability`, `F::relocatability`, and `F::destructibility` is greater than *default-lr*.
 
 ```cpp
 template <class Ss, class Cs, class Rs, std::size_t MaxSize,
-          std::size_t MaxAlign, constraint_level Copyability,
-          constraint_level Relocatability, constraint_level Destructibility>
+          std::size_t MaxAlign, lifetime_requirement Copyability,
+          lifetime_requirement Relocatability, lifetime_requirement Destructibility>
 class basic_facade_builder;
 
 using facade_builder =
     basic_facade_builder<std::tuple<>, std::tuple<>, std::tuple<>, default-size,
-                         default-size, default-cl, default-cl, default-cl>;
+                         default-size, default-lr, default-lr, default-lr>;
 ```
 
 `basic_facade_builder` provides a member type `build` that compiles the template parameters into a [`facade`](../facade.md) type. The template parameters can be modified via various member alias templates that specify `basic_facade_builder` with the modified template parameters.
@@ -90,7 +90,7 @@ struct MovableCallable : pro::facade_builder
 template <class... Os>
 struct CopyableCallable : pro::facade_builder
     ::add_facade<MovableCallable<Os...>>
-    ::support_copy<pro::constraint_level::nontrivial>
+    ::support_copy<pro::lifetime_requirement::supported>
     ::build {};
 ```
 
@@ -100,14 +100,14 @@ Although GCC can usually compile the code above, it does not adhere to the C++ s
 template <class... Os>
 struct CopyableCallable : pro::facade_builder
     ::add_facade<MovableCallable<Os...>>
-    ::template support_copy<pro::constraint_level::nontrivial>
+    ::template support_copy<pro::lifetime_requirement::supported>
     ::build {};
 
 // Or
 
 template <class... Os>
 struct CopyableCallable : pro::facade_builder
-    ::support_copy<pro::constraint_level::nontrivial>
+    ::support_copy<pro::lifetime_requirement::supported>
     ::add_facade<MovableCallable<Os...>>
     ::build {};
 ```
@@ -126,10 +126,11 @@ struct MovableCallable
       ::build {};
 
 template <class... Overloads>
-struct CopyableCallable : pro::facade_builder                               //
-                          ::support_copy<pro::constraint_level::nontrivial> //
-                          ::add_facade<MovableCallable<Overloads...>>       //
-                          ::build {};
+struct CopyableCallable
+    : pro::facade_builder                                  //
+      ::support_copy<pro::lifetime_requirement::supported> //
+      ::add_facade<MovableCallable<Overloads...>>          //
+      ::build {};
 
 // MyFunction has similar functionality as std::function but supports multiple
 // overloads MyMoveOnlyFunction has similar functionality as

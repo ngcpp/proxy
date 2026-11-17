@@ -8,7 +8,7 @@
 ```cpp
 template <class T, class F, class MP = compact_metadata>
 concept proxiable_target =
-    proxiable<observer-ptr<T>, observer_facade<F>, MP>;
+    proxiable<observer-ptr<T>, view_facade<F>, MP>;
 ```
 
 See [`make_proxy_view`](make_proxy_view.md) for the definition of the exposition-only class template *observer-ptr*.

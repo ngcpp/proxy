@@ -58,8 +58,8 @@ static_assert(IsInlineMetaPreferred<DefaultFacade>);
 
 // Non-trivial copyability adds more metas than fit inline, so the proxy stores
 // a signed pointer to out-of-line static meta storage.
-struct CopyableFacade : pro::facade_builder                               //
-                        ::support_copy<pro::constraint_level::nontrivial> //
+struct CopyableFacade : pro::facade_builder                                  //
+                        ::support_copy<pro::lifetime_requirement::supported> //
                         ::build {};
 static_assert(!IsInlineMetaPreferred<CopyableFacade>);
 
