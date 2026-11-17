@@ -10,7 +10,7 @@ struct compact_metadata;
 struct inline_metadata;
 ```
 
-`compact_metadata` and `inline_metadata` are the metadata policies provided by the library. Both meet the [*ProMetadataPolicy* requirements](ProMetadataPolicy.md) and use the same invoker type, a pointer to the generated function. They differ only in how a [`proxy`](proxy/README.md) keeps the metadata deduced from the contained type.
+`compact_metadata` and `inline_metadata` are the metadata policies provided by the library. Both meet the [*ProxyMetadataPolicy* requirements](ProxyMetadataPolicy.md) and use the same invoker type, a pointer to the generated function. They differ only in how a [`proxy`](proxy/README.md) keeps the metadata deduced from the contained type.
 
 | Name               | Metadata storage                                             |
 | ------------------ | ------------------------------------------------------------ |
@@ -63,4 +63,4 @@ int main() {
 ## See Also
 
 - [class template `proxy`](proxy/README.md)
-- [*ProMetadataPolicy* requirements](ProMetadataPolicy.md)
+- [*ProxyMetadataPolicy* requirements](ProxyMetadataPolicy.md)

@@ -25,7 +25,7 @@ For either alias, `typename Refl::access_type` is implementation-defined for the
 
 Reflection types are deduplicated when a [`proxy`](../proxy/README.md) of the built facade is instantiated, not when they are added.
 
-*Since 5.0.0*: reflection types are appended rather than merged into `Rs`. The reflection type carries an access type (see [*ProBasicReflection* requirements](../ProBasicReflection.md)). Previously, `proxy` took the accessibility of the reflection from the member template `accessor` of `R`.
+*Since 5.0.0*: reflection types are appended rather than merged into `Rs`. The reflection type carries an access type (see [*ProxyBasicReflection* requirements](../ProxyBasicReflection.md)). Previously, `proxy` took the accessibility of the reflection from the member template `accessor` of `R`.
 
 ## Notes
 
@@ -91,6 +91,6 @@ int main() {
 
 ## See Also
 
-- [named requirements: *ProReflection*](../ProReflection.md)
-- [named requirements: *ProAccess*](../ProAccess.md)
+- [named requirements: *ProxyReflection*](../ProxyReflection.md)
+- [named requirements: *ProxyAccess*](../ProxyAccess.md)
 - [class template `proxy_reflection`](../proxy_reflection.md)

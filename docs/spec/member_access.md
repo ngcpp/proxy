@@ -12,9 +12,9 @@ template <string-literal Name>
 struct member_access;
 ```
 
-Class template `member_access` is an access type that defines member functions for [`proxy`](proxy/README.md). It meets the [*ProAccess* requirements](ProAccess.md) of applicable types. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_MEMBER(name)`](PRO_ENABLE_MEMBER.md) defines the specialization `member_access<"name">`, whose member functions are named `name`.
+Class template `member_access` is an access type that defines member functions for [`proxy`](proxy/README.md). It meets the [*ProxyAccess* requirements](ProxyAccess.md) of applicable types. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_MEMBER(name)`](PRO_ENABLE_MEMBER.md) defines the specialization `member_access<"name">`, whose member functions are named `name`.
 
-`member_access<Name>` is the access type of the conventions of [`member_dispatch<Name>`](member_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](ProDispatch.md) type, and a reflection can name it with any reflector type. The direct, or the indirect, conventions and reflections whose access type is `member_access<Name>` share an accessor (see [*ProAccess* requirements](ProAccess.md)), so their member functions participate in overload resolution together.
+`member_access<Name>` is the access type of the conventions of [`member_dispatch<Name>`](member_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](ProxyDispatch.md) type, and a reflection can name it with any reflector type. The direct, or the indirect, conventions and reflections whose access type is `member_access<Name>` share an accessor (see [*ProxyAccess* requirements](ProxyAccess.md)), so their member functions participate in overload resolution together.
 
 ## Member Template `accessor`
 
@@ -47,7 +47,7 @@ struct accessor<Self, proxy_reflection<M>> {
 };
 ```
 
-Each type in `Ds` is a *descriptor* (see [*ProAccess* requirements](ProAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProOverload*](ProOverload.md).
+Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](ProxyAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProxyOverload*](ProxyOverload.md).
 
 `(1)` The default implementation of `accessor` is not constructible.
 

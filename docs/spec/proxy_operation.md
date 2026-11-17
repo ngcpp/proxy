@@ -10,9 +10,9 @@ template <class D, class O>
 struct proxy_operation {};
 ```
 
-Class template `proxy_operation` is a *descriptor* of an operation performed on a [`proxy`](proxy/README.md) with a [dispatch](ProDispatch.md) type `D` and an [overload](ProOverload.md) type `O`. Descriptors are the template arguments following `Self` of the member template `accessor` of an access type (see [*ProAccess* requirements](ProAccess.md)), telling the access type which operations and reflections its accessor provides accessibility for.
+Class template `proxy_operation` is a *descriptor* of an operation performed on a [`proxy`](proxy/README.md) with a [dispatch](ProxyDispatch.md) type `D` and an [overload](ProxyOverload.md) type `O`. Descriptors are the template arguments following `Self` of the member template `accessor` of an access type (see [*ProxyAccess* requirements](ProxyAccess.md)), telling the access type which operations and reflections its accessor provides accessibility for.
 
-For a convention type `C` of a [facade](facade.md) type `F` or of any super of `F`, the descriptor of `C` in [`proxy<F, MP>`](proxy/README.md) or [`proxy_indirect_accessor<F, MP>`](proxy_indirect_accessor/README.md) is `proxy_operation<typename C::dispatch_type, `[`substituted-overload`](ProOverload.md)`<typename C::overload_type, F, MP>>`. Within an accessor, the described operation is performed by calling [`invoke<D, O>`](proxy/friend_invoke.md) with the `Self` object, qualified with the *cv ref* qualifiers of `O`, and the arguments of `O`. The access type of a convention added by [`basic_facade_builder`](basic_facade_builder/add_convention.md) is the default access type of its dispatch type.
+For a convention type `C` of a [facade](facade.md) type `F` or of any super of `F`, the descriptor of `C` in [`proxy<F, MP>`](proxy/README.md) or [`proxy_indirect_accessor<F, MP>`](proxy_indirect_accessor/README.md) is `proxy_operation<typename C::dispatch_type, `[`substituted-overload`](ProxyOverload.md)`<typename C::overload_type, F, MP>>`. Within an accessor, the described operation is performed by calling [`invoke<D, O>`](proxy/friend_invoke.md) with the `Self` object, qualified with the *cv ref* qualifiers of `O`, and the arguments of `O`. The access type of a convention added by [`basic_facade_builder`](basic_facade_builder/add_convention.md) is the default access type of its dispatch type.
 
 ## Example
 
@@ -80,5 +80,5 @@ int main() {
 ## See Also
 
 - [class template `proxy_reflection`](proxy_reflection.md)
-- [named requirements *ProAccess*](ProAccess.md)
-- [named requirements *ProBasicConvention*](ProBasicConvention.md)
+- [named requirements *ProxyAccess*](ProxyAccess.md)
+- [named requirements *ProxyBasicConvention*](ProxyBasicConvention.md)

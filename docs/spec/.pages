@@ -54,15 +54,15 @@ nav:
     - PRO_ENABLE_FREE: PRO_ENABLE_FREE.md
     - PRO_ENABLE_MEMBER: PRO_ENABLE_MEMBER.md
   - Named Requirements:
-    - ProAccess: ProAccess.md
-    - ProBasicConvention: ProBasicConvention.md
-    - ProBasicFacade: ProBasicFacade.md
-    - ProBasicMetadata: ProBasicMetadata.md
-    - ProBasicReflection: ProBasicReflection.md
-    - ProConvention: ProConvention.md
-    - ProDispatch: ProDispatch.md
-    - ProFacade: ProFacade.md
-    - ProMetadata: ProMetadata.md
-    - ProMetadataPolicy: ProMetadataPolicy.md
-    - ProOverload: ProOverload.md
-    - ProReflection: ProReflection.md
+    - ProxyAccess: ProxyAccess.md
+    - ProxyBasicConvention: ProxyBasicConvention.md
+    - ProxyBasicFacade: ProxyBasicFacade.md
+    - ProxyBasicMetadata: ProxyBasicMetadata.md
+    - ProxyBasicReflection: ProxyBasicReflection.md
+    - ProxyConvention: ProxyConvention.md
+    - ProxyDispatch: ProxyDispatch.md
+    - ProxyFacade: ProxyFacade.md
+    - ProxyMetadata: ProxyMetadata.md
+    - ProxyMetadataPolicy: ProxyMetadataPolicy.md
+    - ProxyOverload: ProxyOverload.md
+    - ProxyReflection: ProxyReflection.md

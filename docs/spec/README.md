@@ -92,17 +92,17 @@ Also included in `proxy.h`.
 
 ## Named Requirements
 
-| Name                                          | Description                                                  |
-| --------------------------------------------- | ------------------------------------------------------------ |
-| [*ProAccess*](ProAccess.md)                   | Specifies how a type defines member and non-member functions for `proxy`      |
-| [*ProBasicConvention*](ProBasicConvention.md) | Specifies that a type potentially models a "convention"      |
-| [*ProBasicFacade*](ProBasicFacade.md)         | Specifies that a type potentially models a "facade" of `proxy` |
-| [*ProBasicMetadata*](ProBasicMetadata.md)     | Specifies that a type potentially models "metadata"          |
-| [*ProBasicReflection*](ProBasicReflection.md) | Specifies that a type potentially models a "reflection"      |
-| [*ProConvention*](ProConvention.md)           | Specifies that a type models a "convention"                  |
-| [*ProDispatch*](ProDispatch.md)               | Specifies that a type models a "dispatch"                    |
-| [*ProFacade*](ProFacade.md)                   | Specifies that a type models a "facade" of `proxy`           |
-| [*ProMetadata*](ProMetadata.md)               | Specifies that a type models "metadata" of a type            |
-| [*ProMetadataPolicy*](ProMetadataPolicy.md)   | Specifies that a type models a "metadata policy" of `proxy`  |
-| [*ProOverload*](ProOverload.md)               | Specifies that a type models an "overload"                   |
-| [*ProReflection*](ProReflection.md)           | Specifies that a type models a "reflection"                  |
+| Name                                              | Description                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------ |
+| [*ProxyAccess*](ProxyAccess.md)                   | Specifies how a type defines member and non-member functions for `proxy`      |
+| [*ProxyBasicConvention*](ProxyBasicConvention.md) | Specifies that a type potentially models a "convention"      |
+| [*ProxyBasicFacade*](ProxyBasicFacade.md)         | Specifies that a type potentially models a "facade" of `proxy` |
+| [*ProxyBasicMetadata*](ProxyBasicMetadata.md)     | Specifies that a type potentially models "metadata"          |
+| [*ProxyBasicReflection*](ProxyBasicReflection.md) | Specifies that a type potentially models a "reflection"      |
+| [*ProxyConvention*](ProxyConvention.md)           | Specifies that a type models a "convention"                  |
+| [*ProxyDispatch*](ProxyDispatch.md)               | Specifies that a type models a "dispatch"                    |
+| [*ProxyFacade*](ProxyFacade.md)                   | Specifies that a type models a "facade" of `proxy`           |
+| [*ProxyMetadata*](ProxyMetadata.md)               | Specifies that a type models "metadata" of a type            |
+| [*ProxyMetadataPolicy*](ProxyMetadataPolicy.md)   | Specifies that a type models a "metadata policy" of `proxy`  |
+| [*ProxyOverload*](ProxyOverload.md)               | Specifies that a type models an "overload"                   |
+| [*ProxyReflection*](ProxyReflection.md)           | Specifies that a type models a "reflection"                  |

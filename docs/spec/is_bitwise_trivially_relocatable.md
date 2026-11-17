@@ -93,5 +93,5 @@ int main() {
 
 ## See Also
 
-- [named requirements *ProFacade*](ProFacade.md)
+- [named requirements *ProxyFacade*](ProxyFacade.md)
 - [`basic_facade_builder::support_relocation`](basic_facade_builder/support_relocation.md)

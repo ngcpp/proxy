@@ -9,9 +9,9 @@ template <class P, class F, class MP = compact_metadata>
 concept proxiable = /* see-below */;
 ```
 
-The concept `proxiable<P, F, MP>` specifies that [`proxy<F, MP>`](proxy/README.md) can potentially contain a value of type `P`. If `P` is an incomplete type, or `MP` does not meet the [*ProMetadataPolicy* requirements](ProMetadataPolicy.md), the behavior of evaluating `proxiable<P, F, MP>` is undefined. `proxiable<P, F, MP>` is `true` when `F` meets the [*ProFacade* requirements](ProFacade.md) of `P` and `MP`; otherwise, it is `false`.
+The concept `proxiable<P, F, MP>` specifies that [`proxy<F, MP>`](proxy/README.md) can potentially contain a value of type `P`. If `P` is an incomplete type, or `MP` does not meet the [*ProxyMetadataPolicy* requirements](ProxyMetadataPolicy.md), the behavior of evaluating `proxiable<P, F, MP>` is undefined. `proxiable<P, F, MP>` is `true` when `F` meets the [*ProxyFacade* requirements](ProxyFacade.md) of `P` and `MP`; otherwise, it is `false`.
 
-*Since 5.0.0*: `proxiable` takes a [metadata policy](ProMetadataPolicy.md), which participates in the check when a convention of `F` is declared with a [`proxy_dependent_signature`](proxy_dependent_signature.md).
+*Since 5.0.0*: `proxiable` takes a [metadata policy](ProxyMetadataPolicy.md), which participates in the check when a convention of `F` is declared with a [`proxy_dependent_signature`](proxy_dependent_signature.md).
 
 ## Example
 

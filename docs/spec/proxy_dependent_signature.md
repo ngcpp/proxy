@@ -10,7 +10,7 @@ template <template <class, class> class O>
 struct proxy_dependent_signature { proxy_dependent_signature() = delete; };
 ```
 
-Class template `proxy_dependent_signature<O>` specifies a *proxy-dependent signature template* `O`. `O` is instantiated with a [facade](facade.md) type and a [metadata policy](ProMetadataPolicy.md) type, and shall produce a type meeting the [*ProOverload* requirements](ProOverload.md). It is useful when modeling an [overload](ProOverload.md) type of a facade type that recursively depends on the facade type itself, on the metadata policy of the [`proxy`](proxy/README.md) that exposes it, or on both.
+Class template `proxy_dependent_signature<O>` specifies a *proxy-dependent signature template* `O`. `O` is instantiated with a [facade](facade.md) type and a [metadata policy](ProxyMetadataPolicy.md) type, and shall produce a type meeting the [*ProxyOverload* requirements](ProxyOverload.md). It is useful when modeling an [overload](ProxyOverload.md) type of a facade type that recursively depends on the facade type itself, on the metadata policy of the [`proxy`](proxy/README.md) that exposes it, or on both.
 
 *Since 5.0.0*: `proxy_dependent_signature` replaces `facade_aware_overload_t`, whose template argument was instantiated with a facade type only.
 
@@ -57,5 +57,5 @@ int main() {
 
 ## See Also
 
-- [*ProOverload* requirements](ProOverload.md)
+- [*ProxyOverload* requirements](ProxyOverload.md)
 - [alias template `skills::as_view`](skills_as_view.md)

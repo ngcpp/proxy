@@ -74,4 +74,4 @@ int main() {
 - [function template `reflect` (`proxy<F>`)](proxy/friend_reflect.md)
 - [function template `reflect` (`proxy_indirect_accessor<F>`)](proxy_indirect_accessor/friend_reflect.md)
 - [alias template `basic_facade_builder::add_reflection`](basic_facade_builder/add_reflection.md)
-- [named requirements *ProReflection*](ProReflection.md)
+- [named requirements *ProxyReflection*](ProxyReflection.md)

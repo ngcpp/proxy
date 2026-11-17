@@ -9,9 +9,9 @@
 struct explicit_conversion_access;
 ```
 
-Class `explicit_conversion_access` is an access type that defines explicit conversion functions for [`proxy`](../proxy/README.md). It meets the [*ProAccess* requirements](../ProAccess.md) of applicable types.
+Class `explicit_conversion_access` is an access type that defines explicit conversion functions for [`proxy`](../proxy/README.md). It meets the [*ProxyAccess* requirements](../ProxyAccess.md) of applicable types.
 
-`explicit_conversion_access` is the access type of the conventions of [`explicit_conversion_dispatch`](../explicit_conversion_dispatch/README.md) added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](../ProDispatch.md) type that converts a `proxy` to the return types of its overloads. The direct, or the indirect, conventions whose access type is `explicit_conversion_access` share an accessor (see [*ProAccess* requirements](../ProAccess.md)), so the conversions of all of them are available together.
+`explicit_conversion_access` is the access type of the conventions of [`explicit_conversion_dispatch`](../explicit_conversion_dispatch/README.md) added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](../ProxyDispatch.md) type that converts a `proxy` to the return types of its overloads. The direct, or the indirect, conventions whose access type is `explicit_conversion_access` share an accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)), so the conversions of all of them are available together.
 
 ## Member Types
 

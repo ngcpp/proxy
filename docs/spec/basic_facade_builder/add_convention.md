@@ -11,7 +11,7 @@ template <class D, class... Os> requires(/* see below */)
 using add_direct_convention = basic_facade_builder</* see below */>;
 ```
 
-The alias templates `add_convention`, `add_indirect_convention`, and `add_direct_convention` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add convention types to the template parameters. The expression inside `requires` is equivalent to `sizeof...(Os) > 0u` and each type in `Os` meets the [*ProOverload* requirements](../ProOverload.md).
+The alias templates `add_convention`, `add_indirect_convention`, and `add_direct_convention` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` add convention types to the template parameters. The expression inside `requires` is equivalent to `sizeof...(Os) > 0u` and each type in `Os` meets the [*ProxyOverload* requirements](../ProxyOverload.md).
 
 - `add_convention` is equivalent to `add_indirect_convention`.
 - `add_indirect_convention` appends an implementation-defined convention type `IC` to `Cs` for each type `O` in `Os`, where:
@@ -25,7 +25,7 @@ The alias templates `add_convention`, `add_indirect_convention`, and `add_direct
 
 For either alias, `typename IC::access_type` is [`operator_access<Sign, Rhs>`](../operator_access/README.md) if `D` is [`operator_dispatch<Sign, Rhs>`](../operator_dispatch/README.md), [`explicit_conversion_access`](../explicit_conversion_access/README.md) if `D` is [`explicit_conversion_dispatch`](../explicit_conversion_dispatch/README.md), [`implicit_conversion_access`](../implicit_conversion_access/README.md) if `D` is [`implicit_conversion_dispatch`](../implicit_conversion_dispatch/README.md), [`member_access<Name>`](../member_access.md) if `D` is [`member_dispatch<Name>`](../member_dispatch.md), and [`free_access<Name>`](../free_access.md) if `D` is [`free_dispatch<Name>`](../free_dispatch.md). It is implementation-defined for the dispatch types that the library uses to implement its skills. If `D` is [`weak_dispatch<D2>`](../weak_dispatch/README.md) and the builder selects a library-defined access type for `D2` by these rules, `IC::access_type` is the same type. For any other `D`, it is an implementation-defined type `A` where `typename A::template accessor<Self, `[`proxy_operation`](../proxy_operation.md)`<D, Os>...>` is `typename D::template accessor<Self, D, Os...>`.
 
-*Since 5.0.0*: each type in `Os` produces its own convention type, rather than one convention type carrying a tuple-like `overload_types`. The convention type carries an access type (see [*ProBasicConvention* requirements](../ProBasicConvention.md)). Previously, `proxy` took the accessibility of the convention from the member template `accessor` of `D`.
+*Since 5.0.0*: each type in `Os` produces its own convention type, rather than one convention type carrying a tuple-like `overload_types`. The convention type carries an access type (see [*ProxyBasicConvention* requirements](../ProxyBasicConvention.md)). Previously, `proxy` took the accessibility of the convention from the member template `accessor` of `D`.
 
 ## Notes
 
