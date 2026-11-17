@@ -29,13 +29,13 @@ using proxy_view = proxy<view_facade<F>, MP>;
 
 ## Member Constants of `view_facade`
 
-| Name                                   | Definition                  |
-| -------------------------------------- | --------------------------- |
-| `max_size` [static] [constexpr]        | `sizeof(void*)`             |
-| `max_align` [static] [constexpr]       | `alignof(void*)`            |
-| `copyability` [static] [constexpr]     | `constraint_level::trivial` |
-| `relocatability` [static] [constexpr]  | `constraint_level::trivial` |
-| `destructibility` [static] [constexpr] | `constraint_level::trivial` |
+| Name                                   | Definition                      |
+| -------------------------------------- | ------------------------------- |
+| `max_size` [static] [constexpr]        | `sizeof(void*)`                 |
+| `max_align` [static] [constexpr]       | `alignof(void*)`                |
+| `copyability` [static] [constexpr]     | `lifetime_requirement::trivial` |
+| `relocatability` [static] [constexpr]  | `lifetime_requirement::trivial` |
+| `destructibility` [static] [constexpr] | `lifetime_requirement::trivial` |
 
 ## Example
 

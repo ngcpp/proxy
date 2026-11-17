@@ -185,9 +185,9 @@ struct TypeSize {
   std::size_t value;
 };
 
-struct Super : pro::facade_builder                               //
-               ::add_convention<Read, int() const noexcept>      //
-               ::support_copy<pro::constraint_level::nontrivial> //
+struct Super : pro::facade_builder                                  //
+               ::add_convention<Read, int() const noexcept>         //
+               ::support_copy<pro::lifetime_requirement::supported> //
                ::build {};
 struct Derived : pro::facade_builder                                 //
                  ::add_facade<Super>                                 //
@@ -198,10 +198,11 @@ struct Derived : pro::facade_builder                                 //
                  ::add_skill<pro::skills::as_view>                   //
                  ::add_skill<pro::skills::as_weak>                   //
                  ::build {};
-struct Relocatable : pro::facade_builder                                     //
-                     ::add_convention<Read, int() const noexcept>            //
-                     ::support_relocation<pro::constraint_level::nontrivial> //
-                     ::build {};
+struct Relocatable
+    : pro::facade_builder                                        //
+      ::add_convention<Read, int() const noexcept>               //
+      ::support_relocation<pro::lifetime_requirement::supported> //
+      ::build {};
 
 template <class MP>
 concept PolicyPreservingSkills =

@@ -22,7 +22,6 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`bad_proxy_cast`](bad_proxy_cast.md)                        | Exception thrown by the value-returning forms of `proxy_cast` on a type mismatch |
 | [`basic_facade_builder`<br />`facade_builder`](basic_facade_builder/README.md) | Provides capability to build a facade type at compile-time   |
 | [`compact_metadata`<br />`inline_metadata`](compact_metadata.md) | The metadata policies provided by the library                |
-| [`constraint_level`](constraint_level.md)                    | Defines the 4 constraint levels of a special member function |
 | [`explicit_conversion_access`](explicit_conversion_access/README.md) | Access type for explicit conversion expressions              |
 | [`explicit_conversion_dispatch`<br />`conversion_dispatch`](explicit_conversion_dispatch/README.md) | Dispatch type for explicit conversion expressions            |
 | [`free_access`](free_access.md)                              | Access type for free function call expressions               |
@@ -30,6 +29,7 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`implicit_conversion_access`](implicit_conversion_access/README.md) | Access type for implicit conversion expressions              |
 | [`implicit_conversion_dispatch`](implicit_conversion_dispatch/README.md) | Dispatch type for implicit conversion expressions            |
 | [`is_bitwise_trivially_relocatable`](is_bitwise_trivially_relocatable.md) | Specifies whether a type is bitwise trivially relocatable    |
+| [`lifetime_requirement`<br />`constraint_level`](lifetime_requirement.md) | Defines the 4 levels of requirements on a lifetime operation |
 | [`member_access`](member_access.md)                          | Access type for member function call expressions             |
 | [`member_dispatch`](member_dispatch.md)                      | Dispatch type for member function call expressions           |
 | [`not_implemented` ](not_implemented.md)                     | Exception thrown by `weak_dispatch` for the default implementation |

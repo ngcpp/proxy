@@ -11,27 +11,27 @@ namespace proxy_lifetime_tests_detail {
 struct TestFacade
     : pro::facade_builder                                        //
       ::add_convention<utils::spec::FreeToString, std::string()> //
-      ::support_relocation<pro::constraint_level::nontrivial>    //
-      ::support_copy<pro::constraint_level::nontrivial>          //
+      ::support_relocation<pro::lifetime_requirement::supported> //
+      ::support_copy<pro::lifetime_requirement::supported>       //
       ::add_direct_convention<pro::conversion_dispatch,
                               utils::LifetimeTracker::Session() const&,
                               utils::LifetimeTracker::Session() &&> //
       ::build {};
 
 struct TestTrivialFacade
-    : pro::facade_builder                                   //
-      ::add_facade<utils::spec::Stringable>                 //
-      ::support_copy<pro::constraint_level::trivial>        //
-      ::support_relocation<pro::constraint_level::trivial>  //
-      ::support_destruction<pro::constraint_level::trivial> //
+    : pro::facade_builder                                       //
+      ::add_facade<utils::spec::Stringable>                     //
+      ::support_copy<pro::lifetime_requirement::trivial>        //
+      ::support_relocation<pro::lifetime_requirement::trivial>  //
+      ::support_destruction<pro::lifetime_requirement::trivial> //
       ::build {};
 
 struct TestThrowingDestructionFacade
-    : pro::facade_builder                                        //
-      ::add_convention<utils::spec::FreeToString, std::string()> //
-      ::support_copy<pro::constraint_level::nontrivial>          //
-      ::support_relocation<pro::constraint_level::nontrivial>    //
-      ::support_destruction<pro::constraint_level::nontrivial>   //
+    : pro::facade_builder                                         //
+      ::add_convention<utils::spec::FreeToString, std::string()>  //
+      ::support_copy<pro::lifetime_requirement::supported>        //
+      ::support_relocation<pro::lifetime_requirement::supported>  //
+      ::support_destruction<pro::lifetime_requirement::supported> //
       ::build {};
 
 struct TestRttiFacade : pro::facade_builder                           //
@@ -1203,9 +1203,9 @@ TEST(ProxyLifetimeTests, TestSwap_Trivial) {
 TEST(ProxyLifetimeTests, Test_CopyAssignment_NoRelocation) {
   struct Pinned : pro::facade_builder //
                   ::add_convention<utils::spec::FreeToString,
-                                   std::string() const>             //
-                  ::support_copy<pro::constraint_level::nontrivial> //
-                  ::support_relocation<pro::constraint_level::none> //
+                                   std::string() const>                 //
+                  ::support_copy<pro::lifetime_requirement::supported>  //
+                  ::support_relocation<pro::lifetime_requirement::none> //
                   ::build {};
   int v1 = 111, v2 = 222;
   pro::proxy<Pinned> p1{utils::ThrowingCopyPtr<int>{&v1}};
@@ -1220,8 +1220,8 @@ TEST(ProxyLifetimeTests, Test_CopyAssignment_NoRelocation) {
 TEST(ProxyLifetimeTests, Test_PointerAssignment_NoRelocationNoCopy) {
   struct Pinned : pro::facade_builder //
                   ::add_convention<utils::spec::FreeToString,
-                                   std::string() const>             //
-                  ::support_relocation<pro::constraint_level::none> //
+                                   std::string() const>                 //
+                  ::support_relocation<pro::lifetime_requirement::none> //
                   ::build {};
   int v1 = 111, v2 = 222;
   pro::proxy<Pinned> p{utils::ThrowingCopyPtr<int>{&v1}};
@@ -1232,23 +1232,24 @@ TEST(ProxyLifetimeTests, Test_PointerAssignment_NoRelocationNoCopy) {
 TEST(ProxyLifetimeTests, Test_PointerAssignment_ThrowingInitialization) {
   struct Movable : pro::facade_builder //
                    ::add_convention<utils::spec::FreeToString,
-                                    std::string() const>                   //
-                   ::support_copy<pro::constraint_level::nontrivial>       //
-                   ::support_relocation<pro::constraint_level::nontrivial> //
+                                    std::string() const>                      //
+                   ::support_copy<pro::lifetime_requirement::supported>       //
+                   ::support_relocation<pro::lifetime_requirement::supported> //
                    ::build {};
   struct TriviallyCopyable
       : pro::facade_builder //
         ::add_convention<utils::spec::FreeToString,
-                         std::string() const>             //
-        ::support_copy<pro::constraint_level::trivial>    //
-        ::support_relocation<pro::constraint_level::none> //
+                         std::string() const>                 //
+        ::support_copy<pro::lifetime_requirement::trivial>    //
+        ::support_relocation<pro::lifetime_requirement::none> //
         ::build {};
-  struct NothrowCopyable : pro::facade_builder //
-                           ::add_convention<utils::spec::FreeToString,
-                                            std::string() const>             //
-                           ::support_copy<pro::constraint_level::nothrow>    //
-                           ::support_relocation<pro::constraint_level::none> //
-                           ::build {};
+  struct NothrowCopyable
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>                 //
+        ::support_copy<pro::lifetime_requirement::nothrow>    //
+        ::support_relocation<pro::lifetime_requirement::none> //
+        ::build {};
   int v1 = 111, v2 = 222;
 
   pro::proxy<Movable> p1{std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
@@ -1275,17 +1276,17 @@ TEST(ProxyLifetimeTests, Test_PointerAssignment_ThrowingInitialization) {
 TEST(ProxyLifetimeTests, TestSwap_NoRelocation) {
   struct Pinned : pro::facade_builder //
                   ::add_convention<utils::spec::FreeToString,
-                                   std::string() const>             //
-                  ::support_copy<pro::constraint_level::nothrow>    //
-                  ::support_relocation<pro::constraint_level::none> //
+                                   std::string() const>                 //
+                  ::support_copy<pro::lifetime_requirement::nothrow>    //
+                  ::support_relocation<pro::lifetime_requirement::none> //
                   ::build {};
   struct PinnedThrowingDestruction
       : pro::facade_builder //
         ::add_convention<utils::spec::FreeToString,
-                         std::string() const>                    //
-        ::support_copy<pro::constraint_level::nothrow>           //
-        ::support_relocation<pro::constraint_level::none>        //
-        ::support_destruction<pro::constraint_level::nontrivial> //
+                         std::string() const>                       //
+        ::support_copy<pro::lifetime_requirement::nothrow>          //
+        ::support_relocation<pro::lifetime_requirement::none>       //
+        ::support_destruction<pro::lifetime_requirement::supported> //
         ::build {};
 
   int v1 = 111, v2 = 222;
@@ -1327,9 +1328,9 @@ TEST(ProxyLifetimeTests, TestSwap_NoRelocation_ThrowingCopy) {
   struct PinnedThrowingCopy
       : pro::facade_builder //
         ::add_convention<utils::spec::FreeToString,
-                         std::string() const>             //
-        ::support_copy<pro::constraint_level::nontrivial> //
-        ::support_relocation<pro::constraint_level::none> //
+                         std::string() const>                 //
+        ::support_copy<pro::lifetime_requirement::supported>  //
+        ::support_relocation<pro::lifetime_requirement::none> //
         ::build {};
   utils::LifetimeTracker tracker;
   pro::proxy<PinnedThrowingCopy> p1{
@@ -1350,9 +1351,9 @@ TEST(ProxyLifetimeTests, TestSwap_NoRelocation_Null) {
   struct PinnedThrowingCopy
       : pro::facade_builder //
         ::add_convention<utils::spec::FreeToString,
-                         std::string() const>             //
-        ::support_copy<pro::constraint_level::nontrivial> //
-        ::support_relocation<pro::constraint_level::none> //
+                         std::string() const>                 //
+        ::support_copy<pro::lifetime_requirement::supported>  //
+        ::support_relocation<pro::lifetime_requirement::none> //
         ::build {};
   utils::LifetimeTracker tracker;
   std::vector<utils::LifetimeOperation> expected_ops;
@@ -1388,9 +1389,9 @@ TEST(ProxyLifetimeTests, TestSwap_PrefersRelocation) {
   struct Relocatable
       : pro::facade_builder //
         ::add_convention<utils::spec::FreeToString,
-                         std::string() const>                   //
-        ::support_copy<pro::constraint_level::nothrow>          //
-        ::support_relocation<pro::constraint_level::nontrivial> //
+                         std::string() const>                      //
+        ::support_copy<pro::lifetime_requirement::nothrow>         //
+        ::support_relocation<pro::lifetime_requirement::supported> //
         ::build {};
   int v1 = 111, v2 = 222;
   pro::proxy<Relocatable> p1 = &v1;
@@ -1500,10 +1501,10 @@ TEST(ProxyLifetimeTests, Test_CopySubstitution_FromNull) {
 TEST(ProxyLifetimeTests, Test_CopySubstitution_MixedMetaStorage) {
   struct Super : pro::facade_builder //
                  ::add_convention<utils::spec::FreeToString,
-                                  std::string() const>                 //
-                 ::support_copy<pro::constraint_level::trivial>        //
-                 ::support_relocation<pro::constraint_level::trivial>  //
-                 ::support_destruction<pro::constraint_level::trivial> //
+                                  std::string() const>                     //
+                 ::support_copy<pro::lifetime_requirement::trivial>        //
+                 ::support_relocation<pro::lifetime_requirement::trivial>  //
+                 ::support_destruction<pro::lifetime_requirement::trivial> //
                  ::build {};
   struct Derived : pro::facade_builder                           //
                    ::add_direct_reflection<utils::RttiReflector> //
@@ -1570,9 +1571,9 @@ TEST(ProxyLifetimeTests, Test_MoveSubstitution_Trivial) {
 TEST(ProxyLifetimeTests, Test_ConvertingCopyAssignment_NoRelocation) {
   struct Pinned : pro::facade_builder //
                   ::add_convention<utils::spec::FreeToString,
-                                   std::string() const>             //
-                  ::support_copy<pro::constraint_level::nontrivial> //
-                  ::support_relocation<pro::constraint_level::none> //
+                                   std::string() const>                 //
+                  ::support_copy<pro::lifetime_requirement::supported>  //
+                  ::support_relocation<pro::lifetime_requirement::none> //
                   ::build {};
   struct PinnedDerived : pro::facade_builder  //
                          ::add_facade<Pinned> //
@@ -1591,14 +1592,14 @@ TEST(ProxyLifetimeTests, Test_ConvertingCopyAssignment_NoRelocation) {
 TEST(ProxyLifetimeTests, Test_Substitution_TrivialDerived) {
   struct Super : pro::facade_builder //
                  ::add_convention<utils::spec::FreeToString,
-                                  std::string() const>                   //
-                 ::support_copy<pro::constraint_level::nothrow>          //
-                 ::support_relocation<pro::constraint_level::nontrivial> //
+                                  std::string() const>                      //
+                 ::support_copy<pro::lifetime_requirement::nothrow>         //
+                 ::support_relocation<pro::lifetime_requirement::supported> //
                  ::build {};
-  struct Derived : pro::facade_builder                            //
-                   ::add_facade<Super>                            //
-                   ::support_copy<pro::constraint_level::trivial> //
-                   ::restrict_layout<sizeof(int*), alignof(int*)> //
+  struct Derived : pro::facade_builder                                //
+                   ::add_facade<Super>                                //
+                   ::support_copy<pro::lifetime_requirement::trivial> //
+                   ::restrict_layout<sizeof(int*), alignof(int*)>     //
                    ::build {};
   static_assert(Derived::max_size < Super::max_size);
   int v = 123;

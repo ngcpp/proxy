@@ -29,15 +29,15 @@ struct MovableCallable
       ::build {};
 
 template <class... Os>
-struct Callable : pro::facade_builder                               //
-                  ::support_copy<pro::constraint_level::nontrivial> //
-                  ::add_facade<MovableCallable<Os...>>              //
+struct Callable : pro::facade_builder                                  //
+                  ::support_copy<pro::lifetime_requirement::supported> //
+                  ::add_facade<MovableCallable<Os...>>                 //
                   ::build {};
 
 template <class... Os>
 struct WeakCallable
-    : pro::facade_builder                               //
-      ::support_copy<pro::constraint_level::nontrivial> //
+    : pro::facade_builder                                  //
+      ::support_copy<pro::lifetime_requirement::supported> //
       ::add_convention<pro::weak_dispatch<pro::operator_dispatch<"()">>,
                        Os...> //
       ::build {};
@@ -97,9 +97,9 @@ template <class F>
 PRO_DEF_FREE_DISPATCH(FreeLock, LockImpl<F>, Lock);
 
 template <class F>
-struct Weak : pro::facade_builder                               //
-              ::support_copy<pro::constraint_level::nontrivial> //
-              ::add_convention<FreeLock<F>, pro::proxy<F>()>    //
+struct Weak : pro::facade_builder                                  //
+              ::support_copy<pro::lifetime_requirement::supported> //
+              ::add_convention<FreeLock<F>, pro::proxy<F>()>       //
               ::build {};
 
 template <class F, class T>

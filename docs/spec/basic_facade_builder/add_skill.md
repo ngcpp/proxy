@@ -22,9 +22,9 @@ The implementation of `Skill` can combine other member alias templates defined i
 #include <proxy/proxy.h>
 
 template <class FB>
-using SharedSlim = typename FB                                //
-    ::template restrict_layout<sizeof(void*), alignof(void*)> //
-    ::template support_copy<pro::constraint_level::nothrow>   //
+using SharedSlim = typename FB                                  //
+    ::template restrict_layout<sizeof(void*), alignof(void*)>   //
+    ::template support_copy<pro::lifetime_requirement::nothrow> //
     ::template add_skill<pro::skills::as_weak>;
 
 struct SharedFormattable : pro::facade_builder              //

@@ -57,9 +57,9 @@ struct PolymorphicObject : PolymorphicObjectBase {
   T Value;
 };
 
-struct DefaultFacade : pro::facade_builder                               //
-                       ::support_copy<pro::constraint_level::nontrivial> //
-                       ::add_skill<pro::skills::slim>                    //
+struct DefaultFacade : pro::facade_builder                                  //
+                       ::support_copy<pro::lifetime_requirement::supported> //
+                       ::add_skill<pro::skills::slim>                       //
                        ::build {};
 
 void BM_SmallObjectCreationWithProxy(benchmark::State& state) {

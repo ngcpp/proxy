@@ -161,7 +161,7 @@ PRO_DEF_MEM_DISPATCH(MemArea, Area);
 struct Drawable : pro::facade_builder
     ::add_convention<MemDraw, void(std::ostream& output)>
     ::add_convention<MemArea, double() noexcept>
-    ::support_copy<pro::constraint_level::nontrivial>
+    ::support_copy<pro::lifetime_requirement::supported>
     ::build {};
 
 class Rectangle {
@@ -203,7 +203,7 @@ Here is a step-by-step explanation:
 - [`PRO_DEF_MEM_DISPATCH`](https://ngcpp.github.io/proxy/spec/PRO_DEF_MEM_DISPATCH)`(MemArea, Area)`: Defines a dispatch type `MemArea` for expressions of calling member function `Area`.
 - `struct Drawable : pro::facade_builder ... ::build {}`: Defines a facade type `Drawable`. Specifically,
   - [`add_convention`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/add_convention): Adds calling conventions to the build context.
-  - [`support_copy`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/support_copy)`<`[`pro::constraint_level`](https://ngcpp.github.io/proxy/spec/constraint_level)`::nontrivial>`: Specifies the underlying pointer type shall be copyable, which also makes the resulting `proxy` type copyable.
+  - [`support_copy`](https://ngcpp.github.io/proxy/spec/basic_facade_builder/support_copy)`<`[`pro::lifetime_requirement`](https://ngcpp.github.io/proxy/spec/lifetime_requirement)`::supported>`: Specifies the underlying pointer type shall be copyable, which also makes the resulting `proxy` type copyable.
 - `class Rectangle`: An implementation of `Drawable`.
 - Function `PrintDrawableToString`: Converts a `Drawable` into a `std::string`. Note that this is a function rather than a function template, which means it can generate [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) in a larger build system.
 - `pro::proxy<Drawable> p = pro::make_proxy<Drawable, Rectangle>(3, 5)`: Creates a `proxy<Drawable>` object containing a `Rectangle`.

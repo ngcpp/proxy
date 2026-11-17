@@ -9,9 +9,9 @@ A type `F` meets the *ProFacade* requirements of a type `P` and a type `MP`, whe
 | `typename F::reflection_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains any number of types `Rs`. Each type `R` in `Rs` shall meet the [*ProReflection* requirements](ProReflection.md) of `P`. |
 | `F::max_size`                                  | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type `std::size_t` that shall be greater than or equal to `sizeof(P)`. |
 | `F::max_align`                                 | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type `std::size_t` that shall be greater than or equal to `alignof(P)`. |
-| `F::copyability`                               | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required copyability of `P`. |
-| `F::relocatability`                            | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required relocatability of `P`. |
-| `F::destructibility`                           | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`constraint_level`](constraint_level.md) that defines the required destructibility of `P`. |
+| `F::copyability`                               | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`lifetime_requirement`](lifetime_requirement.md) that defines the required copyability of `P`. |
+| `F::relocatability`                            | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`lifetime_requirement`](lifetime_requirement.md) that defines the required relocatability of `P`. |
+| `F::destructibility`                           | A [core constant expression](https://en.cppreference.com/w/cpp/language/constant_expression) of type [`lifetime_requirement`](lifetime_requirement.md) that defines the required destructibility of `P`. |
 
 *Since 5.0.0*: let `Cs` be the conventions of `F` and of every super of `F`, reachable via `typename F::super_types` transitively. Each type `C` in `Cs` whose `typename C::overload_type` is a specialization of [`proxy_dependent_signature`](proxy_dependent_signature.md) shall also meet the [*ProConvention* requirements](ProConvention.md) of `P` with [`substituted-overload`](ProOverload.md)`<typename C::overload_type, F, MP>` in place of `typename C::overload_type`. Among the types in `Cs` sharing `is_direct` and `dispatch_type`, distinct `overload_type`s shall substitute to distinct overloads.
 
@@ -27,12 +27,12 @@ In other words, `P` either supports dereferencing or provides an `element_type`,
 
 Relocatability is defined as *move-construct an object and then destroy the original instance*. Specifically, the value of `F::relocatability` maps to the following requirements on `P`:
 
-| Value                          | Requirement on `P`                                           |
-| ------------------------------ | ------------------------------------------------------------ |
-| `constraint_level::none`       | None                                                         |
-| `constraint_level::nontrivial` | `(std::is_move_constructible_v<P> && std::is_destructible_v<P>) || `[`is_bitwise_trivially_relocatable_v<P>`](is_bitwise_trivially_relocatable.md) |
-| `constraint_level::nothrow`    | `(std::is_nothrow_move_constructible_v<P> && std::is_nothrow_destructible_v<P>) || `[`is_bitwise_trivially_relocatable_v<P>`](is_bitwise_trivially_relocatable.md) |
-| `constraint_level::trivial`    | [`is_bitwise_trivially_relocatable_v<P>`](is_bitwise_trivially_relocatable.md) |
+| Value                             | Requirement on `P`                                           |
+| --------------------------------- | ------------------------------------------------------------ |
+| `lifetime_requirement::none`      | None                                                         |
+| `lifetime_requirement::supported` | `(std::is_move_constructible_v<P> && std::is_destructible_v<P>) || `[`is_bitwise_trivially_relocatable_v<P>`](is_bitwise_trivially_relocatable.md) |
+| `lifetime_requirement::nothrow`   | `(std::is_nothrow_move_constructible_v<P> && std::is_nothrow_destructible_v<P>) || `[`is_bitwise_trivially_relocatable_v<P>`](is_bitwise_trivially_relocatable.md) |
+| `lifetime_requirement::trivial`   | [`is_bitwise_trivially_relocatable_v<P>`](is_bitwise_trivially_relocatable.md) |
 
 ## See Also
 

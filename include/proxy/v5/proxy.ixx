@@ -33,6 +33,7 @@ using v5::inline_metadata;
 using v5::inplace_proxiable_target;
 using v5::is_bitwise_trivially_relocatable;
 using v5::is_bitwise_trivially_relocatable_v;
+using v5::lifetime_requirement;
 using v5::make_proxy_inplace;
 using v5::make_proxy_view;
 using v5::member_access;

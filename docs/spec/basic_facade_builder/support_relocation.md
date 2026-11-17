@@ -1,16 +1,16 @@
 # `basic_facade_builder::support_relocation`
 
 ```cpp
-template <constraint_level CL>
+template <lifetime_requirement LR>
     requires(/* see below */)
 using support_relocation = basic_facade_builder</* see below */>;
 ```
 
-The alias template `support_relocation` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds relocatability support to the template parameters. After the operation, `Relocatability` becomes `std::max(Relocatability, CL)`. The expression inside `requires` is equivalent to `CL` is a defined enumerator of `constraint_level`.
+The alias template `support_relocation` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds relocatability support to the template parameters. After the operation, `Relocatability` becomes `std::max(Relocatability, LR)`. The expression inside `requires` is equivalent to `LR` is a defined enumerator of `lifetime_requirement`.
 
 ## Notes
 
-If no relocatability support is applied before specifying [`build`](build.md), the default value of `build::relocatability` is `pro::constraint_level::trivial`. Please refer to [the *ProFacade* requirements](../ProFacade.md) for more details.
+If no relocatability support is applied before specifying [`build`](build.md), the default value of `build::relocatability` is `pro::lifetime_requirement::trivial`. Please refer to [the *ProFacade* requirements](../ProFacade.md) for more details.
 
 ## Example
 
@@ -21,10 +21,10 @@ If no relocatability support is applied before specifying [`build`](build.md), t
 
 struct Movable : pro::facade_builder::build {};
 
-struct Trivial : pro::facade_builder                                   //
-                 ::support_copy<pro::constraint_level::trivial>        //
-                 ::support_relocation<pro::constraint_level::trivial>  //
-                 ::support_destruction<pro::constraint_level::trivial> //
+struct Trivial : pro::facade_builder                                       //
+                 ::support_copy<pro::lifetime_requirement::trivial>        //
+                 ::support_relocation<pro::lifetime_requirement::trivial>  //
+                 ::support_destruction<pro::lifetime_requirement::trivial> //
                  ::build {};
 
 int main() {
