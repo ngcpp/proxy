@@ -23,7 +23,7 @@ concept inplace_proxiable_target = proxiable<detail::inplace_ptr<T>, F, MP>;
 template <class T, class F, class MP = compact_metadata>
 concept proxiable_target =
     proxiable<detail::observer_ptr<T&, const T&, T&&, const T&&>,
-              observer_facade<F>, MP>;
+              view_facade<F>, MP>;
 
 template <class T>
   requires(is_bitwise_trivially_relocatable_v<T>)
