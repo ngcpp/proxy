@@ -59,9 +59,9 @@ struct TypeNameAware {
       std::tuple<TypeNameReflection<true>, TypeNameReflection<false>>;
   static constexpr std::size_t max_size = sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::trivial;
-  static constexpr auto relocatability = pro::constraint_level::trivial;
-  static constexpr auto destructibility = pro::constraint_level::trivial;
+  static constexpr auto copyability = pro::lifetime_requirement::trivial;
+  static constexpr auto relocatability = pro::lifetime_requirement::trivial;
+  static constexpr auto destructibility = pro::lifetime_requirement::trivial;
 };
 
 int main() {

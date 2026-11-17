@@ -7,30 +7,30 @@ proxy(std::nullptr_t) noexcept;
 
 // (2)
 proxy(const proxy&) noexcept requires(F::copyability ==
-    constraint_level::trivial) = default;
+    lifetime_requirement::trivial) = default;
 proxy(const proxy& rhs)
-    noexcept(F::copyability == constraint_level::nothrow)
-    requires(F::copyability == constraint_level::nontrivial ||
-        F::copyability == constraint_level::nothrow);
+    noexcept(F::copyability == lifetime_requirement::nothrow)
+    requires(F::copyability == lifetime_requirement::supported ||
+        F::copyability == lifetime_requirement::nothrow);
 
 // (3)
 proxy(proxy&& rhs)
-    noexcept(F::relocatability >= constraint_level::nothrow)
-    requires(F::relocatability >= constraint_level::nontrivial &&
-        F::copyability != constraint_level::trivial);
+    noexcept(F::relocatability >= lifetime_requirement::nothrow)
+    requires(F::relocatability >= lifetime_requirement::supported &&
+        F::copyability != lifetime_requirement::trivial);
 
 // (4) (since 5.0.0)
 template <facade F2>
 proxy(const proxy<F2, MP>& rhs)
-    noexcept(F::copyability >= constraint_level::nothrow)
-    requires(F::copyability >= constraint_level::nontrivial);
+    noexcept(F::copyability >= lifetime_requirement::nothrow)
+    requires(F::copyability >= lifetime_requirement::supported);
 
 // (5) (since 5.0.0)
 template <facade F2>
 proxy(proxy<F2, MP>&& rhs)
-    noexcept(F::relocatability >= constraint_level::nothrow)
-    requires(F::relocatability >= constraint_level::nontrivial &&
-        F::copyability != constraint_level::trivial);
+    noexcept(F::relocatability >= lifetime_requirement::nothrow)
+    requires(F::relocatability >= lifetime_requirement::supported &&
+        F::copyability != lifetime_requirement::trivial);
 
 // (6)
 template <class P>
@@ -55,10 +55,10 @@ explicit proxy(std::in_place_type_t<P>, std::initializer_list<U> il,
 Creates a new `proxy`.
 
 - `(1)` Default constructor and the constructor taking `nullptr` construct a `proxy` that does not contain a value.
-- `(2)` Copy constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. When `F::copyability == constraint_level::trivial`, the copy constructor is defaulted. It is trivial only if the metadata storage and accessor base classes also permit trivial copy construction.
-- `(3)` Move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` is in a valid but unspecified state after move construction. As per the `requires` clause, the move constructor does not participate in overload resolution when `F::copyability == constraint_level::trivial`, so that a move construction falls back to the defaulted copy constructor.
+- `(2)` Copy constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. When `F::copyability == lifetime_requirement::trivial`, the copy constructor is defaulted. It is trivial only if the metadata storage and accessor base classes also permit trivial copy construction.
+- `(3)` Move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` is in a valid but unspecified state after move construction. As per the `requires` clause, the move constructor does not participate in overload resolution when `F::copyability == lifetime_requirement::trivial`, so that a move construction falls back to the defaulted copy constructor.
 - `(4)` Converting copy constructor constructs a `proxy` whose contained value is a copy of that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively. `rhs` has the metadata policy of `*this`, because the metadata type of a `proxy` depends on its metadata policy (see [*ProxyMetadataPolicy* requirements](../ProxyMetadataPolicy.md)).
-- `(5)` Converting move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` does not contain a value after the conversion. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively. As per the `requires` clause, the converting move constructor does not participate in overload resolution when `F::copyability == constraint_level::trivial`, so that a conversion from an rvalue falls back to `(4)`.
+- `(5)` Converting move constructor constructs a `proxy` whose contained value is that of `rhs` if `rhs` contains a value, or otherwise, constructs a `proxy` that does not contain a value. `rhs` does not contain a value after the conversion. Participates in overload resolution only if `F2` is not `F` and `F` is a super of `F2`, reachable via `typename F2::super_types` transitively. As per the `requires` clause, the converting move constructor does not participate in overload resolution when `F::copyability == lifetime_requirement::trivial`, so that a conversion from an rvalue falls back to `(4)`.
 - `(6)` Let `VP` be `std::decay_t<P>`. Constructs a `proxy` whose contained value is of type `VP`, direct-non-list-initialized with `std::forward<P>(ptr)`. Participates in overload resolution only if `VP` is not a specialization of `proxy` and is a pointer-like type eligible for `proxy` (see [*ProxyFacade* requirements](../ProxyFacade.md)).
 - `(7)` Constructs a `proxy` whose contained value is of type `P`, direct-non-list-initialized with `std::forward<Args>(args)...`. Participates in overload resolution only if `P` is a pointer-like type eligible for `proxy`.
 - `(8)` Constructs a `proxy` whose contained value is of type `P`, direct-non-list-initialized with `il, std::forward<Args>(args)...`. Participates in overload resolution only if `P` is a pointer-like type eligible for `proxy`.
@@ -109,7 +109,7 @@ struct BasicContainer
     : pro::facade_builder                                       //
       ::add_convention<MemSize, std::size_t() const & noexcept> //
       ::add_convention<MemClear, void() noexcept>               //
-      ::support_copy<pro::constraint_level::nontrivial>         //
+      ::support_copy<pro::lifetime_requirement::supported>      //
       ::build {};
 
 int main() {

@@ -66,9 +66,11 @@ namespace proxy_traits_tests_detail {
 struct DefaultFacade : pro::facade_builder::build {};
 static_assert(
     std::is_same_v<pro::proxy<DefaultFacade>::facade_type, DefaultFacade>);
-static_assert(DefaultFacade::copyability == pro::constraint_level::none);
-static_assert(DefaultFacade::relocatability == pro::constraint_level::trivial);
-static_assert(DefaultFacade::destructibility == pro::constraint_level::nothrow);
+static_assert(DefaultFacade::copyability == pro::lifetime_requirement::none);
+static_assert(DefaultFacade::relocatability ==
+              pro::lifetime_requirement::trivial);
+static_assert(DefaultFacade::destructibility ==
+              pro::lifetime_requirement::nothrow);
 static_assert(DefaultFacade::max_size >= 2 * sizeof(void*));
 static_assert(DefaultFacade::max_align >= sizeof(void*));
 static_assert(std::is_same_v<DefaultFacade::convention_types, std::tuple<>>);
@@ -138,8 +140,8 @@ static_assert(std::is_nothrow_constructible_v<pro::proxy<DefaultFacade>,
 static_assert(
     std::is_nothrow_assignable_v<pro::proxy<DefaultFacade>, MockFunctionPtr>);
 
-struct CopyableFacade : pro::facade_builder                               //
-                        ::support_copy<pro::constraint_level::nontrivial> //
+struct CopyableFacade : pro::facade_builder                                  //
+                        ::support_copy<pro::lifetime_requirement::supported> //
                         ::build {};
 static_assert(std::is_copy_constructible_v<pro::proxy<CopyableFacade>>);
 static_assert(
@@ -180,9 +182,9 @@ static_assert(
 static_assert(sizeof(pro::proxy<CopyableFacade>) == 3 * sizeof(void*));
 
 struct CopyableSmallFacade
-    : pro::facade_builder                               //
-      ::add_skill<pro::skills::slim>                    //
-      ::support_copy<pro::constraint_level::nontrivial> //
+    : pro::facade_builder                                  //
+      ::add_skill<pro::skills::slim>                       //
+      ::support_copy<pro::lifetime_requirement::supported> //
       ::build {};
 static_assert(!pro::proxiable<MockMovablePtr, CopyableSmallFacade>);
 static_assert(!pro::proxiable<MockCopyablePtr, CopyableSmallFacade>);
@@ -211,12 +213,13 @@ static_assert(
     std::is_assignable_v<pro::proxy<CopyableSmallFacade>, MockFunctionPtr>);
 static_assert(sizeof(pro::proxy<CopyableSmallFacade>) == 2 * sizeof(void*));
 
-struct TrivialFacade : pro::facade_builder                                   //
-                       ::restrict_layout<sizeof(void*), alignof(void*)>      //
-                       ::support_copy<pro::constraint_level::trivial>        //
-                       ::support_relocation<pro::constraint_level::trivial>  //
-                       ::support_destruction<pro::constraint_level::trivial> //
-                       ::build {};
+struct TrivialFacade
+    : pro::facade_builder                                       //
+      ::restrict_layout<sizeof(void*), alignof(void*)>          //
+      ::support_copy<pro::lifetime_requirement::trivial>        //
+      ::support_relocation<pro::lifetime_requirement::trivial>  //
+      ::support_destruction<pro::lifetime_requirement::trivial> //
+      ::build {};
 #ifdef PRO5D_HAS_PAC
 static_assert(std::is_nothrow_copy_constructible_v<pro::proxy<TrivialFacade>>);
 static_assert(std::is_nothrow_copy_assignable_v<pro::proxy<TrivialFacade>>);
@@ -314,9 +317,9 @@ struct FacadeWithTupleLikeConventions {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(pro::facade<FacadeWithTupleLikeConventions>);
 
@@ -325,9 +328,9 @@ struct BadFacade_MissingConventionTypes {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_MissingConventionTypes>);
 
@@ -337,9 +340,9 @@ struct BadFacade_BadConventionTypes {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_BadConventionTypes>);
 
@@ -349,9 +352,9 @@ struct FacadeWithSuperTypes {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(pro::facade<FacadeWithSuperTypes>);
 
@@ -362,9 +365,9 @@ struct BadFacade_SuperWithSmallerLayout {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 4 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_SuperWithSmallerLayout>);
 
@@ -374,9 +377,9 @@ struct BadFacade_SuperWithStrongerConstraint {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nontrivial;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::supported;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_SuperWithStrongerConstraint>);
 
@@ -385,9 +388,9 @@ struct BadFacade_MissingSuperTypes {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_MissingSuperTypes>);
 
@@ -397,9 +400,9 @@ struct BadFacade_BadSuperTypes {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_BadSuperTypes>);
 
@@ -410,9 +413,9 @@ struct BadFacade_BadSuperType {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_BadSuperType>);
 
@@ -432,64 +435,74 @@ struct BadFacade_BadConstraints_UnexpectedType {
 static_assert(!pro::facade<BadFacade_BadConstraints_UnexpectedType>);
 
 // Well-formed facade_impl specialization
-static_assert(pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
-                  pro::constraint_level::none, pro::constraint_level::trivial,
-                  pro::constraint_level::nothrow>>);
+static_assert(
+    pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+        pro::lifetime_requirement::none, pro::lifetime_requirement::trivial,
+        pro::lifetime_requirement::nothrow>>);
 
 // Bad size (max_size should be positive)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 0, 4,
-                  pro::constraint_level::none, pro::constraint_level::trivial,
-                  pro::constraint_level::nothrow>>);
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 0, 4,
+        pro::lifetime_requirement::none, pro::lifetime_requirement::trivial,
+        pro::lifetime_requirement::nothrow>>);
 
 // Bad size (max_size should be a multiple of max_align)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 10, 4,
-                  pro::constraint_level::none, pro::constraint_level::trivial,
-                  pro::constraint_level::nothrow>>);
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 10, 4,
+        pro::lifetime_requirement::none, pro::lifetime_requirement::trivial,
+        pro::lifetime_requirement::nothrow>>);
 
 // Bad alignment (max_align should be a power of 2)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 6, 6,
-                  pro::constraint_level::none, pro::constraint_level::trivial,
-                  pro::constraint_level::nothrow>>);
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 6, 6,
+        pro::lifetime_requirement::none, pro::lifetime_requirement::trivial,
+        pro::lifetime_requirement::nothrow>>);
 
-// Bad copyability (less than constraint_level::none)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
-                  (pro::constraint_level)-1, pro::constraint_level::trivial,
-                  pro::constraint_level::nothrow>>);
+// Bad copyability (less than lifetime_requirement::none)
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+        (pro::lifetime_requirement)-1, pro::lifetime_requirement::trivial,
+        pro::lifetime_requirement::nothrow>>);
 
-// Bad copyability (greater than constraint_level::trivial)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
-                  (pro::constraint_level)100, pro::constraint_level::trivial,
-                  pro::constraint_level::nothrow>>);
+// Bad copyability (greater than lifetime_requirement::trivial)
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+        (pro::lifetime_requirement)100, pro::lifetime_requirement::trivial,
+        pro::lifetime_requirement::nothrow>>);
 
-// Bad relocatability (less than constraint_level::none)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
-                  pro::constraint_level::none, (pro::constraint_level)-1,
-                  pro::constraint_level::nothrow>>);
+// Bad relocatability (less than lifetime_requirement::none)
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+        pro::lifetime_requirement::none, (pro::lifetime_requirement)-1,
+        pro::lifetime_requirement::nothrow>>);
 
-// Bad relocatability (greater than constraint_level::trivial)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
-                  pro::constraint_level::none, (pro::constraint_level)100,
-                  pro::constraint_level::nothrow>>);
+// Bad relocatability (greater than lifetime_requirement::trivial)
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+        pro::lifetime_requirement::none, (pro::lifetime_requirement)100,
+        pro::lifetime_requirement::nothrow>>);
 
-// Bad destructibility (less than constraint_level::none)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
-                  pro::constraint_level::none, pro::constraint_level::trivial,
-                  (pro::constraint_level)-1>>);
+// Bad destructibility (less than lifetime_requirement::none)
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+        pro::lifetime_requirement::none, pro::lifetime_requirement::trivial,
+        (pro::lifetime_requirement)-1>>);
 
-// Bad destructibility (greater than constraint_level::trivial)
-static_assert(!pro::facade<pro::detail::facade_impl<
-                  std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
-                  pro::constraint_level::none, pro::constraint_level::trivial,
-                  (pro::constraint_level)100>>);
+// Bad destructibility (greater than lifetime_requirement::trivial)
+static_assert(
+    !pro::facade<pro::detail::facade_impl<
+        std::tuple<>, std::tuple<>, std::tuple<>, 8, 4,
+        pro::lifetime_requirement::none, pro::lifetime_requirement::trivial,
+        (pro::lifetime_requirement)100>>);
 
 struct BadFacade_BadConstraints_NotConstant {
   using super_types = std::tuple<>;
@@ -497,9 +510,9 @@ struct BadFacade_BadConstraints_NotConstant {
   using reflection_types = std::tuple<>;
   static const std::size_t max_size;
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_BadConstraints_NotConstant>);
 const std::size_t BadFacade_BadConstraints_NotConstant::max_size =
@@ -509,9 +522,9 @@ struct BadFacade_MissingReflectionTypes {
   using convention_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_MissingReflectionTypes>);
 
@@ -524,9 +537,9 @@ struct BadFacade_BadReflectionType {
   using reflection_types = std::tuple<BadReflection>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::nothrow;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(!pro::facade<BadFacade_BadReflectionType>);
 
@@ -545,9 +558,9 @@ struct FacadeWithoutAccessTypes {
   using reflection_types = std::tuple<SmallPtrReflection>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::trivial;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::trivial;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 static_assert(pro::proxiable<MockTrivialPtr, FacadeWithoutAccessTypes>);
 static_assert(sizeof(pro::proxy<FacadeWithoutAccessTypes>) ==
@@ -636,9 +649,9 @@ struct AnyArgumentFacade {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::trivial;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::trivial;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 template <class A, class... Os>
 using AnyArgumentSelf =
@@ -751,35 +764,35 @@ static_assert(IsFacadeBuilderWellFormedWithGivenLayout<6u, 1u>);
 static_assert(!IsFacadeBuilderWellFormedWithGivenLayout<6u, 3u>);
 static_assert(!IsFacadeBuilderWellFormedWithGivenLayout<1u, 2u>);
 
-template <pro::constraint_level CL>
+template <pro::lifetime_requirement LR>
 concept IsFacadeBuilderWellFormedWithGivenCopyability =
-    requires { typename pro::facade_builder::support_copy<CL>; };
-static_assert(
-    IsFacadeBuilderWellFormedWithGivenCopyability<pro::constraint_level::none>);
-static_assert(
-    !IsFacadeBuilderWellFormedWithGivenCopyability<(pro::constraint_level)-1>);
-static_assert(
-    !IsFacadeBuilderWellFormedWithGivenCopyability<(pro::constraint_level)100>);
+    requires { typename pro::facade_builder::support_copy<LR>; };
+static_assert(IsFacadeBuilderWellFormedWithGivenCopyability<
+              pro::lifetime_requirement::none>);
+static_assert(!IsFacadeBuilderWellFormedWithGivenCopyability<
+              (pro::lifetime_requirement)-1>);
+static_assert(!IsFacadeBuilderWellFormedWithGivenCopyability<
+              (pro::lifetime_requirement)100>);
 
-template <pro::constraint_level CL>
+template <pro::lifetime_requirement LR>
 concept IsFacadeBuilderWellFormedWithGivenRelocatability =
-    requires { typename pro::facade_builder::support_relocation<CL>; };
+    requires { typename pro::facade_builder::support_relocation<LR>; };
 static_assert(IsFacadeBuilderWellFormedWithGivenRelocatability<
-              pro::constraint_level::none>);
+              pro::lifetime_requirement::none>);
 static_assert(!IsFacadeBuilderWellFormedWithGivenRelocatability<
-              (pro::constraint_level)-1>);
+              (pro::lifetime_requirement)-1>);
 static_assert(!IsFacadeBuilderWellFormedWithGivenRelocatability<
-              (pro::constraint_level)100>);
+              (pro::lifetime_requirement)100>);
 
-template <pro::constraint_level CL>
+template <pro::lifetime_requirement LR>
 concept IsFacadeBuilderWellFormedWithGivenDestructibility =
-    requires { typename pro::facade_builder::support_destruction<CL>; };
+    requires { typename pro::facade_builder::support_destruction<LR>; };
 static_assert(IsFacadeBuilderWellFormedWithGivenDestructibility<
-              pro::constraint_level::none>);
+              pro::lifetime_requirement::none>);
 static_assert(!IsFacadeBuilderWellFormedWithGivenDestructibility<
-              (pro::constraint_level)-1>);
+              (pro::lifetime_requirement)-1>);
 static_assert(!IsFacadeBuilderWellFormedWithGivenDestructibility<
-              (pro::constraint_level)100>);
+              (pro::lifetime_requirement)100>);
 
 static_assert(!std::is_default_constructible_v<
               pro::proxy_indirect_accessor<DefaultFacade>>);

@@ -1,16 +1,16 @@
 # `basic_facade_builder::support_copy`
 
 ```cpp
-template <constraint_level CL>
+template <lifetime_requirement LR>
     requires(/* see below */)
 using support_copy = basic_facade_builder</* see below */>;
 ```
 
-The alias template `support_copy` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds copyability support to the template parameters. After the operation, `Copyability` becomes `std::max(Copyability, CL)`. The expression inside `requires` is equivalent to `CL` is a defined enumerator of `constraint_level`.
+The alias template `support_copy` of `basic_facade_builder<Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds copyability support to the template parameters. After the operation, `Copyability` becomes `std::max(Copyability, LR)`. The expression inside `requires` is equivalent to `LR` is a defined enumerator of `lifetime_requirement`.
 
 ## Notes
 
-If no copyability support is applied before specifying [`build`](build.md), the default value of `build::copyability` is `pro::constraint_level::none`.
+If no copyability support is applied before specifying [`build`](build.md), the default value of `build::copyability` is `pro::lifetime_requirement::none`.
 
 ## Example
 
@@ -21,8 +21,8 @@ If no copyability support is applied before specifying [`build`](build.md), the 
 
 struct Movable : pro::facade_builder::build {};
 
-struct Copyable : pro::facade_builder                               //
-                  ::support_copy<pro::constraint_level::nontrivial> //
+struct Copyable : pro::facade_builder                                  //
+                  ::support_copy<pro::lifetime_requirement::supported> //
                   ::build {};
 
 int main() {

@@ -1,4 +1,4 @@
-# Alias template `proxy_view`<br />Class template `observer_facade`
+# Alias template `proxy_view`<br />Class template `view_facade`
 
 > Header: `proxy.h`  
 > Module: `proxy`  
@@ -7,33 +7,35 @@
 
 ```cpp
 template <facade F>
-struct observer_facade;
+struct view_facade;
 
 template <facade F, class MP = compact_metadata>
-using proxy_view = proxy<observer_facade<F>, MP>;
+using proxy_view = proxy<view_facade<F>, MP>;
 ```
 
 `proxy_view<F, MP>` is a non-owning view of an object that models [`proxiable_target<T, F, MP>`](proxiable_target.md). It behaves like a `proxy<F, MP>` except that it never owns the lifetime of the underlying object. The contained pointer is trivially copyable and trivially relocatable. The corresponding properties of the view itself also depend on its metadata storage and accessor base classes.
 
-`observer_facade<F>` adapts an existing [facade](facade.md) `F` for this non-owning use. The adaptation preserves only those parts of `F` that remain semantically valid when the storage is reduced to a single pointer. Each super of `F` is adapted in the same way, so that view-ness is preserved when converting to a `proxy` of a super: a `proxy_view<F>` converts to a `proxy_view<G>` for every super `G` of `F`.
+`view_facade<F>` adapts an existing [facade](facade.md) `F` for this non-owning use. The adaptation preserves only those parts of `F` that remain semantically valid when the storage is reduced to a single pointer. Each super of `F` is adapted in the same way, so that view-ness is preserved when converting to a `proxy` of a super: a `proxy_view<F>` converts to a `proxy_view<G>` for every super `G` of `F`.
 
-## Member Types of `observer_facade`
+*Since 5.0.0*: `view_facade` replaces `observer_facade`.
+
+## Member Types of `view_facade`
 
 | Name                               | Description                                                  |
 | ---------------------------------- | ------------------------------------------------------------ |
-| `super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type transformed from `typename F::super_types`. Specifically, for each super `G` in `typename F::super_types`, `observer_facade<G>` is included. |
+| `super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type transformed from `typename F::super_types`. Specifically, for each super `G` in `typename F::super_types`, `view_facade<G>` is included. |
 | `convention_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type transformed from `typename F::convention_types`. Specifically, for each convention `C` in `typename F::convention_types`, `C` is included when `C::is_direct` is `false`, or otherwise discarded. |
 | `reflection_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type transformed from `typename F::reflection_types`. Specifically, for each reflection type `R` in `typename F::reflection_types`, `R` is included when `R::is_direct` is `false`, or otherwise discarded. |
 
-## Member Constants of `observer_facade`
+## Member Constants of `view_facade`
 
-| Name                                   | Definition                  |
-| -------------------------------------- | --------------------------- |
-| `max_size` [static] [constexpr]        | `sizeof(void*)`             |
-| `max_align` [static] [constexpr]       | `alignof(void*)`            |
-| `copyability` [static] [constexpr]     | `constraint_level::trivial` |
-| `relocatability` [static] [constexpr]  | `constraint_level::trivial` |
-| `destructibility` [static] [constexpr] | `constraint_level::trivial` |
+| Name                                   | Definition                      |
+| -------------------------------------- | ------------------------------- |
+| `max_size` [static] [constexpr]        | `sizeof(void*)`                 |
+| `max_align` [static] [constexpr]       | `alignof(void*)`                |
+| `copyability` [static] [constexpr]     | `lifetime_requirement::trivial` |
+| `relocatability` [static] [constexpr]  | `lifetime_requirement::trivial` |
+| `destructibility` [static] [constexpr] | `lifetime_requirement::trivial` |
 
 ## Example
 

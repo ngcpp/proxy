@@ -41,9 +41,9 @@ A `proxy` contains storage for the pointer and for the metadata representation c
 
 PRO_DEF_FREE_DISPATCH(FreeToString, std::to_string, ToString);
 
-struct Stringable : pro::facade_builder                                 //
-                    ::add_convention<FreeToString, std::string() const> //
-                    ::support_copy<pro::constraint_level::nontrivial>   //
+struct Stringable : pro::facade_builder                                  //
+                    ::add_convention<FreeToString, std::string() const>  //
+                    ::support_copy<pro::lifetime_requirement::supported> //
                     ::build {};
 
 int main() {

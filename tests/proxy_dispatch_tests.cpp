@@ -75,9 +75,9 @@ struct IndependentAccessFacade {
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
-  static constexpr auto copyability = pro::constraint_level::none;
-  static constexpr auto relocatability = pro::constraint_level::trivial;
-  static constexpr auto destructibility = pro::constraint_level::nothrow;
+  static constexpr auto copyability = pro::lifetime_requirement::none;
+  static constexpr auto relocatability = pro::lifetime_requirement::trivial;
+  static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
 
 } // namespace proxy_dispatch_tests_detail
@@ -875,9 +875,9 @@ TEST(ProxyDispatchTests, TestNamedDispatchWithIndependentAccess) {
 
 TEST(ProxyDispatchTests, TestSuperConversion) {
 #ifdef PRO5D_HAS_FORMAT
-  struct Base : pro::facade_builder                            //
-                ::add_skill<pro::skills::format>               //
-                ::support_copy<pro::constraint_level::nothrow> //
+  struct Base : pro::facade_builder                                //
+                ::add_skill<pro::skills::format>                   //
+                ::support_copy<pro::lifetime_requirement::nothrow> //
                 ::build {};
   struct TestFacade : pro::facade_builder //
                       ::add_facade<Base>  //

@@ -46,10 +46,10 @@ Throws any exception thrown by allocation and the constructor of `T`.
 
 #include <proxy/proxy.h>
 
-struct RttiAware : pro::facade_builder                            //
-                   ::support_copy<pro::constraint_level::nothrow> //
-                   ::add_skill<pro::skills::rtti>                 //
-                   ::add_skill<pro::skills::as_weak>              //
+struct RttiAware : pro::facade_builder                                //
+                   ::support_copy<pro::lifetime_requirement::nothrow> //
+                   ::add_skill<pro::skills::rtti>                     //
+                   ::add_skill<pro::skills::as_weak>                  //
                    ::build {};
 
 int main() {

@@ -47,7 +47,16 @@ struct proxy_meta;
 
 } // namespace detail
 
-enum class constraint_level { none, nontrivial, nothrow, trivial };
+enum class lifetime_requirement {
+  none,
+  supported,
+  nothrow,
+  trivial,
+  nontrivial [[deprecated("Use lifetime_requirement::supported instead")]] =
+      supported
+};
+using constraint_level [[deprecated("Use lifetime_requirement instead")]] =
+    lifetime_requirement;
 
 template <template <class, class> class O>
 struct proxy_dependent_signature {
@@ -187,56 +196,60 @@ struct add_qualifier_traits<T, qualifier_type::const_rv>
 template <class T, qualifier_type Q>
 using add_qualifier_t = add_qualifier_traits<T, Q>::type;
 
-template <class T, constraint_level CL>
+template <class T, lifetime_requirement LR>
 struct copyability_traits : inapplicable_traits {};
 template <class T>
-struct copyability_traits<T, constraint_level::none> : applicable_traits {};
+struct copyability_traits<T, lifetime_requirement::none> : applicable_traits {};
 template <class T>
   requires(std::is_copy_constructible_v<T>)
-struct copyability_traits<T, constraint_level::nontrivial> : applicable_traits {
-};
+struct copyability_traits<T, lifetime_requirement::supported>
+    : applicable_traits {};
 template <class T>
   requires(std::is_nothrow_copy_constructible_v<T>)
-struct copyability_traits<T, constraint_level::nothrow> : applicable_traits {};
+struct copyability_traits<T, lifetime_requirement::nothrow>
+    : applicable_traits {};
 template <class T>
   requires(std::is_trivially_copy_constructible_v<T>)
-struct copyability_traits<T, constraint_level::trivial> : applicable_traits {};
+struct copyability_traits<T, lifetime_requirement::trivial>
+    : applicable_traits {};
 
-template <class T, constraint_level CL>
+template <class T, lifetime_requirement LR>
 struct relocatability_traits : inapplicable_traits {};
 template <class T>
-struct relocatability_traits<T, constraint_level::none> : applicable_traits {};
+struct relocatability_traits<T, lifetime_requirement::none>
+    : applicable_traits {};
 template <class T>
   requires((std::is_move_constructible_v<T> && std::is_destructible_v<T>) ||
            is_bitwise_trivially_relocatable_v<T>)
-struct relocatability_traits<T, constraint_level::nontrivial>
+struct relocatability_traits<T, lifetime_requirement::supported>
     : applicable_traits {};
 template <class T>
   requires((std::is_nothrow_move_constructible_v<T> &&
             std::is_nothrow_destructible_v<T>) ||
            is_bitwise_trivially_relocatable_v<T>)
-struct relocatability_traits<T, constraint_level::nothrow> : applicable_traits {
-};
+struct relocatability_traits<T, lifetime_requirement::nothrow>
+    : applicable_traits {};
 template <class T>
   requires(is_bitwise_trivially_relocatable_v<T>)
-struct relocatability_traits<T, constraint_level::trivial> : applicable_traits {
-};
+struct relocatability_traits<T, lifetime_requirement::trivial>
+    : applicable_traits {};
 
-template <class T, constraint_level CL>
+template <class T, lifetime_requirement LR>
 struct destructibility_traits : inapplicable_traits {};
 template <class T>
-struct destructibility_traits<T, constraint_level::none> : applicable_traits {};
+struct destructibility_traits<T, lifetime_requirement::none>
+    : applicable_traits {};
 template <class T>
   requires(std::is_destructible_v<T>)
-struct destructibility_traits<T, constraint_level::nontrivial>
+struct destructibility_traits<T, lifetime_requirement::supported>
     : applicable_traits {};
 template <class T>
   requires(std::is_nothrow_destructible_v<T>)
-struct destructibility_traits<T, constraint_level::nothrow>
+struct destructibility_traits<T, lifetime_requirement::nothrow>
     : applicable_traits {};
 template <class T>
   requires(std::is_trivially_destructible_v<T>)
-struct destructibility_traits<T, constraint_level::trivial>
+struct destructibility_traits<T, lifetime_requirement::trivial>
     : applicable_traits {};
 
 template <class F, class MP, qualifier_type Q>
@@ -542,16 +555,16 @@ struct copy_dispatch {
 struct destroy_dispatch {
   PRO5D_STATIC_CALL(void, auto&&) noexcept {}
 };
-template <class MP, class D, class ONE, class OE, constraint_level C>
+template <class MP, class D, class ONE, class OE, lifetime_requirement LR>
 struct lifetime_meta_traits : std::type_identity<void> {};
 template <class MP, class D, class ONE, class OE>
-struct lifetime_meta_traits<MP, D, ONE, OE, constraint_level::nothrow>
+struct lifetime_meta_traits<MP, D, ONE, OE, lifetime_requirement::nothrow>
     : std::type_identity<invocation_meta<MP, true, D, ONE>> {};
 template <class MP, class D, class ONE, class OE>
-struct lifetime_meta_traits<MP, D, ONE, OE, constraint_level::nontrivial>
+struct lifetime_meta_traits<MP, D, ONE, OE, lifetime_requirement::supported>
     : std::type_identity<invocation_meta<MP, true, D, OE>> {};
-template <class MP, class D, class ONE, class OE, constraint_level C>
-using lifetime_meta_t = lifetime_meta_traits<MP, D, ONE, OE, C>::type;
+template <class MP, class D, class ONE, class OE, lifetime_requirement LR>
+using lifetime_meta_t = lifetime_meta_traits<MP, D, ONE, OE, LR>::type;
 
 template <class... As>
 struct PRO5D_ENFORCE_EBO composite_accessor : As... {};
@@ -752,17 +765,17 @@ consteval void diagnose_proxiable_align_too_large() {
   static_assert(ActualAlign <= MaxAlign,
                 "not proxiable due to alignment too large");
 }
-template <class P, class F, constraint_level RequiredCopyability>
+template <class P, class F, lifetime_requirement RequiredCopyability>
 consteval void diagnose_proxiable_insufficient_copyability() {
   static_assert(copyability_traits<P, RequiredCopyability>::applicable,
                 "not proxiable due to insufficient copyability");
 }
-template <class P, class F, constraint_level RequiredRelocatability>
+template <class P, class F, lifetime_requirement RequiredRelocatability>
 consteval void diagnose_proxiable_insufficient_relocatability() {
   static_assert(relocatability_traits<P, RequiredRelocatability>::applicable,
                 "not proxiable due to insufficient relocatability");
 }
-template <class P, class F, constraint_level RequiredDestructibility>
+template <class P, class F, lifetime_requirement RequiredDestructibility>
 consteval void diagnose_proxiable_insufficient_destructibility() {
   static_assert(destructibility_traits<P, RequiredDestructibility>::applicable,
                 "not proxiable due to insufficient destructibility");
@@ -782,24 +795,26 @@ consteval void diagnose_proxiable_required_reflection_not_implemented() {
 consteval bool is_layout_well_formed(std::size_t size, std::size_t align) {
   return size > 0u && std::has_single_bit(align) && size % align == 0u;
 }
-consteval bool is_cl_well_formed(constraint_level cl) {
-  return cl >= constraint_level::none && cl <= constraint_level::trivial;
+consteval bool is_lr_well_formed(lifetime_requirement lr) {
+  return lr >= lifetime_requirement::none &&
+         lr <= lifetime_requirement::trivial;
 }
 template <class F>
 consteval bool is_facade_constraints_well_formed() {
   if constexpr (requires {
                   typename static_prop_probe<std::size_t, F::max_size>;
                   typename static_prop_probe<std::size_t, F::max_align>;
-                  typename static_prop_probe<constraint_level, F::copyability>;
-                  typename static_prop_probe<constraint_level,
+                  typename static_prop_probe<lifetime_requirement,
+                                             F::copyability>;
+                  typename static_prop_probe<lifetime_requirement,
                                              F::relocatability>;
-                  typename static_prop_probe<constraint_level,
+                  typename static_prop_probe<lifetime_requirement,
                                              F::destructibility>;
                 }) {
     return is_layout_well_formed(F::max_size, F::max_align) &&
-           is_cl_well_formed(F::copyability) &&
-           is_cl_well_formed(F::relocatability) &&
-           is_cl_well_formed(F::destructibility);
+           is_lr_well_formed(F::copyability) &&
+           is_lr_well_formed(F::relocatability) &&
+           is_lr_well_formed(F::destructibility);
   }
   return false;
 }
@@ -1151,39 +1166,41 @@ public:
   proxy() noexcept { initialize(); }
   proxy(std::nullptr_t) noexcept : proxy() {}
   proxy(const proxy&) noexcept
-    requires(F::copyability == constraint_level::trivial)
+    requires(F::copyability == lifetime_requirement::trivial)
   = default;
-  proxy(const proxy& rhs) noexcept(F::copyability == constraint_level::nothrow)
-    requires(F::copyability == constraint_level::nontrivial ||
-             F::copyability == constraint_level::nothrow)
+  proxy(const proxy& rhs) noexcept(F::copyability ==
+                                   lifetime_requirement::nothrow)
+    requires(F::copyability == lifetime_requirement::supported ||
+             F::copyability == lifetime_requirement::nothrow)
       : detail::inplace_ptr<
             proxy_indirect_accessor<F, MP>>() /* Make GCC happy */ {
     initialize(rhs);
   }
-  proxy(proxy&& rhs) noexcept(F::relocatability >= constraint_level::nothrow)
-    requires(F::relocatability >= constraint_level::nontrivial &&
-             F::copyability != constraint_level::trivial)
+  proxy(proxy&& rhs) noexcept(F::relocatability >=
+                              lifetime_requirement::nothrow)
+    requires(F::relocatability >= lifetime_requirement::supported &&
+             F::copyability != lifetime_requirement::trivial)
   {
     initialize(std::move(rhs));
   }
   template <facade F2>
   proxy(const proxy<F2, MP>& rhs) noexcept(F::copyability >=
-                                           constraint_level::nothrow)
+                                           lifetime_requirement::nothrow)
     requires(!std::is_same_v<F, F2> &&
              std::is_convertible_v<const detail::proxy_meta<F2, MP>&,
                                    const detail::proxy_meta<F, MP>&> &&
-             F::copyability >= constraint_level::nontrivial)
+             F::copyability >= lifetime_requirement::supported)
       : detail::inplace_ptr<proxy_indirect_accessor<F, MP>>() {
     initialize(rhs);
   }
   template <facade F2>
   proxy(proxy<F2, MP>&& rhs) noexcept(F::relocatability >=
-                                      constraint_level::nothrow)
+                                      lifetime_requirement::nothrow)
     requires(!std::is_same_v<F, F2> &&
              std::is_convertible_v<const detail::proxy_meta<F2, MP>&,
                                    const detail::proxy_meta<F, MP>&> &&
-             F::relocatability >= constraint_level::nontrivial &&
-             F::copyability != constraint_level::trivial)
+             F::relocatability >= lifetime_requirement::supported &&
+             F::copyability != lifetime_requirement::trivial)
   {
     initialize(std::move(rhs));
   }
@@ -1215,28 +1232,28 @@ public:
     initialize<P>(il, std::forward<Args>(args)...);
   }
   proxy& operator=(std::nullptr_t) noexcept(F::destructibility >=
-                                            constraint_level::nothrow)
-    requires(F::destructibility >= constraint_level::nontrivial)
+                                            lifetime_requirement::nothrow)
+    requires(F::destructibility >= lifetime_requirement::supported)
   {
     reset();
     return *this;
   }
   proxy& operator=(const proxy&) noexcept
-    requires(F::copyability == constraint_level::trivial)
+    requires(F::copyability == lifetime_requirement::trivial)
   = default;
-  proxy& operator=(const proxy& rhs) noexcept(F::copyability >=
-                                                  constraint_level::nothrow &&
-                                              F::destructibility >=
-                                                  constraint_level::nothrow)
-    requires((F::copyability == constraint_level::nontrivial ||
-              F::copyability == constraint_level::nothrow) &&
-             F::destructibility >= constraint_level::nontrivial)
+  proxy& operator=(const proxy& rhs) noexcept(
+      F::copyability >= lifetime_requirement::nothrow &&
+      F::destructibility >= lifetime_requirement::nothrow)
+    requires((F::copyability == lifetime_requirement::supported ||
+              F::copyability == lifetime_requirement::nothrow) &&
+             F::destructibility >= lifetime_requirement::supported)
   {
     if (this != std::addressof(rhs)) [[likely]] {
-      if constexpr (F::copyability == constraint_level::nothrow) {
+      if constexpr (F::copyability == lifetime_requirement::nothrow) {
         destroy();
         initialize(rhs);
-      } else if constexpr (F::relocatability >= constraint_level::nontrivial) {
+      } else if constexpr (F::relocatability >=
+                           lifetime_requirement::supported) {
         *this = proxy{rhs};
       } else {
         reset();
@@ -1246,12 +1263,12 @@ public:
     return *this;
   }
   proxy& operator=(proxy&& rhs) noexcept(F::relocatability >=
-                                             constraint_level::nothrow &&
+                                             lifetime_requirement::nothrow &&
                                          F::destructibility >=
-                                             constraint_level::nothrow)
-    requires(F::relocatability >= constraint_level::nontrivial &&
-             F::destructibility >= constraint_level::nontrivial &&
-             F::copyability != constraint_level::trivial)
+                                             lifetime_requirement::nothrow)
+    requires(F::relocatability >= lifetime_requirement::supported &&
+             F::destructibility >= lifetime_requirement::supported &&
+             F::copyability != lifetime_requirement::trivial)
   {
     if (this != std::addressof(rhs)) [[likely]] {
       reset();
@@ -1261,18 +1278,18 @@ public:
   }
   template <facade F2>
   proxy& operator=(const proxy<F2, MP>& rhs) noexcept(
-      F::copyability >= constraint_level::nothrow &&
-      F::destructibility >= constraint_level::nothrow)
+      F::copyability >= lifetime_requirement::nothrow &&
+      F::destructibility >= lifetime_requirement::nothrow)
     requires(!std::is_same_v<F, F2> &&
              std::is_convertible_v<const detail::proxy_meta<F2, MP>&,
                                    const detail::proxy_meta<F, MP>&> &&
-             F::copyability >= constraint_level::nontrivial &&
-             F::destructibility >= constraint_level::nontrivial)
+             F::copyability >= lifetime_requirement::supported &&
+             F::destructibility >= lifetime_requirement::supported)
   {
-    if constexpr (F::copyability >= constraint_level::nothrow) {
+    if constexpr (F::copyability >= lifetime_requirement::nothrow) {
       destroy();
       initialize(rhs);
-    } else if constexpr (F::relocatability >= constraint_level::nontrivial) {
+    } else if constexpr (F::relocatability >= lifetime_requirement::supported) {
       *this = proxy{rhs};
     } else {
       reset();
@@ -1282,14 +1299,14 @@ public:
   }
   template <facade F2>
   proxy& operator=(proxy<F2, MP>&& rhs) noexcept(
-      F::relocatability >= constraint_level::nothrow &&
-      F::destructibility >= constraint_level::nothrow)
+      F::relocatability >= lifetime_requirement::nothrow &&
+      F::destructibility >= lifetime_requirement::nothrow)
     requires(!std::is_same_v<F, F2> &&
              std::is_convertible_v<const detail::proxy_meta<F2, MP>&,
                                    const detail::proxy_meta<F, MP>&> &&
-             F::relocatability >= constraint_level::nontrivial &&
-             F::destructibility >= constraint_level::nontrivial &&
-             F::copyability != constraint_level::trivial)
+             F::relocatability >= lifetime_requirement::supported &&
+             F::destructibility >= lifetime_requirement::supported &&
+             F::copyability != lifetime_requirement::trivial)
   {
     reset();
     initialize(std::move(rhs));
@@ -1298,17 +1315,17 @@ public:
   template <class P>
   constexpr proxy& operator=(P&& ptr) noexcept(
       std::is_nothrow_constructible_v<std::decay_t<P>, P> &&
-      F::destructibility >= constraint_level::nothrow)
+      F::destructibility >= lifetime_requirement::nothrow)
     requires(!detail::specialization_of<std::decay_t<P>, proxy> &&
              detail::pointer_like<std::decay_t<P>> &&
              std::is_constructible_v<std::decay_t<P>, P> &&
-             F::destructibility >= constraint_level::nontrivial)
+             F::destructibility >= lifetime_requirement::supported)
   {
     if constexpr (std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
       destroy();
       initialize<std::decay_t<P>>(std::forward<P>(ptr));
-    } else if constexpr (F::relocatability >= constraint_level::nontrivial ||
-                         F::copyability >= constraint_level::nothrow) {
+    } else if constexpr (F::relocatability >= lifetime_requirement::supported ||
+                         F::copyability >= lifetime_requirement::nothrow) {
       *this = proxy{std::forward<P>(ptr)};
     } else {
       reset();
@@ -1317,31 +1334,32 @@ public:
     return *this;
   }
   ~proxy()
-    requires(F::destructibility == constraint_level::trivial)
+    requires(F::destructibility == lifetime_requirement::trivial)
   = default;
-  ~proxy() noexcept(F::destructibility == constraint_level::nothrow)
-    requires(F::destructibility == constraint_level::nontrivial ||
-             F::destructibility == constraint_level::nothrow)
+  ~proxy() noexcept(F::destructibility == lifetime_requirement::nothrow)
+    requires(F::destructibility == lifetime_requirement::supported ||
+             F::destructibility == lifetime_requirement::nothrow)
   {
     destroy();
   }
 
   bool has_value() const noexcept { return static_cast<bool>(meta_); }
   explicit operator bool() const noexcept { return static_cast<bool>(meta_); }
-  void reset() noexcept(F::destructibility >= constraint_level::nothrow)
-    requires(F::destructibility >= constraint_level::nontrivial)
+  void reset() noexcept(F::destructibility >= lifetime_requirement::nothrow)
+    requires(F::destructibility >= lifetime_requirement::supported)
   {
     destroy();
     initialize();
   }
   void swap(proxy& rhs) noexcept(F::relocatability >=
-                                     constraint_level::nothrow ||
-                                 F::copyability == constraint_level::trivial)
-    requires(F::relocatability >= constraint_level::nontrivial ||
-             F::copyability == constraint_level::trivial)
+                                     lifetime_requirement::nothrow ||
+                                 F::copyability ==
+                                     lifetime_requirement::trivial)
+    requires(F::relocatability >= lifetime_requirement::supported ||
+             F::copyability == lifetime_requirement::trivial)
   {
-    if constexpr (F::relocatability == constraint_level::trivial ||
-                  F::copyability == constraint_level::trivial) {
+    if constexpr (F::relocatability == lifetime_requirement::trivial ||
+                  F::copyability == lifetime_requirement::trivial) {
       auto meta = std::as_const(meta_);
       meta_ = std::as_const(rhs.meta_);
       rhs.meta_ = std::as_const(meta);
@@ -1369,13 +1387,14 @@ public:
       }
     }
   }
-  void swap(proxy& rhs) noexcept(F::copyability >= constraint_level::nothrow &&
+  void swap(proxy& rhs) noexcept(F::copyability >=
+                                     lifetime_requirement::nothrow &&
                                  F::destructibility >=
-                                     constraint_level::nothrow)
-    requires(F::relocatability == constraint_level::none &&
-             (F::copyability == constraint_level::nontrivial ||
-              F::copyability == constraint_level::nothrow) &&
-             F::destructibility >= constraint_level::nontrivial)
+                                     lifetime_requirement::nothrow)
+    requires(F::relocatability == lifetime_requirement::none &&
+             (F::copyability == lifetime_requirement::supported ||
+              F::copyability == lifetime_requirement::nothrow) &&
+             F::destructibility >= lifetime_requirement::supported)
   {
     if (meta_) {
       if (rhs.meta_) {
@@ -1394,9 +1413,9 @@ public:
   template <class P, class... Args>
   constexpr P& emplace(Args&&... args) noexcept(
       std::is_nothrow_constructible_v<P, Args...> &&
-      F::destructibility >= constraint_level::nothrow)
+      F::destructibility >= lifetime_requirement::nothrow)
     requires(detail::pointer_like<P> && std::is_constructible_v<P, Args...> &&
-             F::destructibility >= constraint_level::nontrivial)
+             F::destructibility >= lifetime_requirement::supported)
   {
     reset();
     return initialize<P>(std::forward<Args>(args)...);
@@ -1404,10 +1423,10 @@ public:
   template <class P, class U, class... Args>
   constexpr P& emplace(std::initializer_list<U> il, Args&&... args) noexcept(
       std::is_nothrow_constructible_v<P, std::initializer_list<U>&, Args...> &&
-      F::destructibility >= constraint_level::nothrow)
+      F::destructibility >= lifetime_requirement::nothrow)
     requires(detail::pointer_like<P> &&
              std::is_constructible_v<P, std::initializer_list<U>&, Args...> &&
-             F::destructibility >= constraint_level::nontrivial)
+             F::destructibility >= lifetime_requirement::supported)
   {
     reset();
     return initialize<P>(il, std::forward<Args>(args)...);
@@ -1456,14 +1475,14 @@ private:
   void initialize(const proxy<F2, MP>& rhs) {
     PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
-      if constexpr (F2::copyability == constraint_level::trivial) {
+      if constexpr (F2::copyability == lifetime_requirement::trivial) {
         std::uninitialized_copy_n(
             static_cast<const std::byte*>(detail::proxy_helper::get_ptr(rhs)),
             F2::max_size, ptr_);
       } else {
         invoke<detail::copy_dispatch,
                void(void*) const noexcept(
-                   F::copyability == constraint_level::nothrow)>(rhs, ptr_);
+                   F::copyability == lifetime_requirement::nothrow)>(rhs, ptr_);
       }
       meta_ = detail::proxy_helper::get_meta_storage(rhs);
     } else {
@@ -1476,14 +1495,14 @@ private:
     if (rhs.has_value()) {
       detail::proxy_helper::meta_resetting_guard<F2, MP> guard{rhs};
       void* rhs_ptr = detail::proxy_helper::get_ptr(rhs);
-      if constexpr (F2::relocatability == constraint_level::trivial) {
+      if constexpr (F2::relocatability == lifetime_requirement::trivial) {
         std::uninitialized_copy_n(static_cast<std::byte*>(rhs_ptr),
                                   F2::max_size, ptr_);
       } else {
         detail::proxy_helper::get_meta<detail::invocation_meta<
             MP, true, detail::relocate_dispatch,
-            void(void*) &&
-                noexcept(F::relocatability == constraint_level::nothrow)>>(rhs)
+            void(void*) && noexcept(F::relocatability ==
+                                    lifetime_requirement::nothrow)>>(rhs)
             .function(rhs_ptr, ptr_);
       }
       meta_ = detail::proxy_helper::get_meta_storage(rhs);
@@ -1504,13 +1523,14 @@ private:
     return result;
   }
   void destroy()
-    requires(F::destructibility != constraint_level::none)
+    requires(F::destructibility != lifetime_requirement::none)
   {
-    if constexpr (F::destructibility != constraint_level::trivial) {
+    if constexpr (F::destructibility != lifetime_requirement::trivial) {
       if (meta_) {
         invoke<detail::destroy_dispatch,
                void() && noexcept(F::destructibility ==
-                                  constraint_level::nothrow)>(std::move(*this));
+                                  lifetime_requirement::nothrow)>(
+            std::move(*this));
       }
     }
   }
@@ -1581,9 +1601,9 @@ template <class R, facade F, class MP>
 }
 
 template <facade F>
-struct observer_facade;
+struct view_facade;
 template <facade F, class MP = compact_metadata>
-using proxy_view = proxy<observer_facade<F>, MP>;
+using proxy_view = proxy<view_facade<F>, MP>;
 
 template <facade F>
 struct weak_facade;
@@ -1658,17 +1678,18 @@ template <class T>
 using default_access_t = default_access_traits<T>::type;
 
 template <class Ss, class Cs, class Rs, std::size_t MaxSize,
-          std::size_t MaxAlign, constraint_level Copyability,
-          constraint_level Relocatability, constraint_level Destructibility>
+          std::size_t MaxAlign, lifetime_requirement Copyability,
+          lifetime_requirement Relocatability,
+          lifetime_requirement Destructibility>
 struct facade_impl {
   using super_types = Ss;
   using convention_types = Cs;
   using reflection_types = Rs;
   static constexpr std::size_t max_size = MaxSize;
   static constexpr std::size_t max_align = MaxAlign;
-  static constexpr constraint_level copyability = Copyability;
-  static constexpr constraint_level relocatability = Relocatability;
-  static constexpr constraint_level destructibility = Destructibility;
+  static constexpr lifetime_requirement copyability = Copyability;
+  static constexpr lifetime_requirement relocatability = Relocatability;
+  static constexpr lifetime_requirement destructibility = Destructibility;
 };
 
 template <class LR, class CLR, class RR, class CRR>
@@ -1690,18 +1711,18 @@ private:
 };
 
 template <class C>
-struct observer_conv_traits : std::type_identity<void> {};
+struct view_conv_traits : std::type_identity<void> {};
 template <class C>
   requires(!C::is_direct)
-struct observer_conv_traits<C> : std::type_identity<C> {};
+struct view_conv_traits<C> : std::type_identity<C> {};
 template <class... Cs>
-using observer_conv_types =
-    composite_t<std::tuple<>, typename observer_conv_traits<Cs>::type...>;
+using view_conv_types =
+    composite_t<std::tuple<>, typename view_conv_traits<Cs>::type...>;
 template <class... Rs>
-using observer_refl_types =
+using view_refl_types =
     composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void, Rs>...>;
 template <facade... Fs>
-using observer_super_types = std::tuple<observer_facade<Fs>...>;
+using view_super_types = std::tuple<view_facade<Fs>...>;
 
 struct weak_lock_dispatch {
   template <class P>
@@ -1743,16 +1764,16 @@ using weak_super_types = std::tuple<weak_facade<Fs>...>;
 } // namespace detail
 
 template <facade F>
-struct observer_facade
+struct view_facade
     : detail::facade_impl<
-          detail::specialization_t<detail::observer_super_types,
+          detail::specialization_t<detail::view_super_types,
                                    typename F::super_types>,
-          detail::specialization_t<detail::observer_conv_types,
+          detail::specialization_t<detail::view_conv_types,
                                    typename F::convention_types>,
-          detail::specialization_t<detail::observer_refl_types,
+          detail::specialization_t<detail::view_refl_types,
                                    typename F::reflection_types>,
-          sizeof(void*), alignof(void*), constraint_level::trivial,
-          constraint_level::trivial, constraint_level::trivial> {};
+          sizeof(void*), alignof(void*), lifetime_requirement::trivial,
+          lifetime_requirement::trivial, lifetime_requirement::trivial> {};
 
 template <facade F>
 struct weak_facade

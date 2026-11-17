@@ -1,14 +1,14 @@
 # `proxy<F, MP>::~proxy`
 
 ```cpp
-~proxy() requires(F::destructibility == constraint_level::trivial)
+~proxy() requires(F::destructibility == lifetime_requirement::trivial)
     = default;
-~proxy() noexcept(F::destructibility == constraint_level::nothrow)
-    requires(F::destructibility == constraint_level::nontrivial ||
-        F::destructibility == constraint_level::nothrow);
+~proxy() noexcept(F::destructibility == lifetime_requirement::nothrow)
+    requires(F::destructibility == lifetime_requirement::supported ||
+        F::destructibility == lifetime_requirement::nothrow);
 ```
 
-Destroys the `proxy` object. If the `proxy` contains a value, the contained value is also destroyed. When `F::destructibility == constraint_level::trivial`, the destructor is defaulted. It is trivial only if the metadata storage and accessor base classes also have trivial destructors.
+Destroys the `proxy` object. If the `proxy` contains a value, the contained value is also destroyed. When `F::destructibility == lifetime_requirement::trivial`, the destructor is defaulted. It is trivial only if the metadata storage and accessor base classes also have trivial destructors.
 
 ## Example
 
