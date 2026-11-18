@@ -34,23 +34,24 @@ proxy(proxy<F2, MP>&& rhs)
 
 // (6)
 template <class P>
-proxy(P&& ptr) noexcept(std::is_nothrow_constructible_v<std::decay_t<P>, P>)
-    requires(std::is_constructible_v<std::decay_t<P>, P>);
+proxy(P&& ptr) noexcept(nothrow-constructible<std::decay_t<P>, P>)
+    requires(constructible<std::decay_t<P>, P>);
 
 // (7)
 template <class P, class... Args>
 explicit proxy(std::in_place_type_t<P>, Args&&... args)
-    noexcept(std::is_nothrow_constructible_v<P, Args...>)
-    requires(std::is_constructible_v<P, Args...>);
+    noexcept(nothrow-constructible<P, Args...>)
+    requires(constructible<P, Args...>);
 
 // (8)
 template <class P, class U, class... Args>
 explicit proxy(std::in_place_type_t<P>, std::initializer_list<U> il,
         Args&&... args)
-    noexcept(std::is_nothrow_constructible_v<
-        P, std::initializer_list<U>&, Args...>)
-    requires(std::is_constructible_v<P, std::initializer_list<U>&, Args...>);
+    noexcept(nothrow-constructible<P, std::initializer_list<U>&, Args...>)
+    requires(constructible<P, std::initializer_list<U>&, Args...>);
 ```
+
+See [*ProxyFacade* requirements](../ProxyFacade.md) for the definitions of the exposition-only concepts *constructible* and *nothrow-constructible*.
 
 Creates a new `proxy`.
 

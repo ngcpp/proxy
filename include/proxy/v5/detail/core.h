@@ -196,16 +196,25 @@ struct add_qualifier_traits<T, qualifier_type::const_rv>
 template <class T, qualifier_type Q>
 using add_qualifier_t = add_qualifier_traits<T, Q>::type;
 
+// Like std::is_constructible_v, but does not require T to be destructible.
+template <class T, class... Args>
+concept constructible =
+    requires { ::new (std::declval<void*>()) T(std::declval<Args>()...); };
+template <class T, class... Args>
+concept nothrow_constructible =
+    constructible<T, Args...> &&
+    noexcept(::new (std::declval<void*>()) T(std::declval<Args>()...));
+
 template <class T, lifetime_requirement LR>
 struct copyability_traits : inapplicable_traits {};
 template <class T>
 struct copyability_traits<T, lifetime_requirement::none> : applicable_traits {};
 template <class T>
-  requires(std::is_copy_constructible_v<T>)
+  requires(constructible<T, const T&>)
 struct copyability_traits<T, lifetime_requirement::supported>
     : applicable_traits {};
 template <class T>
-  requires(std::is_nothrow_copy_constructible_v<T>)
+  requires(nothrow_constructible<T, const T&>)
 struct copyability_traits<T, lifetime_requirement::nothrow>
     : applicable_traits {};
 template <class T>
@@ -553,8 +562,8 @@ consteval bool is_metadata_well_formed() {
 }
 struct copy_dispatch {
   template <class T>
-  PRO5D_STATIC_CALL(void, const T& self, void* rhs) noexcept(
-      std::is_nothrow_copy_constructible_v<T>) {
+  PRO5D_STATIC_CALL(void, const T& self,
+                    void* rhs) noexcept(nothrow_constructible<T, const T&>) {
     std::construct_at(static_cast<T*>(rhs), self);
   }
 };
@@ -1170,7 +1179,7 @@ public:
   using metadata_policy_type = MP;
 
   proxy() noexcept { initialize(); }
-  proxy(std::nullptr_t) noexcept : proxy() {}
+  proxy(std::nullptr_t) noexcept { initialize(); }
   proxy(const proxy&) noexcept
     requires(F::copyability == lifetime_requirement::trivial)
   = default;
@@ -1212,28 +1221,28 @@ public:
   }
   template <class P>
   constexpr proxy(P&& ptr) noexcept(
-      std::is_nothrow_constructible_v<std::decay_t<P>, P>)
+      detail::nothrow_constructible<std::decay_t<P>, P>)
     requires(!detail::specialization_of<std::decay_t<P>, proxy> &&
              detail::pointer_like<std::decay_t<P>> &&
-             std::is_constructible_v<std::decay_t<P>, P>)
+             detail::constructible<std::decay_t<P>, P>)
   {
     initialize<std::decay_t<P>>(std::forward<P>(ptr));
   }
   template <class P, class... Args>
   constexpr explicit proxy(std::in_place_type_t<P>, Args&&... args) noexcept(
-      std::is_nothrow_constructible_v<P, Args...>)
-    requires(detail::pointer_like<P> && std::is_constructible_v<P, Args...>)
+      detail::nothrow_constructible<P, Args...>)
+    requires(detail::pointer_like<P> && detail::constructible<P, Args...>)
   {
     initialize<P>(std::forward<Args>(args)...);
   }
   template <class P, class U, class... Args>
   constexpr explicit proxy(
       std::in_place_type_t<P>, std::initializer_list<U> il,
-      Args&&... args) noexcept(std::
-                                   is_nothrow_constructible_v<
+      Args&&... args) noexcept(detail::
+                                   nothrow_constructible<
                                        P, std::initializer_list<U>&, Args...>)
     requires(detail::pointer_like<P> &&
-             std::is_constructible_v<P, std::initializer_list<U>&, Args...>)
+             detail::constructible<P, std::initializer_list<U>&, Args...>)
   {
     initialize<P>(il, std::forward<Args>(args)...);
   }
@@ -1340,6 +1349,9 @@ public:
     return *this;
   }
   ~proxy()
+    requires(F::destructibility == lifetime_requirement::none)
+  = delete;
+  ~proxy()
     requires(F::destructibility == lifetime_requirement::trivial)
   = default;
   ~proxy() noexcept(F::destructibility == lifetime_requirement::nothrow)
@@ -1361,8 +1373,10 @@ public:
                                      lifetime_requirement::nothrow ||
                                  F::copyability ==
                                      lifetime_requirement::trivial)
-    requires(F::relocatability >= lifetime_requirement::supported ||
-             F::copyability == lifetime_requirement::trivial)
+    requires(F::relocatability == lifetime_requirement::trivial ||
+             F::copyability == lifetime_requirement::trivial ||
+             (F::relocatability >= lifetime_requirement::supported &&
+              F::destructibility >= lifetime_requirement::supported))
   {
     if constexpr (F::relocatability == lifetime_requirement::trivial ||
                   F::copyability == lifetime_requirement::trivial) {
