@@ -14,7 +14,7 @@ struct member_dispatch;
 
 Class template `member_dispatch` is a [dispatch](ProxyDispatch.md) type for member function call expressions. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_MEMBER(name)`](PRO_ENABLE_MEMBER.md) defines the specialization `member_dispatch<"name">`, which calls the member function `name` of its operand.
 
-A convention of `member_dispatch<Name>` added via [`basic_facade_builder`](basic_facade_builder/add_convention.md) has the access type [`member_access<Name>`](member_access.md).
+An operation of `member_dispatch<Name>` added via [`basic_facade_builder`](basic_facade_builder/add_convention.md) has the access type [`member_access<Name>`](member_access.md).
 
 ## Call Operator
 

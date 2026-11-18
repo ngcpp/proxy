@@ -11,7 +11,7 @@ struct implicit_conversion_access;
 
 Class `implicit_conversion_access` is an access type that defines implicit conversion functions for [`proxy`](../proxy/README.md). It meets the [*ProxyAccess* requirements](../ProxyAccess.md) of applicable types.
 
-`implicit_conversion_access` is the access type of the conventions of [`implicit_conversion_dispatch`](../implicit_conversion_dispatch/README.md) added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](../ProxyDispatch.md) type that converts a `proxy` to the return types of its overloads. The direct, or the indirect, conventions whose access type is `implicit_conversion_access` share an accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)), so the conversions of all of them are available together.
+`implicit_conversion_access` is the access type of the operations of [`implicit_conversion_dispatch`](../implicit_conversion_dispatch/README.md) added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md). An operation can also name it as its access type with any other [dispatch](../ProxyDispatch.md) type that converts a `proxy` to the return types of its signatures. The direct, or the indirect, operations whose access type is `implicit_conversion_access` share an accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)), so the conversions of all of them are available together.
 
 ## Member Types
 
@@ -35,19 +35,19 @@ struct ToStringDispatch {
   }
 };
 
-template <class D, class O>
-struct ConversionConvention {
+template <class D, class S>
+struct ConversionOperation {
   static constexpr bool is_direct = false;
   using dispatch_type = D;
-  using overload_type = O;
+  using signature_type = S;
   using access_type = pro::implicit_conversion_access;
 };
 
 struct Stringable {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<
-      ConversionConvention<pro::implicit_conversion_dispatch, int() const>,
-      ConversionConvention<ToStringDispatch, std::string() const>>;
+  using operation_types = std::tuple<
+      ConversionOperation<pro::implicit_conversion_dispatch, int() const>,
+      ConversionOperation<ToStringDispatch, std::string() const>>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);

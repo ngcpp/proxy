@@ -17,7 +17,7 @@ using weak_proxy = proxy<weak_facade<F>, MP>;
 
 `weak_facade<F>` adapts the original [facade](facade.md) `F` so that:
 
-* A `lock()` member (direct convention) is provided, returning a `proxy<F>` that contains a value if and only if the referenced object is still alive at the time of the call.
+* A `lock()` member (direct operation) is provided, returning a `proxy<F>` that contains a value if and only if the referenced object is still alive at the time of the call.
 * Each super of `F` is adapted in the same way, so that "weak-ness" is preserved when converting to a `proxy` of a super: a `weak_proxy<F>` converts to a `weak_proxy<G>` for every super `G` of `F`.
 * No reflections from `F` are preserved.
 
@@ -25,8 +25,8 @@ using weak_proxy = proxy<weak_facade<F>, MP>;
 
 | Name                               | Description |
 | ---------------------------------- | ----------- |
-| `super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type transformed from `typename F::super_types`. Specifically, for each super `S` in `typename F::super_types`, `weak_facade<S>` is included. |
-| `convention_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains a single direct convention whose dispatch type denotes the member function `lock` and whose overload is the [`proxy_dependent_signature`](proxy_dependent_signature.md) yielding `proxy<F, MP>() const noexcept` for the metadata policy `MP` of the `weak_proxy`. Calling this overload attempts to obtain a strong `proxy<F, MP>`; it returns an empty `proxy<F, MP>` if the object has expired. All conventions from `F` are discarded. |
+| `super_types`<br />*(since 5.0.0)* | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type transformed from `typename F::super_types`. Specifically, for each super `G` in `typename F::super_types`, `weak_facade<G>` is included. |
+| `operation_types`                  | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains a single direct operation whose dispatch type denotes the member function `lock` and whose signature is the [`proxy_dependent_signature`](proxy_dependent_signature.md) yielding `proxy<F, MP>() const noexcept` for the metadata policy `MP` of the `weak_proxy`. Calling this operation attempts to obtain a strong `proxy<F, MP>`; it returns an empty `proxy<F, MP>` if the object has expired. All operations from `F` are discarded. |
 | `reflection_types`                 | A [tuple-like](https://en.cppreference.com/w/cpp/utility/tuple/tuple-like) type that contains no types. |
 
 ## Member Constants of `weak_facade`

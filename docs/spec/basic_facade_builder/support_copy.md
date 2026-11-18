@@ -6,7 +6,7 @@ template <lifetime_requirement LR>
 using support_copy = basic_facade_builder</* see below */>;
 ```
 
-The alias template `support_copy` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds copyability support to the template parameters. After the operation, `Copyability` becomes `std::max(Copyability, LR)`. The expression inside `requires` is equivalent to `LR` is a defined enumerator of `lifetime_requirement`.
+The alias template `support_copy` of `basic_facade_builder<Fs, Os, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds copyability support to the template parameters. After the operation, `Copyability` becomes `std::max(Copyability, LR)`. The expression inside `requires` is equivalent to `LR` is a defined enumerator of `lifetime_requirement`.
 
 ## Notes
 

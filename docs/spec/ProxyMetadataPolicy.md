@@ -2,7 +2,7 @@
 
 > Since: 5.0.0
 
-A metadata policy chooses how a [`proxy`](proxy/README.md) refers to the functions the library generates for a facade, and how it keeps the metadata deduced from the contained type. A type `MP` meets the *ProxyMetadataPolicy* requirements if `typename MP::template invoker<F>` and `typename MP::template storage<M>` meet the requirements below for every function type `F` and metadata type `M` the library uses.
+A metadata policy chooses how a [`proxy`](proxy/README.md) refers to the functions the library generates for a facade, and how it keeps the metadata deduced from the contained type. A type `MP` meets the *ProxyMetadataPolicy* requirements if `typename MP::template invoker<F>` and `typename MP::template storage<M>` meet the requirements below for every function type `F` and every metadata type `M` of a `proxy` that the library uses.
 
 ## Invoker
 
@@ -23,7 +23,7 @@ Let `M` be the metadata type generated for a facade and `MP`, and `P` be a conta
 | `M(std::in_place_type<P>)` | Creates the metadata deduced from `P`. |
 | `static_cast<bool>(cm)` | Returns `true` if and only if `cm` is not empty. |
 
-`static_cast<bool>(cm)` is non-throwing. `M(std::in_place_type<P>)` throws any exception thrown by constructing a reflector.
+`static_cast<bool>(cm)` is non-throwing. `M(std::in_place_type<P>)` throws any exception thrown by constructing the metadata of a reflection.
 
 `typename MP::template storage<M>` shall denote a type `S` for which `std::is_nothrow_default_constructible_v<S>`, `std::is_nothrow_copy_constructible_v<S>`, `std::is_nothrow_copy_assignable_v<S>`, and `std::is_nothrow_destructible_v<S>` are `true`. The library default-initializes `S` and then first resets, emplaces, assigns, or destroys it, which shall be valid even if it holds indeterminate values. Let `s` be an lvalue of type `S`, `cs` be a reference to `const S`, and `cs2` be a reference to `const MP::template storage<M2>`, where `M2` is the metadata type generated for a facade that has the facade of `M` as a super. The following expressions shall be non-throwing and have the specified semantics.
 

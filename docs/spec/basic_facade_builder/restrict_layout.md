@@ -6,7 +6,7 @@ template <std::size_t PtrSize, std::size_t PtrAlign = /* see below */>
 using restrict_layout = basic_facade_builder</* see below */>;
 ```
 
-The alias template `restrict_layout` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds layout restrictions to the template parameters. The default value of `PtrAlign` is the maximum possible alignment of an object of size `PtrSize`, not greater than `alignof(std::max_align_t)`. After applying the restriction, `MaxSize` becomes `std::min(MaxSize, PtrSize)`, and `MaxAlign` becomes `std::min(MaxAlign, PtrAlign)`.
+The alias template `restrict_layout` of `basic_facade_builder<Fs, Os, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` adds layout restrictions to the template parameters. The default value of `PtrAlign` is the maximum possible alignment of an object of size `PtrSize`, not greater than `alignof(std::max_align_t)`. After applying the restriction, `MaxSize` becomes `std::min(MaxSize, PtrSize)`, and `MaxAlign` becomes `std::min(MaxAlign, PtrAlign)`.
 
 ## Notes
 

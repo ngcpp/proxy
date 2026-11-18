@@ -193,9 +193,9 @@ TEST(ProxyViewTests, TestSuperConversion_FromRvalue) {
 }
 
 TEST(ProxyViewTests, TestFacadeAware_FromSuper) {
-  // as_view is declared on the super only. The facade-aware overload must be
+  // as_view is declared on the super only. The facade-aware signature must be
   // substituted against the deriving facade, so the view exposes the deriving
-  // facade's conventions rather than the super's.
+  // facade's operations rather than the super's.
   struct TestFacade1
       : pro::facade_builder                                              //
         ::add_convention<utils::spec::FreeToString, std::string() const> //

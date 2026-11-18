@@ -6,13 +6,13 @@
 > Since: 5.0.0
 
 ```cpp
-template <class D, class O>
+template <class D, class S>
 struct proxy_operation {};
 ```
 
-Class template `proxy_operation` is a *descriptor* of an operation performed on a [`proxy`](proxy/README.md) with a [dispatch](ProxyDispatch.md) type `D` and an [overload](ProxyOverload.md) type `O`. Descriptors are the template arguments following `Self` of the member template `accessor` of an access type (see [*ProxyAccess* requirements](ProxyAccess.md)), telling the access type which operations and reflections its accessor provides accessibility for.
+Class template `proxy_operation` is a *descriptor* of an operation performed on a [`proxy`](proxy/README.md) with a [dispatch](ProxyDispatch.md) type `D` and a [signature](ProxySignature.md) type `S`. Descriptors are the template arguments following `Self` of the member template `accessor` of an access type (see [*ProxyAccess* requirements](ProxyAccess.md)), telling the access type which operations and reflections its accessor provides accessibility for.
 
-For a convention type `C` of a [facade](facade.md) type `F` or of any super of `F`, the descriptor of `C` in [`proxy<F, MP>`](proxy/README.md) or [`proxy_indirect_accessor<F, MP>`](proxy_indirect_accessor/README.md) is `proxy_operation<typename C::dispatch_type, `[`substituted-overload`](ProxyOverload.md)`<typename C::overload_type, F, MP>>`. Within an accessor, the described operation is performed by calling [`invoke<D, O>`](proxy/friend_invoke.md) with the `Self` object, qualified with the *cv ref* qualifiers of `O`, and the arguments of `O`. The access type of a convention added by [`basic_facade_builder`](basic_facade_builder/add_convention.md) is the default access type of its dispatch type.
+For an operation type `O` of a [facade](facade.md) type `F` or of any super of `F`, the descriptor of `O` in [`proxy<F, MP>`](proxy/README.md) or [`proxy_indirect_accessor<F, MP>`](proxy_indirect_accessor/README.md) is `proxy_operation<typename O::dispatch_type, `[`substituted-signature`](ProxySignature.md)`<typename O::signature_type, F, MP>>`. Within an accessor, the described operation is performed by calling [`invoke<D, S>`](proxy/friend_invoke.md) with the `Self` object, qualified with the *cv ref* qualifiers of `S`, and the arguments of `S`. The access type of an operation added by [`basic_facade_builder`](basic_facade_builder/add_convention.md) is the default access type of its dispatch type.
 
 ## Example
 
@@ -42,16 +42,16 @@ struct AreaDispatch {
   }
 };
 
-struct AreaConvention {
+struct AreaOperation {
   static constexpr bool is_direct = false;
   using dispatch_type = AreaDispatch;
-  using overload_type = double() const;
+  using signature_type = double() const;
   using access_type = AreaAccess;
 };
 
 struct Shape {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<AreaConvention>;
+  using operation_types = std::tuple<AreaOperation>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -81,4 +81,4 @@ int main() {
 
 - [class template `proxy_reflection`](proxy_reflection.md)
 - [named requirements *ProxyAccess*](ProxyAccess.md)
-- [named requirements *ProxyBasicConvention*](ProxyBasicConvention.md)
+- [named requirements *ProxyBasicOperation*](ProxyBasicOperation.md)

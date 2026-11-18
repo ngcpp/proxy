@@ -14,7 +14,7 @@ struct operator_access;
 
 Class template `operator_access` is an access type that defines operator functions for [`proxy`](../proxy/README.md). It meets the [*ProxyAccess* requirements](../ProxyAccess.md) of applicable types. `Sign` represents the sign of operator (SOP) as a string literal (e.g., `"+"` for operator `+`). `Rhs` specifies whether the `proxy` operand is on the right-hand side of a binary operator.
 
-`operator_access<Sign, Rhs>` is defined for the same SOPs as [`operator_dispatch<Sign, Rhs>`](../operator_dispatch/README.md), and instantiating it with any other `Sign` and `Rhs` is ill-formed. It is the access type of the conventions of `operator_dispatch<Sign, Rhs>` added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](../ProxyDispatch.md) type. The direct, or the indirect, conventions whose access type is `operator_access<Sign, Rhs>` share an accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)), so their overloads participate in overload resolution together when the operator expression is evaluated.
+`operator_access<Sign, Rhs>` is defined for the same SOPs as [`operator_dispatch<Sign, Rhs>`](../operator_dispatch/README.md), and instantiating it with any other `Sign` and `Rhs` is ill-formed. It is the access type of the operations of `operator_dispatch<Sign, Rhs>` added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md). An operation can also name it as its access type with any other [dispatch](../ProxyDispatch.md) type. The direct, or the indirect, operations whose access type is `operator_access<Sign, Rhs>` share an accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)), so their overloads participate in overload resolution together when the operator expression is evaluated.
 
 ## Supported SOPs
 
@@ -41,19 +41,19 @@ struct RunDispatch {
   }
 };
 
-template <class D, class O>
-struct CallConvention {
+template <class D, class S>
+struct CallOperation {
   static constexpr bool is_direct = false;
   using dispatch_type = D;
-  using overload_type = O;
+  using signature_type = S;
   using access_type = pro::operator_access<"()">;
 };
 
 struct Runnable {
   using super_types = std::tuple<>;
-  using convention_types =
-      std::tuple<CallConvention<pro::operator_dispatch<"()">, void(int)>,
-                 CallConvention<RunDispatch, void()>>;
+  using operation_types =
+      std::tuple<CallOperation<pro::operator_dispatch<"()">, void(int)>,
+                 CallOperation<RunDispatch, void()>>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);

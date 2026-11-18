@@ -3,18 +3,18 @@
 > Since: 4.1.0
 
 ```cpp
-template <class R>
-const R& reflect(const proxy<F, MP>& p) noexcept;
+template <class M>
+const M& reflect(const proxy<F, MP>& p) noexcept;
 ```
 
 Acquires reflection information of the contained type of a `proxy<F, MP>`, through a *direct* reflection.
 
-Let `P` be the contained type of `p`. Returns a `const` reference of `R` direct-non-list-initialized with [`std::in_place_type<P>`](https://en.cppreference.com/w/cpp/utility/in_place). The behavior is undefined if `p` does not contain a value.
+Let `P` be the contained type of `p`. Returns a `const` reference of `M` direct-non-list-initialized with [`std::in_place_type<P>`](https://en.cppreference.com/w/cpp/utility/in_place). The behavior is undefined if `p` does not contain a value.
 
 There shall be a reflection type `Refl` defined in the reflection types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
 
 - `Refl::is_direct` is `true`, and
-- `typename Refl::reflector_type` is `R`.
+- `typename Refl::metadata_type` is `M`.
 
 The reference obtained from `reflect()` may be invalidated if `p` is subsequently modified.
 
@@ -37,18 +37,18 @@ This function is useful when only metadata deduced from a type is needed. While 
 
 #include <proxy/proxy.h>
 
-class CopyabilityReflector {
+class CopyabilityMetadata {
 public:
-  CopyabilityReflector() = default;
+  CopyabilityMetadata() = default;
   template <class T>
-  constexpr explicit CopyabilityReflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit CopyabilityMetadata(std::in_place_type_t<T>) noexcept
       : copyable_(std::is_copy_constructible_v<T>) {}
 
-  template <class P, class R>
+  template <class P, class M>
   struct accessor {
     bool IsCopyable() const noexcept {
-      const CopyabilityReflector& self =
-          reflect<R>(static_cast<const P&>(*this));
+      const CopyabilityMetadata& self =
+          reflect<M>(static_cast<const P&>(*this));
       return self.copyable_;
     }
   };
@@ -57,8 +57,8 @@ private:
   bool copyable_;
 };
 
-struct CopyabilityAware : pro::facade_builder                           //
-                          ::add_direct_reflection<CopyabilityReflector> //
+struct CopyabilityAware : pro::facade_builder                          //
+                          ::add_direct_reflection<CopyabilityMetadata> //
                           ::build {};
 
 int main() {

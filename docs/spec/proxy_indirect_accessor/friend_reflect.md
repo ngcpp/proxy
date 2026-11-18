@@ -3,18 +3,18 @@
 > Since: 4.1.0
 
 ```cpp
-template <class R>
-const R& reflect(const proxy_indirect_accessor<F, MP>& p) noexcept;
+template <class M>
+const M& reflect(const proxy_indirect_accessor<F, MP>& p) noexcept;
 ```
 
 Acquires reflection information of the contained type of the associated `proxy`, through an *indirect* reflection.
 
-Let `P` be the contained type of the `proxy` object associated to `p`. Returns a `const` reference of `R` direct-non-list-initialized with [`std::in_place_type<typename std::pointer_traits<P>::element_type>`](https://en.cppreference.com/w/cpp/utility/in_place).
+Let `P` be the contained type of the `proxy` object associated to `p`. Returns a `const` reference of `M` direct-non-list-initialized with [`std::in_place_type<typename std::pointer_traits<P>::element_type>`](https://en.cppreference.com/w/cpp/utility/in_place).
 
 There shall be a reflection type `Refl` defined in the reflection types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
 
 - `Refl::is_direct` is `false`, and
-- `typename Refl::reflector_type` is `R`.
+- `typename Refl::metadata_type` is `M`.
 
 The reference obtained from `reflect()` may be invalidated if the associated `proxy` is subsequently modified.
 
@@ -35,17 +35,17 @@ This function is useful when only metadata deduced from a type is needed. While 
 
 #include <proxy/proxy.h>
 
-class LayoutReflector {
+class LayoutMetadata {
 public:
-  LayoutReflector() = default;
+  LayoutMetadata() = default;
   template <class T>
-  constexpr explicit LayoutReflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit LayoutMetadata(std::in_place_type_t<T>) noexcept
       : Size(sizeof(T)), Align(alignof(T)) {}
 
-  template <class P, class R>
+  template <class P, class M>
   struct accessor {
     friend std::size_t SizeOf(const P& self) noexcept {
-      const LayoutReflector& refl = reflect<R>(self);
+      const LayoutMetadata& refl = reflect<M>(self);
       return refl.Size;
     }
   };
@@ -53,8 +53,8 @@ public:
   std::size_t Size, Align;
 };
 
-struct LayoutAware : pro::facade_builder                        //
-                     ::add_indirect_reflection<LayoutReflector> //
+struct LayoutAware : pro::facade_builder                       //
+                     ::add_indirect_reflection<LayoutMetadata> //
                      ::build {};
 
 int main() {

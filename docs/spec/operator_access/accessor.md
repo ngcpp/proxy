@@ -10,7 +10,7 @@ struct accessor {
 
 `(1)` The default implementation of `accessor` is not constructible.
 
-For different `Sign` and `Rhs`, `operator_access<Sign, Rhs>::accessor` has different specializations. `sop` denotes the sign of operator of each specialization. Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](../ProxyAccess.md)), and an operation is described by [`proxy_operation`](../proxy_operation.md)`<D, O>`, where `D` is a [dispatch](../ProxyDispatch.md) type and `O` is an [overload](../ProxyOverload.md) type.
+For different `Sign` and `Rhs`, `operator_access<Sign, Rhs>::accessor` has different specializations. `sop` denotes the sign of operator of each specialization. Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](../ProxyAccess.md)), and an operation is described by [`proxy_operation`](../proxy_operation.md)`<D, S>`, where `D` is a [dispatch](../ProxyDispatch.md) type and `S` is a [signature](../ProxySignature.md) type.
 
 ## Left-Hand-Side Operand Specializations
 
@@ -25,7 +25,7 @@ struct accessor<Self, Ds...> : accessor<Self, Ds>... {
 
 `(2)` When `sizeof...(Ds)` is greater than `1`, and `accessor<Self, Ds>...` are default-constructible types, inherits all `accessor<Self, Ds>...` types and `using` their `operator sop`.
 
-When `Rhs` is `false`, the other specializations are defined as follows, where `sizeof...(Ds)` is `1` and the only type in `Ds` is `proxy_operation<D, O>`, with `O` qualified with `cv ref noex`. When `O` matches none of the specializations for `Sign`, such as `R()` for `"/"`, the default implementation `(1)` applies, so `operator_access<Sign, false>` provides no accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)).
+When `Rhs` is `false`, the other specializations are defined as follows, where `sizeof...(Ds)` is `1` and the only type in `Ds` is `proxy_operation<D, S>`, with `S` qualified with `cv ref noex`. When `S` matches none of the specializations for `Sign`, such as `R()` for `"/"`, the default implementation `(1)` applies, so `operator_access<Sign, false>` provides no accessor (see [*ProxyAccess* requirements](../ProxyAccess.md)).
 
 ### Unary & Binary SOPs
 
@@ -45,9 +45,9 @@ struct accessor<Self, proxy_operation<D, R(Arg) cv ref noex>> {
 };
 ```
 
-`(3)` Provides a unary `operator sop()` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop()` is equivalent to `return invoke<D, R() cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this))`.
+`(3)` Provides a unary `operator sop()` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator sop()` is equivalent to `return invoke<D, R() cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this))`.
 
-`(4)` Provides a binary `operator sop(Arg)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(Arg)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))`.
+`(4)` Provides a binary `operator sop(Arg)` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator sop(Arg)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))`.
 
 ### Binary SOPs
 
@@ -61,7 +61,7 @@ struct accessor<Self, proxy_operation<D, R(Arg) cv ref noex>> {
 };
 ```
 
-`(5)` Provides an `operator sop(Arg)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(Arg)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))`.
+`(5)` Provides an `operator sop(Arg)` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator sop(Arg)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))`.
 
 ### `"!"` and `"~"`
 
@@ -75,7 +75,7 @@ struct accessor<Self, proxy_operation<D, R() cv ref noex>> {
 };
 ```
 
-`(6)` Provides an `operator sop()` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop()` is equivalent to `return invoke<D, R() cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this))`.
+`(6)` Provides an `operator sop()` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator sop()` is equivalent to `return invoke<D, R() cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this))`.
 
 ### `"++"` and `"--"`
 
@@ -95,9 +95,9 @@ struct accessor<Self, proxy_operation<D, R(int) cv ref noex>> {
 };
 ```
 
-`(7)` Provides a prefix `operator sop()` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop()` calls `invoke<D, R() cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this))` and returns `static_cast<Self cv <ref ? ref : &>>(*this)`.
+`(7)` Provides a prefix `operator sop()` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator sop()` calls `invoke<D, R() cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this))` and returns `static_cast<Self cv <ref ? ref : &>>(*this)`.
 
-`(8)` Provides a postfix `operator sop(int)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(int)` is equivalent to `return invoke<D, R(int) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), 0)`.
+`(8)` Provides a postfix `operator sop(int)` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator sop(int)` is equivalent to `return invoke<D, R(int) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), 0)`.
 
 ### Assignment SOPs
 
@@ -111,7 +111,7 @@ struct accessor<Self, proxy_operation<D, R(Arg) cv ref noex>> {
 };
 ```
 
-`(9)` Provides an `operator sop(Arg)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator sop(Arg)` calls `invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))` and returns `static_cast<Self cv <ref ? ref : &>>(*this)`.
+`(9)` Provides an `operator sop(Arg)` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator sop(Arg)` calls `invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))` and returns `static_cast<Self cv <ref ? ref : &>>(*this)`.
 
 ### `"()"`
 
@@ -125,7 +125,7 @@ struct accessor<Self, proxy_operation<D, R(Args...) cv ref noex>> {
 };
 ```
 
-`(10)` Provides an `operator()(Args...)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator()(Args...)` is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`.
+`(10)` Provides an `operator()(Args...)` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator()(Args...)` is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`.
 
 ### `"[]"`
 
@@ -145,9 +145,9 @@ struct accessor<Self, proxy_operation<D, R(Args...) cv ref noex>> {
 };
 ```
 
-`(11)` Provides an `operator[](Arg)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator[](Arg)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))`.
+`(11)` Provides an `operator[](Arg)` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator[](Arg)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Arg>(arg))`.
 
-`(12)` Provides an `operator[](Args...)` with the same *cv ref noex* specifiers as of the overload type. `accessor::operator[](Args...)` is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`. Requires the [multidimensional subscript feature](https://en.cppreference.com/w/cpp/language/operators#Array_subscript_operator) in C++23.
+`(12)` Provides an `operator[](Args...)` with the same *cv ref noex* specifiers as of the signature type. `accessor::operator[](Args...)` is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`. Requires the [multidimensional subscript feature](https://en.cppreference.com/w/cpp/language/operators#Array_subscript_operator) in C++23.
 
 ## Right-Hand-Side Operand Specializations
 
@@ -160,7 +160,7 @@ struct accessor<Self, Ds...> : accessor<Self, Ds>... {};
 
 `(13)` When `sizeof...(Ds)` is greater than `1`, and `accessor<Self, Ds>...` are default-constructible types, inherits all `accessor<Self, Ds>...` types.
 
-When `Rhs` is `true`, the other specializations are defined as follows, where `sizeof...(Ds)` is `1` and the only type in `Ds` is `proxy_operation<D, O>`, with `O` qualified with `cv ref noex`. When `O` matches none of them, the default implementation `(1)` applies, so `operator_access<Sign, true>` provides no accessor.
+When `Rhs` is `true`, the other specializations are defined as follows, where `sizeof...(Ds)` is `1` and the only type in `Ds` is `proxy_operation<D, S>`, with `S` qualified with `cv ref noex`. When `S` matches none of them, the default implementation `(1)` applies, so `operator_access<Sign, true>` provides no accessor.
 
 ### Regular SOPs
 
@@ -174,7 +174,7 @@ struct accessor<Self, proxy_operation<D, R(Arg) cv ref noex>> {
 };
 ```
 
-`(14)` Provides a `friend operator sop(Arg arg, Self cv <ref ? ref : &> self)` with the same *noex* specifiers as of the overload type. `accessor::operator sop(Arg arg, Self cv <ref ? ref : &> self)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(self), std::forward<Arg>(arg))`.
+`(14)` Provides a `friend operator sop(Arg arg, Self cv <ref ? ref : &> self)` with the same *noex* specifiers as of the signature type. `accessor::operator sop(Arg arg, Self cv <ref ? ref : &> self)` is equivalent to `return invoke<D, R(Arg) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(self), std::forward<Arg>(arg))`.
 
 ### Assignment SOPs
 
@@ -188,4 +188,4 @@ struct accessor<Self, proxy_operation<D, R(Arg&) cv ref noex>> {
 };
 ```
 
-`(15)` Provides a `friend operator sop(Arg& arg, Self cv <ref ? ref : &> self)` with the same *noex* specifiers as of the overload type. `accessor::operator sop(Arg& arg, Self cv <ref ? ref : &> self)` calls `invoke<D, R(Arg&) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(self), arg)` and returns `arg`.
+`(15)` Provides a `friend operator sop(Arg& arg, Self cv <ref ? ref : &> self)` with the same *noex* specifiers as of the signature type. `accessor::operator sop(Arg& arg, Self cv <ref ? ref : &> self)` calls `invoke<D, R(Arg&) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(self), arg)` and returns `arg`.

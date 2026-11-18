@@ -14,7 +14,7 @@ struct member_access;
 
 Class template `member_access` is an access type that defines member functions for [`proxy`](proxy/README.md). It meets the [*ProxyAccess* requirements](ProxyAccess.md) of applicable types. Instantiating the primary template is ill-formed. For an identifier `name`, [`PRO_ENABLE_MEMBER(name)`](PRO_ENABLE_MEMBER.md) defines the specialization `member_access<"name">`, whose member functions are named `name`.
 
-`member_access<Name>` is the access type of the conventions of [`member_dispatch<Name>`](member_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). A convention can also name it as its access type with any other [dispatch](ProxyDispatch.md) type, and a reflection can name it with any reflector type. The direct, or the indirect, conventions and reflections whose access type is `member_access<Name>` share an accessor (see [*ProxyAccess* requirements](ProxyAccess.md)), so their member functions participate in overload resolution together.
+`member_access<Name>` is the access type of the operations of [`member_dispatch<Name>`](member_dispatch.md) added via [`basic_facade_builder`](basic_facade_builder/add_convention.md). An operation can also name it as its access type with any other [dispatch](ProxyDispatch.md) type, and a reflection can name it with any metadata type. The direct, or the indirect, operations and reflections whose access type is `member_access<Name>` share an accessor (see [*ProxyAccess* requirements](ProxyAccess.md)), so their member functions participate in overload resolution together.
 
 ## Member Template `accessor`
 
@@ -47,13 +47,13 @@ struct accessor<Self, proxy_reflection<M>> {
 };
 ```
 
-Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](ProxyAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProxyOverload*](ProxyOverload.md).
+Each type in `Ds` is a *descriptor* (see [*ProxyAccess* requirements](ProxyAccess.md)), and `cv ref noex` ranges over the qualifiers supported by [*ProxySignature*](ProxySignature.md).
 
 `(1)` The default implementation of `accessor` is not constructible.
 
 `(2)` When `sizeof...(Ds)` is greater than `1`, and `accessor<Self, Ds>...` are default-constructible, inherits all `accessor<Self, Ds>...` types and `using` their member functions `name`.
 
-`(3)` When `sizeof...(Ds)` is `1` and the only type in `Ds` is [`proxy_operation`](proxy_operation.md)`<D, R(Args...) cv ref noex>`, provides a member function `name(Args...)` with the same *cv ref noex* specifiers as the overload type. `accessor::name(Args...)` is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`.
+`(3)` When `sizeof...(Ds)` is `1` and the only type in `Ds` is [`proxy_operation`](proxy_operation.md)`<D, R(Args...) cv ref noex>`, provides a member function `name(Args...)` with the same *cv ref noex* specifiers as the signature type. `accessor::name(Args...)` is equivalent to `return invoke<D, R(Args...) cv ref noex>(static_cast<Self cv <ref ? ref : &>>(*this), std::forward<Args>(args)...)`.
 
 `(4)` When `sizeof...(Ds)` is `1` and the only type in `Ds` is [`proxy_reflection`](proxy_reflection.md)`<M>`, provides a member function `name()`. `accessor::name()` is equivalent to `return reflect<M>(static_cast<const Self&>(*this))`.
 
@@ -74,16 +74,16 @@ int Area(const Square& square) noexcept { return square.side * square.side; }
 PRO_ENABLE_FREE(Area);
 PRO_ENABLE_MEMBER(Area);
 
-struct AreaConvention {
+struct AreaOperation {
   static constexpr bool is_direct = false;
   using dispatch_type = pro::free_dispatch<"Area">;
-  using overload_type = int() const noexcept;
+  using signature_type = int() const noexcept;
   using access_type = pro::member_access<"Area">;
 };
 
 struct Shape {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<AreaConvention>;
+  using operation_types = std::tuple<AreaOperation>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);

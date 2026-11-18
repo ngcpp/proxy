@@ -73,7 +73,7 @@ static_assert(DefaultFacade::destructibility ==
               pro::lifetime_requirement::nothrow);
 static_assert(DefaultFacade::max_size >= 2 * sizeof(void*));
 static_assert(DefaultFacade::max_align >= sizeof(void*));
-static_assert(std::is_same_v<DefaultFacade::convention_types, std::tuple<>>);
+static_assert(std::is_same_v<DefaultFacade::operation_types, std::tuple<>>);
 static_assert(std::is_same_v<DefaultFacade::reflection_types, std::tuple<>>);
 static_assert(
     std::is_nothrow_default_constructible_v<pro::proxy<DefaultFacade>>);
@@ -306,14 +306,14 @@ struct FacadeWithNonTrivialDestructionReflection
       ::build {};
 static_assert(!pro::facade<FacadeWithNonTrivialDestructionReflection>);
 
-struct FacadeWithTupleLikeConventions {
-  struct ToStringConvention {
+struct FacadeWithTupleLikeOperations {
+  struct ToStringOperation {
     static constexpr bool is_direct = false;
     using dispatch_type = utils::spec::FreeToString;
-    using overload_type = std::string();
+    using signature_type = std::string();
   };
   using super_types = std::tuple<>;
-  using convention_types = std::array<ToStringConvention, 1>;
+  using operation_types = std::array<ToStringOperation, 1>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -321,9 +321,9 @@ struct FacadeWithTupleLikeConventions {
   static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
   static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
-static_assert(pro::facade<FacadeWithTupleLikeConventions>);
+static_assert(pro::facade<FacadeWithTupleLikeOperations>);
 
-struct BadFacade_MissingConventionTypes {
+struct BadFacade_MissingOperationTypes {
   using super_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
@@ -332,11 +332,11 @@ struct BadFacade_MissingConventionTypes {
   static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
   static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
-static_assert(!pro::facade<BadFacade_MissingConventionTypes>);
+static_assert(!pro::facade<BadFacade_MissingOperationTypes>);
 
-struct BadFacade_BadConventionTypes {
+struct BadFacade_BadOperationTypes {
   using super_types = std::tuple<>;
-  using convention_types = int;
+  using operation_types = int;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -344,11 +344,11 @@ struct BadFacade_BadConventionTypes {
   static constexpr auto relocatability = pro::lifetime_requirement::nothrow;
   static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
-static_assert(!pro::facade<BadFacade_BadConventionTypes>);
+static_assert(!pro::facade<BadFacade_BadOperationTypes>);
 
 struct FacadeWithSuperTypes {
-  using super_types = std::tuple<FacadeWithTupleLikeConventions>;
-  using convention_types = std::tuple<>;
+  using super_types = std::tuple<FacadeWithTupleLikeOperations>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -360,8 +360,8 @@ static_assert(pro::facade<FacadeWithSuperTypes>);
 
 // A facade shall be no less conservative than any of its supers
 struct BadFacade_SuperWithSmallerLayout {
-  using super_types = std::tuple<FacadeWithTupleLikeConventions>;
-  using convention_types = std::tuple<>;
+  using super_types = std::tuple<FacadeWithTupleLikeOperations>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 4 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -372,8 +372,8 @@ struct BadFacade_SuperWithSmallerLayout {
 static_assert(!pro::facade<BadFacade_SuperWithSmallerLayout>);
 
 struct BadFacade_SuperWithStrongerConstraint {
-  using super_types = std::tuple<FacadeWithTupleLikeConventions>;
-  using convention_types = std::tuple<>;
+  using super_types = std::tuple<FacadeWithTupleLikeOperations>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -384,7 +384,7 @@ struct BadFacade_SuperWithStrongerConstraint {
 static_assert(!pro::facade<BadFacade_SuperWithStrongerConstraint>);
 
 struct BadFacade_MissingSuperTypes {
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -396,7 +396,7 @@ static_assert(!pro::facade<BadFacade_MissingSuperTypes>);
 
 struct BadFacade_BadSuperTypes {
   using super_types = int;
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -408,8 +408,8 @@ static_assert(!pro::facade<BadFacade_BadSuperTypes>);
 
 // A super that is not itself a facade makes the whole facade ill-formed
 struct BadFacade_BadSuperType {
-  using super_types = std::tuple<BadFacade_BadConventionTypes>;
-  using convention_types = std::tuple<>;
+  using super_types = std::tuple<BadFacade_BadOperationTypes>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -421,14 +421,14 @@ static_assert(!pro::facade<BadFacade_BadSuperType>);
 
 struct BadFacade_MissingConstraints {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
 };
 static_assert(!pro::facade<BadFacade_MissingConstraints>);
 
 struct BadFacade_BadConstraints_UnexpectedType {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static constexpr auto constraints = 0;
 };
@@ -506,7 +506,7 @@ static_assert(
 
 struct BadFacade_BadConstraints_NotConstant {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<>;
   static const std::size_t max_size;
   static constexpr std::size_t max_align = alignof(void*);
@@ -519,7 +519,7 @@ const std::size_t BadFacade_BadConstraints_NotConstant::max_size =
     2 * sizeof(void*);
 struct BadFacade_MissingReflectionTypes {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
   static constexpr auto copyability = pro::lifetime_requirement::none;
@@ -533,7 +533,7 @@ struct BadReflection {
 };
 struct BadFacade_BadReflectionType {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   using reflection_types = std::tuple<BadReflection>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -544,17 +544,17 @@ struct BadFacade_BadReflectionType {
 static_assert(!pro::facade<BadFacade_BadReflectionType>);
 
 struct FacadeWithoutAccessTypes {
-  struct Convention {
+  struct Operation {
     static constexpr bool is_direct = true;
     using dispatch_type = pro::implicit_conversion_dispatch;
-    using overload_type = void() const;
+    using signature_type = void() const;
   };
   struct SmallPtrReflection {
     static constexpr bool is_direct = true;
-    using reflector_type = ReflectionOfSmallPtr;
+    using metadata_type = ReflectionOfSmallPtr;
   };
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<Convention>;
+  using operation_types = std::tuple<Operation>;
   using reflection_types = std::tuple<SmallPtrReflection>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -606,7 +606,7 @@ struct FacadeWithDefaultAccessTypes
       ::build {};
 template <std::size_t I>
 using DefaultAccessType = typename std::tuple_element_t<
-    I, FacadeWithDefaultAccessTypes::convention_types>::access_type;
+    I, FacadeWithDefaultAccessTypes::operation_types>::access_type;
 static_assert(std::is_same_v<DefaultAccessType<0>, pro::operator_access<"+">>);
 static_assert(std::is_same_v<DefaultAccessType<1>, pro::operator_access<"+">>);
 static_assert(
@@ -635,17 +635,17 @@ struct AnyArgumentDispatch {
     return 0;
   }
 };
-template <class A, class O>
-struct AnyArgumentConvention {
+template <class A, class S>
+struct AnyArgumentOperation {
   static constexpr bool is_direct = false;
   using dispatch_type = AnyArgumentDispatch;
-  using overload_type = O;
+  using signature_type = S;
   using access_type = A;
 };
-template <class A, class... Os>
+template <class A, class... Ss>
 struct AnyArgumentFacade {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<AnyArgumentConvention<A, Os>...>;
+  using operation_types = std::tuple<AnyArgumentOperation<A, Ss>...>;
   using reflection_types = std::tuple<>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -653,9 +653,9 @@ struct AnyArgumentFacade {
   static constexpr auto relocatability = pro::lifetime_requirement::trivial;
   static constexpr auto destructibility = pro::lifetime_requirement::nothrow;
 };
-template <class A, class... Os>
+template <class A, class... Ss>
 using AnyArgumentSelf =
-    pro::proxy_indirect_accessor<AnyArgumentFacade<A, Os...>>;
+    pro::proxy_indirect_accessor<AnyArgumentFacade<A, Ss...>>;
 template <class T, class... Args>
 concept HasOperatorPlus =
     requires(T& self, Args... args) { self.operator+(args...); };
@@ -694,8 +694,8 @@ static_assert(!HasOperatorSubscript<
               AnyArgumentSelf<SubscriptAccess, int(int, int)>, int, int>);
 #endif // __cpp_multidimensional_subscript >= 202110L
 
-// A facade-aware convention declared on a super is substituted against the
-// deriving facade, so proxiable shall reflect the substituted overload rather
+// A facade-aware operation declared on a super is substituted against the
+// deriving facade, so proxiable shall reflect the substituted signature rather
 // than only the one the super was checked with.
 namespace facade_aware_from_super {
 
@@ -740,7 +740,7 @@ struct Impl {
 
 // GetSignature<Super> is int() const, which Impl satisfies;
 // GetSignature<Derived> is std::string() const, which it does not. The
-// convention is carried across two levels of super, so the check reaches
+// operation is carried across two levels of super, so the check reaches
 // Derived through Mid.
 static_assert(pro::proxiable<Impl*, Super>);
 static_assert(pro::proxiable<Impl*, Mid>);

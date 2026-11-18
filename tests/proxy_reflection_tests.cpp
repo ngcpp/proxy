@@ -17,11 +17,11 @@ PRO_ENABLE_FREE(GetTypeInfo);
 
 namespace proxy_reflection_tests_detail {
 
-struct TraitsReflector {
+struct TraitsMetadata {
 public:
-  TraitsReflector() = default;
+  TraitsMetadata() = default;
   template <class T>
-  constexpr explicit TraitsReflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit TraitsMetadata(std::in_place_type_t<T>) noexcept
       : is_default_constructible_(std::is_default_constructible_v<T>),
         is_copy_constructible_(std::is_copy_constructible_v<T>),
         is_nothrow_move_constructible_(std::is_nothrow_move_constructible_v<T>),
@@ -29,10 +29,10 @@ public:
         is_trivial_(std::is_trivially_default_constructible_v<T> &&
                     std::is_trivially_copyable_v<T>) {}
 
-  template <class Self, class R>
+  template <class Self, class M>
   struct accessor {
-    const TraitsReflector& ReflectTraits() const noexcept {
-      return reflect<R>(static_cast<const Self&>(*this));
+    const TraitsMetadata& ReflectTraits() const noexcept {
+      return reflect<M>(static_cast<const Self&>(*this));
     }
   };
 
@@ -43,13 +43,13 @@ public:
   bool is_trivial_;
 };
 
-struct TestRttiFacade : pro::facade_builder                           //
-                        ::add_reflection<utils::RttiReflector>        //
-                        ::add_direct_reflection<utils::RttiReflector> //
+struct TestRttiFacade : pro::facade_builder                          //
+                        ::add_reflection<utils::RttiMetadata>        //
+                        ::add_direct_reflection<utils::RttiMetadata> //
                         ::build {};
 
-struct TestTraitsFacade : pro::facade_builder                      //
-                          ::add_direct_reflection<TraitsReflector> //
+struct TestTraitsFacade : pro::facade_builder                     //
+                          ::add_direct_reflection<TraitsMetadata> //
                           ::build {};
 
 struct DescriptionAccess {
@@ -76,29 +76,29 @@ struct DescribeDispatch {
   }
 };
 
-struct TypeInfoReflector {
-  TypeInfoReflector() = default;
+struct TypeInfoMetadata {
+  TypeInfoMetadata() = default;
   template <class T>
-  constexpr explicit TypeInfoReflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit TypeInfoMetadata(std::in_place_type_t<T>) noexcept
       : info(&typeid(T)) {}
 
   const std::type_info* info;
 };
 
 struct TestDescriptionFacade {
-  struct DescribeConvention {
+  struct DescribeOperation {
     static constexpr bool is_direct = false;
     using dispatch_type = DescribeDispatch;
-    using overload_type = std::string() const;
+    using signature_type = std::string() const;
     using access_type = DescriptionAccess;
   };
   struct TypeInfoReflection {
     static constexpr bool is_direct = false;
-    using reflector_type = TypeInfoReflector;
+    using metadata_type = TypeInfoMetadata;
     using access_type = DescriptionAccess;
   };
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<DescribeConvention>;
+  using operation_types = std::tuple<DescribeOperation>;
   using reflection_types = std::tuple<TypeInfoReflection>;
   static constexpr std::size_t max_size = 2 * sizeof(void*);
   static constexpr std::size_t max_align = alignof(void*);
@@ -110,13 +110,13 @@ struct TestDescriptionFacade {
 template <bool IsDirect, class A>
 struct TypeInfoReflection {
   static constexpr bool is_direct = IsDirect;
-  using reflector_type = TypeInfoReflector;
+  using metadata_type = TypeInfoMetadata;
   using access_type = A;
 };
 
 struct TestNamedAccessFacade {
   using super_types = std::tuple<>;
-  using convention_types = std::tuple<>;
+  using operation_types = std::tuple<>;
   using reflection_types =
       std::tuple<TypeInfoReflection<true, pro::member_access<"GetTypeInfo">>,
                  TypeInfoReflection<false, pro::member_access<"GetTypeInfo">>,
@@ -172,7 +172,7 @@ TEST(ProxyReflectionTests, TestSharedAccess) {
                             Self,
                             pro::proxy_operation<detail::DescribeDispatch,
                                                  std::string() const>,
-                            pro::proxy_reflection<detail::TypeInfoReflector>>,
+                            pro::proxy_reflection<detail::TypeInfoMetadata>>,
                         Self>);
   static_assert(sizeof(pro::proxy<detail::TestDescriptionFacade>) ==
                 3 * sizeof(void*));

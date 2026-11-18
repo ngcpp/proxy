@@ -10,11 +10,11 @@ template <class D>
 struct weak_dispatch : D;
 ```
 
-Class template `weak_dispatch<D>` extends an existing [dispatch](../ProxyDispatch.md) type `D` and offers a default implementation of `operator()` that throws [`not_implemented`](../not_implemented.md) when a convention is not implemented in `D`.
+Class template `weak_dispatch<D>` extends an existing [dispatch](../ProxyDispatch.md) type `D` and offers a default implementation of `operator()` that throws [`not_implemented`](../not_implemented.md) when an operation is not implemented in `D`.
 
-When `D` is a dispatch type provided by the library, [`basic_facade_builder`](../basic_facade_builder/add_convention.md) assigns the same access type to the conventions of `weak_dispatch<D>` and `D`, so their overloads participate in overload resolution together. For other dispatch types, the builder adapts the `accessor` member template inherited from `D` separately for `weak_dispatch<D>` and `D`.
+When `D` is a dispatch type provided by the library, [`basic_facade_builder`](../basic_facade_builder/add_convention.md) assigns the same access type to the operations of `weak_dispatch<D>` and `D`, so their overloads participate in overload resolution together. For other dispatch types, the builder adapts the `accessor` member template inherited from `D` separately for `weak_dispatch<D>` and `D`.
 
-*Since 5.0.0*: the conventions of `weak_dispatch<D>` and of `D` share an access type when `D` is provided by the library. Previously, each dispatch type had its own accessor.
+*Since 5.0.0*: the operations of `weak_dispatch<D>` and of `D` share an access type when `D` is provided by the library. Previously, each dispatch type had its own accessor.
 
 ## Member Functions
 
@@ -26,7 +26,7 @@ When `D` is a dispatch type provided by the library, [`basic_facade_builder`](..
 
 ## Notes
 
-A "weak dispatch" can extend an existing dispatch with a default implementation that does not depend on the contained value of a `proxy` object. This is useful when instantiating a `proxy<F>` with a value that does not support some conventions defined by `F`. Compared to wrapping the default implementation with [`PRO_DEF_FREE_DISPATCH`](../PRO_DEF_FREE_DISPATCH.md), using "weak dispatch" when applicable can effectively improve compilation speed and binary size, in case some contained value of a `proxy` object does not participate code generation.
+A "weak dispatch" can extend an existing dispatch with a default implementation that does not depend on the contained value of a `proxy` object. This is useful when instantiating a `proxy<F>` with a value that does not support some operations defined by `F`. Compared to wrapping the default implementation with [`PRO_DEF_FREE_DISPATCH`](../PRO_DEF_FREE_DISPATCH.md), using "weak dispatch" when applicable can effectively improve compilation speed and binary size, in case some contained value of a `proxy` object does not participate code generation.
 
 In [Java](https://docs.oracle.com/javase/specs/jls/se23/html/jls-9.html#jls-9.4-200) or [C#](https://learn.microsoft.com/dotnet/csharp/language-reference/proposals/csharp-8.0/default-interface-methods), a "default method" can invoke other abstract methods defined in a same `interface`. This pattern is discouraged when using the Proxy library because the invocations are not necessarily indirect. If a "default implementation" otherwise needs to observe the contained value of a `proxy` object, it is encouraged to define a separate free function, and subsequently define a dispatch type of it by using [`PRO_DEF_FREE_DISPATCH`](../PRO_DEF_FREE_DISPATCH.md) or [`PRO_DEF_FREE_AS_MEM_DISPATCH`](../PRO_DEF_FREE_AS_MEM_DISPATCH.md).
 

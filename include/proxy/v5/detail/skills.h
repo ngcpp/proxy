@@ -108,17 +108,17 @@ template <template <class...> class Formatter,
           template <class...> class FormatContext>
 struct format_traits {
   template <class CharT>
-  using overload = typename FormatContext<CharT>::iterator(
+  using signature = typename FormatContext<CharT>::iterator(
       StringView<CharT> spec, FormatContext<CharT>& fc) const;
 
   struct access {
     template <class Self, class... Ds>
     struct PRO5D_ENFORCE_EBO accessor : accessor<Self, Ds>... {};
     template <class Self, class D>
-    struct accessor<Self, proxy_operation<D, overload<char>>>
+    struct accessor<Self, proxy_operation<D, signature<char>>>
         : enabled_t<Formatter, char> {};
     template <class Self, class D>
-    struct accessor<Self, proxy_operation<D, overload<wchar_t>>>
+    struct accessor<Self, proxy_operation<D, signature<wchar_t>>>
         : enabled_t<Formatter, wchar_t> {};
   };
 
@@ -139,7 +139,7 @@ struct format_traits {
     template <class P, class CompatibleFormatContext>
     auto format(const P& p, CompatibleFormatContext& fc) const
         -> CompatibleFormatContext::iterator {
-      return invoke<dispatch, overload<CharT>>(p, spec_, fc);
+      return invoke<dispatch, signature<CharT>>(p, spec_, fc);
     }
 
   private:
@@ -191,7 +191,7 @@ struct proxy_cast_context {
   void* result_ptr;
 };
 
-template <class Self, class D, class O>
+template <class Self, class D, class S>
 struct proxy_cast_accessor_impl {
   template <class T>
   friend T proxy_cast(Self self) {
@@ -239,7 +239,7 @@ private:
   static void invoke_cast(Self self, const proxy_cast_context& cast_ctx) {
     if constexpr (specialization_of<std::remove_cvref_t<Self>, proxy>) {
       constexpr bool is_rv =
-          overload_traits<O>::this_qualifier == qualifier_type::rv;
+          signature_traits<S>::this_qualifier == qualifier_type::rv;
       if (proxy_typeid(self) == *cast_ctx.type_ptr) [[likely]] {
         auto* ptr = proxy_helper::get_ptr(self);
         if constexpr (is_rv) {
@@ -247,17 +247,17 @@ private:
               typename std::remove_cvref_t<Self>::facade_type,
               typename std::remove_cvref_t<Self>::metadata_policy_type>
               guard{self};
-          overload_traits<O>::template invoke<std::decay_t<T>, true, D>(
+          signature_traits<S>::template invoke<std::decay_t<T>, true, D>(
               ptr, cast_ctx);
         } else {
-          overload_traits<O>::template invoke<std::decay_t<T>, true, D>(
+          signature_traits<S>::template invoke<std::decay_t<T>, true, D>(
               ptr, cast_ctx);
         }
       } else if constexpr (is_rv) {
         self.reset();
       }
     } else {
-      invoke<D, O>(static_cast<Self>(self), cast_ctx);
+      invoke<D, S>(static_cast<Self>(self), cast_ctx);
     }
   }
 };
@@ -311,10 +311,10 @@ struct proxy_typeid_access {
   };
 };
 
-struct proxy_typeid_reflector {
-  proxy_typeid_reflector() = default;
+struct proxy_typeid_metadata {
+  proxy_typeid_metadata() = default;
   template <class T>
-  constexpr explicit proxy_typeid_reflector(std::in_place_type_t<T>) noexcept
+  constexpr explicit proxy_typeid_metadata(std::in_place_type_t<T>) noexcept
       : info(&typeid(T)) {}
 
   const std::type_info* info;
@@ -337,8 +337,8 @@ struct direct_rtti_access {
   };
 };
 
-struct direct_rtti_reflector : proxy_typeid_reflector {
-  using proxy_typeid_reflector::proxy_typeid_reflector;
+struct direct_rtti_metadata : proxy_typeid_metadata {
+  using proxy_typeid_metadata::proxy_typeid_metadata;
 };
 #endif // __cpp_rtti >= 199711L
 
@@ -356,10 +356,10 @@ template <>
 struct default_access_traits<proxy_cast_dispatch>
     : std::type_identity<proxy_cast_access> {};
 template <>
-struct default_access_traits<proxy_typeid_reflector>
+struct default_access_traits<proxy_typeid_metadata>
     : std::type_identity<proxy_typeid_access> {};
 template <>
-struct default_access_traits<direct_rtti_reflector>
+struct default_access_traits<direct_rtti_metadata>
     : std::type_identity<direct_rtti_access> {};
 #endif // __cpp_rtti >= 199711L
 
@@ -371,12 +371,12 @@ namespace skills {
 template <class FB>
 using format =
     FB::template add_convention<detail::std_format_traits::dispatch,
-                                detail::std_format_traits::overload<char>>;
+                                detail::std_format_traits::signature<char>>;
 
 template <class FB>
 using wformat =
     FB::template add_convention<detail::std_format_traits::dispatch,
-                                detail::std_format_traits::overload<wchar_t>>;
+                                detail::std_format_traits::signature<wchar_t>>;
 #endif // PRO5D_HAS_FORMAT
 
 #if __cpp_rtti >= 199711L
@@ -385,11 +385,11 @@ using indirect_rtti = FB::template add_indirect_convention<
     detail::proxy_cast_dispatch, void(detail::proxy_cast_context) &,
     void(detail::proxy_cast_context) const&,
     void(detail::proxy_cast_context) &&>::
-    template add_indirect_reflection<detail::proxy_typeid_reflector>;
+    template add_indirect_reflection<detail::proxy_typeid_metadata>;
 
 template <class FB>
 using direct_rtti =
-    FB::template add_direct_reflection<detail::direct_rtti_reflector>;
+    FB::template add_direct_reflection<detail::direct_rtti_metadata>;
 
 template <class FB>
 using rtti = indirect_rtti<FB>;

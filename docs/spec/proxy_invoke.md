@@ -8,43 +8,43 @@
 
 ```cpp
 // (1)
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(proxy_indirect_accessor<F, MP>& p, Args&&... args);
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(const proxy_indirect_accessor<F, MP>& p, Args&&... args);
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(proxy_indirect_accessor<F, MP>&& p, Args&&... args);
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(const proxy_indirect_accessor<F, MP>&& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(proxy_indirect_accessor<F, MP>& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(const proxy_indirect_accessor<F, MP>& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(proxy_indirect_accessor<F, MP>&& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(const proxy_indirect_accessor<F, MP>&& p, Args&&... args);
 
 // (2)
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(proxy<F, MP>& p, Args&&... args);
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(const proxy<F, MP>& p, Args&&... args);
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(proxy<F, MP>&& p, Args&&... args);
-template <class D, class O, facade F, class MP, class... Args>
-return-type-of<O> proxy_invoke(const proxy<F, MP>&& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(proxy<F, MP>& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(const proxy<F, MP>& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(proxy<F, MP>&& p, Args&&... args);
+template <class D, class S, facade F, class MP, class... Args>
+return-type-of<S> proxy_invoke(const proxy<F, MP>&& p, Args&&... args);
 ```
 
-Invokes a `proxy` with a specified dispatch type, an overload type, and arguments. Let `Args2...` be the argument types of `O`, `R` be the return type of `O`. `return-type-of<O>` is `R`.
+Invokes a `proxy` with a specified dispatch type, a signature type, and arguments. Let `Args2...` be the argument types of `S`, `R` be the return type of `S`. `return-type-of<S>` is `R`.
 
 - `(1)` Let `ptr` be the contained value of the `proxy` object associated to `p` with the same cv ref-qualifiers. Equivalent to [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), *ptr, static_cast<Args2>(args)...)`.
 - `(2)` Let `ptr` be the contained value of `p` with the same cv ref-qualifiers. Equivalent to [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), ptr, static_cast<Args2>(args)...)`.  The behavior is undefined if `p` does not contain a value.
 
-There shall be a convention type `Conv` defined in the convention types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
+There shall be an operation type `Op` defined in the operation types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
 
-- `Conv::is_direct` is `false` (for `(1)`) or `true` (for `(2)`), and
-- `typename Conv::dispatch_type` is `D`, and
-- [`substituted-overload`](ProxyOverload.md)`<typename Conv::overload_type, F, MP>` is `O`.
+- `Op::is_direct` is `false` (for `(1)`) or `true` (for `(2)`), and
+- `typename Op::dispatch_type` is `D`, and
+- [`substituted-signature`](ProxySignature.md)`<typename Op::signature_type, F, MP>` is `S`.
 
 ## Notes
 
 It is generally not recommended to call `proxy_invoke` directly. Using an [`accessor`](ProxyAccess.md) is usually a better option with easier and more descriptive syntax. If the facade type `F` is defined with the recommended facilities, it has full accessibility support. Specifically, when
 
 - `D` is defined via [macro `PRO_DEF_MEM_DISPATCH`](PRO_DEF_MEM_DISPATCH.md), [macro `PRO_DEF_FREE_DISPATCH`](PRO_DEF_FREE_DISPATCH.md) or [macro `PRO_DEF_FREE_AS_MEM_DISPATCH`](PRO_DEF_FREE_AS_MEM_DISPATCH.md), or is a specialization of [`operator_dispatch`](operator_dispatch/README.md), or is either [`explicit_conversion_dispatch`](explicit_conversion_dispatch/README.md) or [`implicit_conversion_dispatch`](implicit_conversion_dispatch/README.md), and
-- the convention type `Conv` is defined via [`facade_builder`](basic_facade_builder/README.md).
+- the operation type `Op` is defined via [`facade_builder`](basic_facade_builder/README.md).
 
 ## Example
 

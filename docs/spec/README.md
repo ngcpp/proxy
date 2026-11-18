@@ -64,7 +64,7 @@ This document provides the API specifications for the C++ library Proxy (version
 | [`make_proxy_shared`](make_proxy_shared.md)         | Creates a `proxy` object with shared ownership               |
 | [`make_proxy_view`](make_proxy_view.md)             | Creates a `proxy_view` object                                |
 | [`make_proxy`](make_proxy.md)                       | Creates a `proxy` object potentially with heap allocation    |
-| [`proxy_invoke`](proxy_invoke.md) [deprecated]      | Invokes a `proxy` with a specified convention                |
+| [`proxy_invoke`](proxy_invoke.md) [deprecated]      | Invokes a `proxy` with a specified operation                 |
 | [`proxy_reflect`](proxy_reflect.md) [deprecated]    | Acquires reflection information of a contained type          |
 
 ## Header `<proxy_macros.h>`
@@ -95,14 +95,14 @@ Also included in `proxy.h`.
 | Name                                              | Description                                                  |
 | ------------------------------------------------- | ------------------------------------------------------------ |
 | [*ProxyAccess*](ProxyAccess.md)                   | Specifies how a type defines member and non-member functions for `proxy`      |
-| [*ProxyBasicConvention*](ProxyBasicConvention.md) | Specifies that a type potentially models a "convention"      |
 | [*ProxyBasicFacade*](ProxyBasicFacade.md)         | Specifies that a type potentially models a "facade" of `proxy` |
 | [*ProxyBasicMetadata*](ProxyBasicMetadata.md)     | Specifies that a type potentially models "metadata"          |
+| [*ProxyBasicOperation*](ProxyBasicOperation.md)   | Specifies that a type potentially models an "operation"      |
 | [*ProxyBasicReflection*](ProxyBasicReflection.md) | Specifies that a type potentially models a "reflection"      |
-| [*ProxyConvention*](ProxyConvention.md)           | Specifies that a type models a "convention"                  |
 | [*ProxyDispatch*](ProxyDispatch.md)               | Specifies that a type models a "dispatch"                    |
 | [*ProxyFacade*](ProxyFacade.md)                   | Specifies that a type models a "facade" of `proxy`           |
 | [*ProxyMetadata*](ProxyMetadata.md)               | Specifies that a type models "metadata" of a type            |
 | [*ProxyMetadataPolicy*](ProxyMetadataPolicy.md)   | Specifies that a type models a "metadata policy" of `proxy`  |
-| [*ProxyOverload*](ProxyOverload.md)               | Specifies that a type models an "overload"                   |
+| [*ProxyOperation*](ProxyOperation.md)             | Specifies that a type models an "operation"                  |
 | [*ProxyReflection*](ProxyReflection.md)           | Specifies that a type models a "reflection"                  |
+| [*ProxySignature*](ProxySignature.md)             | Specifies that a type models a "signature"                   |

@@ -15,7 +15,7 @@ constexpr lifetime_requirement default-lr = static_cast<lifetime_requirement>(
 Given a [facade](../facade.md) type `F`, any meaningful value of `F::max_size` and `F::max_align` is less than *default-size*; any meaningful value of `F::copyability`, `F::relocatability`, and `F::destructibility` is greater than *default-lr*.
 
 ```cpp
-template <class Ss, class Cs, class Rs, std::size_t MaxSize,
+template <class Fs, class Os, class Rs, std::size_t MaxSize,
           std::size_t MaxAlign, lifetime_requirement Copyability,
           lifetime_requirement Relocatability, lifetime_requirement Destructibility>
 class basic_facade_builder;
@@ -27,7 +27,7 @@ using facade_builder =
 
 `basic_facade_builder` provides a member type `build` that compiles the template parameters into a [`facade`](../facade.md) type. The template parameters can be modified via various member alias templates that specify `basic_facade_builder` with the modified template parameters.
 
-*Since 5.0.0*: `Ss` is added to the template parameters, holding the supers accumulated by [`add_facade`](add_facade.md).
+*Since 5.0.0*: `Fs` is added to the template parameters, holding the supers accumulated by [`add_facade`](add_facade.md).
 
 ## Member Types
 
@@ -39,7 +39,7 @@ using facade_builder =
 
 | Name                                                         | Description                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [`add_convention`<br />`add_indirect_convention`<br />`add_direct_convention`](add_convention.md) | Adds a convention to the template parameters                 |
+| [`add_convention`<br />`add_indirect_convention`<br />`add_direct_convention`](add_convention.md) | Adds operations to the template parameters                   |
 | [`add_facade`](add_facade.md)                                | Adds a facade to the template parameters                     |
 | [`add_facade_with_substitution`](add_facade_with_substitution.md) | Equivalent to [`add_facade`](add_facade.md)                   |
 | [`add_reflection`<br />`add_indirect_reflection`<br />`add_direct_reflection`](add_reflection.md) | Adds a reflection to the template parameters                 |
@@ -82,33 +82,33 @@ Definition `(2)` is a type alias, its "real" type may have a long name, and the 
 Consider the following facade template definitions:
 
 ```cpp
-template <class... Os>
+template <class... Ss>
 struct MovableCallable : pro::facade_builder
-    ::add_convention<pro::operator_dispatch<"()">, Os...>
+    ::add_convention<pro::operator_dispatch<"()">, Ss...>
     ::build {};
 
-template <class... Os>
+template <class... Ss>
 struct CopyableCallable : pro::facade_builder
-    ::add_facade<MovableCallable<Os...>>
+    ::add_facade<MovableCallable<Ss...>>
     ::support_copy<pro::lifetime_requirement::supported>
     ::build {};
 ```
 
-Although GCC can usually compile the code above, it does not adhere to the C++ standard syntax, and as a result, it won't compile with Clang or MSVC ([live demo](https://godbolt.org/z/38ce4jb8a)). This is because type `add_facade<MovableCallable<Os...>>` depends on the template parameters, and an explicit `template` is required when specifying its member alias template `support_copy`. To fix the code, we could either add the keyword `template` before `support_copy`, or simply swap `add_facade` and `support_copy`. For instance:
+Although GCC can usually compile the code above, it does not adhere to the C++ standard syntax, and as a result, it won't compile with Clang or MSVC ([live demo](https://godbolt.org/z/38ce4jb8a)). This is because type `add_facade<MovableCallable<Ss...>>` depends on the template parameters, and an explicit `template` is required when specifying its member alias template `support_copy`. To fix the code, we could either add the keyword `template` before `support_copy`, or simply swap `add_facade` and `support_copy`. For instance:
 
 ```cpp
-template <class... Os>
+template <class... Ss>
 struct CopyableCallable : pro::facade_builder
-    ::add_facade<MovableCallable<Os...>>
+    ::add_facade<MovableCallable<Ss...>>
     ::template support_copy<pro::lifetime_requirement::supported>
     ::build {};
 
 // Or
 
-template <class... Os>
+template <class... Ss>
 struct CopyableCallable : pro::facade_builder
     ::support_copy<pro::lifetime_requirement::supported>
-    ::add_facade<MovableCallable<Os...>>
+    ::add_facade<MovableCallable<Ss...>>
     ::build {};
 ```
 
@@ -119,26 +119,26 @@ struct CopyableCallable : pro::facade_builder
 
 #include <proxy/proxy.h>
 
-template <class... Overloads>
+template <class... Signatures>
 struct MovableCallable
-    : pro::facade_builder                                          //
-      ::add_convention<pro::operator_dispatch<"()">, Overloads...> //
+    : pro::facade_builder                                           //
+      ::add_convention<pro::operator_dispatch<"()">, Signatures...> //
       ::build {};
 
-template <class... Overloads>
+template <class... Signatures>
 struct CopyableCallable
     : pro::facade_builder                                  //
       ::support_copy<pro::lifetime_requirement::supported> //
-      ::add_facade<MovableCallable<Overloads...>>          //
+      ::add_facade<MovableCallable<Signatures...>>         //
       ::build {};
 
 // MyFunction has similar functionality as std::function but supports multiple
-// overloads MyMoveOnlyFunction has similar functionality as
-// std::move_only_function but supports multiple overloads
-template <class... Overloads>
-using MyFunction = pro::proxy<CopyableCallable<Overloads...>>;
-template <class... Overloads>
-using MyMoveOnlyFunction = pro::proxy<MovableCallable<Overloads...>>;
+// signatures MyMoveOnlyFunction has similar functionality as
+// std::move_only_function but supports multiple signatures
+template <class... Signatures>
+using MyFunction = pro::proxy<CopyableCallable<Signatures...>>;
+template <class... Signatures>
+using MyMoveOnlyFunction = pro::proxy<MovableCallable<Signatures...>>;
 
 int main() {
   auto f = [](auto&&... v) {

@@ -7,7 +7,7 @@ template <facade F>
 using add_facade_with_substitution = basic_facade_builder</* see below */>;
 ```
 
-The alias template `add_facade_with_substitution` of `basic_facade_builder<Ss, Cs, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` is equivalent to [`add_facade`](add_facade.md)`<F>`.
+The alias template `add_facade_with_substitution` of `basic_facade_builder<Fs, Os, Rs, MaxSize, MaxAlign, Copyability, Relocatability, Destructibility>` is equivalent to [`add_facade`](add_facade.md)`<F>`.
 
 ## Example
 

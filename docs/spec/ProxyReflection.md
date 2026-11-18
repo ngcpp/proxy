@@ -6,7 +6,7 @@ A type `R` meets the *ProxyReflection* requirements of a type `P` if `R` meets t
 
 | Expressions                                         | Semantics                                                    |
 | --------------------------------------------------- | ------------------------------------------------------------ |
-| `typename R::reflector_type(std::in_place_type<T>)` | Constructs a value of type `typename R::reflector_type`, reflecting implementation-defined metadata of type `T`. `typename R::reflector_type` shall meet the [*ProxyMetadata* requirements](ProxyMetadata.md) of `T` *(since 5.0.0)*. |
+| `typename R::metadata_type(std::in_place_type<T>)`  | Constructs a value of type `typename R::metadata_type`, reflecting implementation-defined metadata of type `T`. `typename R::metadata_type` shall meet the [*ProxyMetadata* requirements](ProxyMetadata.md) of `T` *(since 5.0.0)*. |
 
 ## See Also
 

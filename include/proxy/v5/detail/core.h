@@ -58,12 +58,12 @@ enum class lifetime_requirement {
 using constraint_level [[deprecated("Use lifetime_requirement instead")]] =
     lifetime_requirement;
 
-template <template <class, class> class O>
+template <template <class, class> class ST>
 struct proxy_dependent_signature {
   proxy_dependent_signature() = delete;
 };
 
-template <class D, class O>
+template <class D, class S>
 struct proxy_operation {};
 template <class M>
 struct proxy_reflection {};
@@ -362,10 +362,10 @@ private:
 
 struct relocate_dispatch;
 
-template <class O>
-struct overload_traits : inapplicable_traits {};
+template <class S>
+struct signature_traits : inapplicable_traits {};
 template <qualifier_type Q, bool NE, class R, class... Args>
-struct overload_traits_impl : applicable_traits {
+struct signature_traits_impl : applicable_traits {
   using return_type = R;
   using pointer_type = std::conditional_t<Q == qualifier_type::const_lv ||
                                               Q == qualifier_type::const_rv,
@@ -405,83 +405,83 @@ struct overload_traits_impl : applicable_traits {
       invocable_dispatch<P, IsDirect, D, Q, NE, R, Args...>;
 };
 template <class R, class... Args>
-struct overload_traits<R(Args...)>
-    : overload_traits_impl<qualifier_type::lv, false, R, Args...> {};
+struct signature_traits<R(Args...)>
+    : signature_traits_impl<qualifier_type::lv, false, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) noexcept>
-    : overload_traits_impl<qualifier_type::lv, true, R, Args...> {};
+struct signature_traits<R(Args...) noexcept>
+    : signature_traits_impl<qualifier_type::lv, true, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) &>
-    : overload_traits_impl<qualifier_type::lv, false, R, Args...> {};
+struct signature_traits<R(Args...) &>
+    : signature_traits_impl<qualifier_type::lv, false, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) & noexcept>
-    : overload_traits_impl<qualifier_type::lv, true, R, Args...> {};
+struct signature_traits<R(Args...) & noexcept>
+    : signature_traits_impl<qualifier_type::lv, true, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) &&>
-    : overload_traits_impl<qualifier_type::rv, false, R, Args...> {};
+struct signature_traits<R(Args...) &&>
+    : signature_traits_impl<qualifier_type::rv, false, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) && noexcept>
-    : overload_traits_impl<qualifier_type::rv, true, R, Args...> {};
+struct signature_traits<R(Args...) && noexcept>
+    : signature_traits_impl<qualifier_type::rv, true, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) const>
-    : overload_traits_impl<qualifier_type::const_lv, false, R, Args...> {};
+struct signature_traits<R(Args...) const>
+    : signature_traits_impl<qualifier_type::const_lv, false, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) const noexcept>
-    : overload_traits_impl<qualifier_type::const_lv, true, R, Args...> {};
+struct signature_traits<R(Args...) const noexcept>
+    : signature_traits_impl<qualifier_type::const_lv, true, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) const&>
-    : overload_traits_impl<qualifier_type::const_lv, false, R, Args...> {};
+struct signature_traits<R(Args...) const&>
+    : signature_traits_impl<qualifier_type::const_lv, false, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) const & noexcept>
-    : overload_traits_impl<qualifier_type::const_lv, true, R, Args...> {};
+struct signature_traits<R(Args...) const & noexcept>
+    : signature_traits_impl<qualifier_type::const_lv, true, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) const&&>
-    : overload_traits_impl<qualifier_type::const_rv, false, R, Args...> {};
+struct signature_traits<R(Args...) const&&>
+    : signature_traits_impl<qualifier_type::const_rv, false, R, Args...> {};
 template <class R, class... Args>
-struct overload_traits<R(Args...) const && noexcept>
-    : overload_traits_impl<qualifier_type::const_rv, true, R, Args...> {};
-template <class O>
-using ret_t = overload_traits<O>::return_type;
+struct signature_traits<R(Args...) const && noexcept>
+    : signature_traits_impl<qualifier_type::const_rv, true, R, Args...> {};
+template <class S>
+using ret_t = signature_traits<S>::return_type;
 
-template <class MP, bool IsDirect, class D, class O>
+template <class MP, bool IsDirect, class D, class S>
 struct invocation_meta {
   invocation_meta() = default;
   template <class P>
   constexpr explicit invocation_meta(std::in_place_type_t<P>)
-      : function(overload_traits<O>::template invoke<P, IsDirect, D>) {}
+      : function(signature_traits<S>::template invoke<P, IsDirect, D>) {}
 
   explicit operator bool() const noexcept {
     return static_cast<bool>(function);
   }
 
-  typename MP::template invoker<typename overload_traits<O>::function_type>
+  typename MP::template invoker<typename signature_traits<S>::function_type>
       function;
 };
 
-template <class O>
-struct overload_substitution_traits : inapplicable_traits {
+template <class S>
+struct signature_substitution_traits : inapplicable_traits {
   template <class, class>
-  using type = O;
+  using type = S;
 };
-template <template <class, class> class O>
-struct overload_substitution_traits<proxy_dependent_signature<O>>
+template <template <class, class> class ST>
+struct signature_substitution_traits<proxy_dependent_signature<ST>>
     : applicable_traits {
   template <class F, class MP>
-  using type = O<F, MP>;
+  using type = ST<F, MP>;
 };
-template <class O, class F, class MP>
-using substituted_overload_t =
-    overload_substitution_traits<O>::template type<F, MP>;
-template <class O>
-concept extended_overload = overload_traits<O>::applicable ||
-                            overload_substitution_traits<O>::applicable;
+template <class S, class F, class MP>
+using substituted_signature_t =
+    signature_substitution_traits<S>::template type<F, MP>;
+template <class S>
+concept extended_signature = signature_traits<S>::applicable ||
+                             signature_substitution_traits<S>::applicable;
 
-template <class C>
-concept basic_convention = requires {
-  { typename C::dispatch_type() } noexcept;
-  typename C::overload_type;
-  typename static_prop_probe<bool, C::is_direct>;
-} && extended_overload<typename C::overload_type>;
+template <class O>
+concept basic_operation = requires {
+  { typename O::dispatch_type() } noexcept;
+  typename O::signature_type;
+  typename static_prop_probe<bool, O::is_direct>;
+} && extended_signature<typename O::signature_type>;
 
 template <class M>
 concept basic_meta = std::is_nothrow_copy_constructible_v<M> &&
@@ -492,9 +492,9 @@ concept meta = basic_meta<M> &&
 
 template <class R>
 concept basic_reflection = requires {
-  typename R::reflector_type;
+  typename R::metadata_type;
   typename static_prop_probe<bool, R::is_direct>;
-} && basic_meta<typename R::reflector_type>;
+} && basic_meta<typename R::metadata_type>;
 
 template <class T>
 concept pointer_like = (std::is_pointer_v<T> ||
@@ -516,32 +516,32 @@ struct a11y_traits<std::void_t<typename T::template accessor<Args...>>, T,
 template <class Self, class A, class... Ds>
 using accessor_t = a11y_traits<void, A, Self, Ds...>::type;
 
-template <bool IsDirect, class R>
+template <bool IsDirect, class M>
 struct reflection_meta {
   template <class P>
     requires(IsDirect)
   constexpr explicit reflection_meta(std::in_place_type_t<P>)
-      : reflector(std::in_place_type<P>) {}
+      : metadata(std::in_place_type<P>) {}
   template <class P>
     requires(!IsDirect)
   constexpr explicit reflection_meta(std::in_place_type_t<P>)
-      : reflector(
+      : metadata(
             std::in_place_type<typename std::pointer_traits<P>::element_type>) {
   }
 
   [[PRO5D_NO_UNIQUE_ADDRESS_ATTRIBUTE]]
-  R reflector;
+  M metadata;
 };
 
-template <class T, bool IsDirect, class R>
-consteval bool is_reflector_well_formed() {
+template <class T, bool IsDirect, class M>
+consteval bool is_metadata_well_formed() {
   if constexpr (IsDirect) {
-    if constexpr (meta<R, T>) {
+    if constexpr (meta<M, T>) {
       return true;
     }
   } else {
-    return is_reflector_well_formed<
-        typename std::pointer_traits<T>::element_type, true, R>();
+    return is_metadata_well_formed<
+        typename std::pointer_traits<T>::element_type, true, M>();
   }
   return false;
 }
@@ -555,26 +555,26 @@ struct copy_dispatch {
 struct destroy_dispatch {
   PRO5D_STATIC_CALL(void, auto&&) noexcept {}
 };
-template <class MP, class D, class ONE, class OE, lifetime_requirement LR>
+template <class MP, class D, class SNE, class SE, lifetime_requirement LR>
 struct lifetime_meta_traits : std::type_identity<void> {};
-template <class MP, class D, class ONE, class OE>
-struct lifetime_meta_traits<MP, D, ONE, OE, lifetime_requirement::nothrow>
-    : std::type_identity<invocation_meta<MP, true, D, ONE>> {};
-template <class MP, class D, class ONE, class OE>
-struct lifetime_meta_traits<MP, D, ONE, OE, lifetime_requirement::supported>
-    : std::type_identity<invocation_meta<MP, true, D, OE>> {};
-template <class MP, class D, class ONE, class OE, lifetime_requirement LR>
-using lifetime_meta_t = lifetime_meta_traits<MP, D, ONE, OE, LR>::type;
+template <class MP, class D, class SNE, class SE>
+struct lifetime_meta_traits<MP, D, SNE, SE, lifetime_requirement::nothrow>
+    : std::type_identity<invocation_meta<MP, true, D, SNE>> {};
+template <class MP, class D, class SNE, class SE>
+struct lifetime_meta_traits<MP, D, SNE, SE, lifetime_requirement::supported>
+    : std::type_identity<invocation_meta<MP, true, D, SE>> {};
+template <class MP, class D, class SNE, class SE, lifetime_requirement LR>
+using lifetime_meta_t = lifetime_meta_traits<MP, D, SNE, SE, LR>::type;
 
 template <class... As>
 struct PRO5D_ENFORCE_EBO composite_accessor : As... {};
 
 template <class T, class F, class MP>
 struct descriptor_substitution_traits : std::type_identity<T> {};
-template <class D, class O, class F, class MP>
-struct descriptor_substitution_traits<proxy_operation<D, O>, F, MP>
-    : std::type_identity<proxy_operation<D, substituted_overload_t<O, F, MP>>> {
-};
+template <class D, class S, class F, class MP>
+struct descriptor_substitution_traits<proxy_operation<D, S>, F, MP>
+    : std::type_identity<
+          proxy_operation<D, substituted_signature_t<S, F, MP>>> {};
 template <class T, class F, class MP>
 using substituted_descriptor_t = descriptor_substitution_traits<T, F, MP>::type;
 
@@ -628,13 +628,13 @@ struct access_traits<T> : std::type_identity<typename T::access_type> {};
 template <class T>
 using access_t = access_traits<T>::type;
 
-template <class C>
-using conv_access_group_t =
-    access_group<access_t<C>, proxy_operation<typename C::dispatch_type,
-                                              typename C::overload_type>>;
+template <class O>
+using op_access_group_t =
+    access_group<access_t<O>, proxy_operation<typename O::dispatch_type,
+                                              typename O::signature_type>>;
 template <class R>
 using refl_access_group_t =
-    access_group<access_t<R>, proxy_reflection<typename R::reflector_type>>;
+    access_group<access_t<R>, proxy_reflection<typename R::metadata_type>>;
 
 template <class O, class I, class T>
 struct first_containing_reduction : std::type_identity<O> {};
@@ -742,12 +742,12 @@ struct proxy_meta_base_traits
     : specialization_type_traits<proxy_meta_base_impl,
                                  unique_types_t<std::tuple<Ms...>>,
                                  sentinel_meta> {};
-template <class MP, bool IsDirect, class D, class O, class... Ms>
-struct proxy_meta_base_traits<invocation_meta<MP, IsDirect, D, O>, Ms...>
+template <class MP, bool IsDirect, class D, class S, class... Ms>
+struct proxy_meta_base_traits<invocation_meta<MP, IsDirect, D, S>, Ms...>
     : specialization_type_traits<
           proxy_meta_base_impl,
           unique_types_t<
-              std::tuple<invocation_meta<MP, IsDirect, D, O>, Ms...>>> {};
+              std::tuple<invocation_meta<MP, IsDirect, D, S>, Ms...>>> {};
 template <class F, class MP, class... Ms>
 struct proxy_meta_base_traits<proxy_meta<F, MP>, Ms...>
     : specialization_type_traits<
@@ -780,15 +780,15 @@ consteval void diagnose_proxiable_insufficient_destructibility() {
   static_assert(destructibility_traits<P, RequiredDestructibility>::applicable,
                 "not proxiable due to insufficient destructibility");
 }
-template <class P, class F, class MP, bool IsDirect, class D, class O>
-consteval void diagnose_proxiable_required_convention_not_implemented() {
-  static_assert(overload_traits<substituted_overload_t<O, F, MP>>::
+template <class P, class F, class MP, bool IsDirect, class D, class S>
+consteval void diagnose_proxiable_required_operation_not_implemented() {
+  static_assert(signature_traits<substituted_signature_t<S, F, MP>>::
                     template applicable_ptr<P, IsDirect, D>,
-                "not proxiable due to a required convention not implemented");
+                "not proxiable due to a required operation not implemented");
 }
-template <class P, class F, bool IsDirect, class R>
+template <class P, class F, bool IsDirect, class M>
 consteval void diagnose_proxiable_required_reflection_not_implemented() {
-  static_assert(is_reflector_well_formed<P, IsDirect, R>(),
+  static_assert(is_metadata_well_formed<P, IsDirect, M>(),
                 "not proxiable due to a required reflection not implemented");
 }
 
@@ -846,12 +846,12 @@ consteval bool is_metadata_policy_well_formed() {
   }
   return false;
 }
-template <class F, class S>
+template <class F, class G>
 consteval bool is_super_constraints_well_formed() {
-  return F::max_size <= S::max_size && F::max_align <= S::max_align &&
-         F::copyability >= S::copyability &&
-         F::relocatability >= S::relocatability &&
-         F::destructibility >= S::destructibility;
+  return F::max_size <= G::max_size && F::max_align <= G::max_align &&
+         F::copyability >= G::copyability &&
+         F::relocatability >= G::relocatability &&
+         F::destructibility >= G::destructibility;
 }
 template <class F, class... Fs>
 struct basic_facade_super_traits_impl : inapplicable_traits {};
@@ -859,11 +859,11 @@ template <class F, class... Fs>
   requires((facade<Fs> && ...) &&
            (is_super_constraints_well_formed<F, Fs>() && ...))
 struct basic_facade_super_traits_impl<F, Fs...> : applicable_traits {};
-template <class... Cs>
-struct basic_facade_conv_traits_impl : inapplicable_traits {};
-template <class... Cs>
-  requires(basic_convention<Cs> && ...)
-struct basic_facade_conv_traits_impl<Cs...> : applicable_traits {};
+template <class... Os>
+struct basic_facade_op_traits_impl : inapplicable_traits {};
+template <class... Os>
+  requires(basic_operation<Os> && ...)
+struct basic_facade_op_traits_impl<Os...> : applicable_traits {};
 template <class... Rs>
 struct basic_facade_refl_traits_impl : inapplicable_traits {};
 template <class... Rs>
@@ -874,96 +874,96 @@ struct basic_facade_traits : inapplicable_traits {};
 template <class F>
   requires(requires {
     typename F::super_types;
-    typename F::convention_types;
+    typename F::operation_types;
     typename F::reflection_types;
   } && is_facade_constraints_well_formed<F>() &&
            is_tuple_like_well_formed<typename F::super_types>() &&
            specialization_t<basic_facade_super_traits_impl,
                             typename F::super_types, F>::applicable &&
-           is_tuple_like_well_formed<typename F::convention_types>() &&
-           specialization_t<basic_facade_conv_traits_impl,
-                            typename F::convention_types>::applicable &&
+           is_tuple_like_well_formed<typename F::operation_types>() &&
+           specialization_t<basic_facade_op_traits_impl,
+                            typename F::operation_types>::applicable &&
            is_tuple_like_well_formed<typename F::reflection_types>() &&
            specialization_t<basic_facade_refl_traits_impl,
                             typename F::reflection_types>::applicable)
 struct basic_facade_traits<F> : applicable_traits {};
 
-template <class F, class MP, class... Cs>
-struct conv_traits_impl {
-  static_assert((overload_traits<substituted_overload_t<
-                     typename Cs::overload_type, F, MP>>::applicable &&
+template <class F, class MP, class... Os>
+struct op_traits_impl {
+  static_assert((signature_traits<substituted_signature_t<
+                     typename Os::signature_type, F, MP>>::applicable &&
                  ...),
                 "a proxy-dependent signature did not substitute into a valid "
-                "overload");
-  using convs = std::tuple<Cs...>;
-  using conv_meta = std::tuple<invocation_meta<
-      MP, Cs::is_direct, typename Cs::dispatch_type,
-      substituted_overload_t<typename Cs::overload_type, F, MP>>...>;
+                "signature");
+  using ops = std::tuple<Os...>;
+  using op_meta = std::tuple<invocation_meta<
+      MP, Os::is_direct, typename Os::dispatch_type,
+      substituted_signature_t<typename Os::signature_type, F, MP>>...>;
 
   template <class P>
-  static consteval void diagnose_proxiable_conv() {
-    (diagnose_proxiable_required_convention_not_implemented<
-         P, F, MP, Cs::is_direct, typename Cs::dispatch_type,
-         typename Cs::overload_type>(),
+  static consteval void diagnose_proxiable_op() {
+    (diagnose_proxiable_required_operation_not_implemented<
+         P, F, MP, Os::is_direct, typename Os::dispatch_type,
+         typename Os::signature_type>(),
      ...);
   }
 
   template <class P>
-  static constexpr bool conv_applicable_ptr =
-      (overload_traits<
-           substituted_overload_t<typename Cs::overload_type, F, MP>>::
-           template applicable_ptr<P, Cs::is_direct,
-                                   typename Cs::dispatch_type> &&
+  static constexpr bool op_applicable_ptr =
+      (signature_traits<
+           substituted_signature_t<typename Os::signature_type, F, MP>>::
+           template applicable_ptr<P, Os::is_direct,
+                                   typename Os::dispatch_type> &&
        ...);
 };
 template <class F, class MP, class... Fs>
 struct proxy_super_traits_impl
     : specialization_t<
-          conv_traits_impl,
-          merge_tuples_t<typename proxy_traits<Fs, MP>::dependent_convs...>, F,
+          op_traits_impl,
+          merge_tuples_t<typename proxy_traits<Fs, MP>::dependent_ops...>, F,
           MP> {
-  using super_dependent_convs = typename proxy_super_traits_impl::convs;
+  using super_dependent_ops = typename proxy_super_traits_impl::ops;
   using super_indirect_access_groups = access_groups_merge_t<
       typename proxy_traits<Fs, MP>::indirect_access_groups...>;
   using super_direct_access_groups = access_groups_merge_t<
       typename proxy_traits<Fs, MP>::direct_access_groups...>;
   using super_meta = composite_t<std::tuple<proxy_meta<Fs, MP>...>,
-                                 typename proxy_super_traits_impl::conv_meta>;
+                                 typename proxy_super_traits_impl::op_meta>;
 
   template <class P>
   static consteval void diagnose_proxiable_super() {
     (proxy_traits<Fs, MP>::template diagnose_proxiable<P>(), ...);
-    proxy_super_traits_impl::template diagnose_proxiable_conv<P>();
+    proxy_super_traits_impl::template diagnose_proxiable_op<P>();
   }
 
   template <class P>
   static constexpr bool super_applicable_ptr =
       (proxy_traits<Fs, MP>::template applicable_ptr<P> && ...) &&
-      proxy_super_traits_impl::template conv_applicable_ptr<P>;
+      proxy_super_traits_impl::template op_applicable_ptr<P>;
 };
-template <class F, class MP, class... Cs>
-struct proxy_conv_traits_impl : conv_traits_impl<F, MP, Cs...> {
-  using self_conv_meta = typename proxy_conv_traits_impl::conv_meta;
-  using self_indirect_conv_groups =
-      composite_t<std::tuple<>, std::conditional_t<Cs::is_direct, void,
-                                                   conv_access_group_t<Cs>>...>;
-  using self_direct_conv_groups = composite_t<
+template <class F, class MP, class... Os>
+struct proxy_op_traits_impl : op_traits_impl<F, MP, Os...> {
+  using self_op_meta = typename proxy_op_traits_impl::op_meta;
+  using self_indirect_op_groups =
+      composite_t<std::tuple<>, std::conditional_t<Os::is_direct, void,
+                                                   op_access_group_t<Os>>...>;
+  using self_direct_op_groups = composite_t<
       std::tuple<>,
-      std::conditional_t<Cs::is_direct, conv_access_group_t<Cs>, void>...>;
-  using self_dependent_convs = composite_t<
+      std::conditional_t<Os::is_direct, op_access_group_t<Os>, void>...>;
+  using self_dependent_ops = composite_t<
       std::tuple<>,
-      std::conditional_t<
-          overload_substitution_traits<typename Cs::overload_type>::applicable,
-          Cs, void>...>;
+      std::conditional_t<signature_substitution_traits<
+                             typename Os::signature_type>::applicable,
+                         Os, void>...>;
 
   template <class P>
-  static consteval void diagnose_proxiable_self_conv() {
-    proxy_conv_traits_impl::template diagnose_proxiable_conv<P>();
+  static consteval void diagnose_proxiable_self_op() {
+    proxy_op_traits_impl::template diagnose_proxiable_op<P>();
   }
 
   template <class P>
-  static constexpr bool self_conv_applicable_ptr =
-      proxy_conv_traits_impl::template conv_applicable_ptr<P>;
+  static constexpr bool self_op_applicable_ptr =
+      proxy_op_traits_impl::template op_applicable_ptr<P>;
 };
 template <class F, class... Rs>
 struct facade_refl_traits_impl {
@@ -973,40 +973,40 @@ struct facade_refl_traits_impl {
   using self_direct_refl_groups = composite_t<
       std::tuple<>,
       std::conditional_t<Rs::is_direct, refl_access_group_t<Rs>, void>...>;
-  using refl_meta = std::tuple<
-      reflection_meta<Rs::is_direct, typename Rs::reflector_type>...>;
+  using refl_meta =
+      std::tuple<reflection_meta<Rs::is_direct, typename Rs::metadata_type>...>;
 
   template <class P>
   static consteval void diagnose_proxiable_refl() {
     (diagnose_proxiable_required_reflection_not_implemented<
-         P, F, Rs::is_direct, typename Rs::reflector_type>(),
+         P, F, Rs::is_direct, typename Rs::metadata_type>(),
      ...);
   }
 
   template <class P>
   static constexpr bool refl_applicable_ptr =
-      (is_reflector_well_formed<P, Rs::is_direct,
-                                typename Rs::reflector_type>() &&
+      (is_metadata_well_formed<P, Rs::is_direct,
+                               typename Rs::metadata_type>() &&
        ...);
 };
 template <class F, class MP>
 struct proxy_traits
     : specialization_t<proxy_super_traits_impl, typename F::super_types, F, MP>,
-      specialization_t<proxy_conv_traits_impl, typename F::convention_types, F,
+      specialization_t<proxy_op_traits_impl, typename F::operation_types, F,
                        MP>,
       specialization_t<facade_refl_traits_impl, typename F::reflection_types,
                        F> {
   using indirect_access_groups =
       access_groups_merge_t<typename proxy_traits::super_indirect_access_groups,
-                            typename proxy_traits::self_indirect_conv_groups,
+                            typename proxy_traits::self_indirect_op_groups,
                             typename proxy_traits::self_indirect_refl_groups>;
   using direct_access_groups =
       access_groups_merge_t<typename proxy_traits::super_direct_access_groups,
-                            typename proxy_traits::self_direct_conv_groups,
+                            typename proxy_traits::self_direct_op_groups,
                             typename proxy_traits::self_direct_refl_groups>;
-  using dependent_convs =
-      merge_tuples_t<typename proxy_traits::super_dependent_convs,
-                     typename proxy_traits::self_dependent_convs>;
+  using dependent_ops =
+      merge_tuples_t<typename proxy_traits::super_dependent_ops,
+                     typename proxy_traits::self_dependent_ops>;
   using indirect_accessor =
       specialization_t<accessors_t, indirect_access_groups,
                        proxy_indirect_accessor<F, MP>, F, MP>;
@@ -1022,7 +1022,7 @@ struct proxy_traits
                           void(void*) &&, F::relocatability>,
           lifetime_meta_t<MP, destroy_dispatch, void() && noexcept, void() &&,
                           F::destructibility>,
-          typename proxy_traits::self_conv_meta,
+          typename proxy_traits::self_op_meta,
           typename proxy_traits::refl_meta>>;
 
   template <class P>
@@ -1033,7 +1033,7 @@ struct proxy_traits
     diagnose_proxiable_insufficient_relocatability<P, F, F::relocatability>();
     diagnose_proxiable_insufficient_destructibility<P, F, F::destructibility>();
     proxy_traits::template diagnose_proxiable_super<P>();
-    proxy_traits::template diagnose_proxiable_self_conv<P>();
+    proxy_traits::template diagnose_proxiable_self_op<P>();
     proxy_traits::template diagnose_proxiable_refl<P>();
   }
 
@@ -1050,7 +1050,7 @@ struct proxy_traits
       relocatability_traits<P, F::relocatability>::applicable &&
       destructibility_traits<P, F::destructibility>::applicable &&
       proxy_traits::template super_applicable_ptr<P> &&
-      proxy_traits::template self_conv_applicable_ptr<P> &&
+      proxy_traits::template self_op_applicable_ptr<P> &&
       proxy_traits::template refl_applicable_ptr<P>;
 };
 
@@ -1093,12 +1093,12 @@ add_qualifier_t<proxy<F, MP>, Q>
       reinterpret_cast<
           add_qualifier_t<inplace_ptr<proxy_indirect_accessor<F, MP>>, Q>>(p));
 }
-template <class F, class MP, bool IsDirect, class D, class O, class P,
+template <class F, class MP, bool IsDirect, class D, class S, class P,
           class... Args>
-ret_t<O> invoke_impl(P&& p, Args&&... args) {
+ret_t<S> invoke_impl(P&& p, Args&&... args) {
   auto* ptr = proxy_helper::get_ptr(p);
-  auto& inv = proxy_helper::get_meta<invocation_meta<MP, IsDirect, D, O>>(p);
-  if constexpr (overload_traits<O>::this_qualifier == qualifier_type::rv) {
+  auto& inv = proxy_helper::get_meta<invocation_meta<MP, IsDirect, D, S>>(p);
+  if constexpr (signature_traits<S>::this_qualifier == qualifier_type::rv) {
     proxy_helper::meta_resetting_guard<F, MP> guard{p};
     return inv.function(ptr, std::forward<Args>(args)...);
   } else {
@@ -1122,32 +1122,32 @@ class proxy_indirect_accessor
   proxy_indirect_accessor& operator=(const proxy_indirect_accessor&) = default;
 
 public:
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(proxy_indirect_accessor& p, Args&&... args) {
-    return detail::invoke_impl<F, MP, false, D, O>(p,
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(proxy_indirect_accessor& p, Args&&... args) {
+    return detail::invoke_impl<F, MP, false, D, S>(p,
                                                    std::forward<Args>(args)...);
   }
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(const proxy_indirect_accessor& p,
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(const proxy_indirect_accessor& p,
                                  Args&&... args) {
-    return detail::invoke_impl<F, MP, false, D, O>(p,
+    return detail::invoke_impl<F, MP, false, D, S>(p,
                                                    std::forward<Args>(args)...);
   }
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(proxy_indirect_accessor&& p, Args&&... args) {
-    return detail::invoke_impl<F, MP, false, D, O>(std::move(p),
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(proxy_indirect_accessor&& p, Args&&... args) {
+    return detail::invoke_impl<F, MP, false, D, S>(std::move(p),
                                                    std::forward<Args>(args)...);
   }
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(const proxy_indirect_accessor&& p,
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(const proxy_indirect_accessor&& p,
                                  Args&&... args) {
-    return detail::invoke_impl<F, MP, false, D, O>(std::move(p),
+    return detail::invoke_impl<F, MP, false, D, S>(std::move(p),
                                                    std::forward<Args>(args)...);
   }
-  template <class R>
-  friend const R& reflect(const proxy_indirect_accessor& p) noexcept {
-    return detail::proxy_helper::get_meta<detail::reflection_meta<false, R>>(p)
-        .reflector;
+  template <class M>
+  friend const M& reflect(const proxy_indirect_accessor& p) noexcept {
+    return detail::proxy_helper::get_meta<detail::reflection_meta<false, M>>(p)
+        .metadata;
   }
 };
 
@@ -1440,30 +1440,30 @@ public:
   friend bool operator==(const proxy& lhs, std::nullptr_t) noexcept {
     return !lhs.has_value();
   }
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(proxy& p, Args&&... args) {
-    return detail::invoke_impl<F, MP, true, D, O>(p,
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(proxy& p, Args&&... args) {
+    return detail::invoke_impl<F, MP, true, D, S>(p,
                                                   std::forward<Args>(args)...);
   }
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(const proxy& p, Args&&... args) {
-    return detail::invoke_impl<F, MP, true, D, O>(p,
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(const proxy& p, Args&&... args) {
+    return detail::invoke_impl<F, MP, true, D, S>(p,
                                                   std::forward<Args>(args)...);
   }
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(proxy&& p, Args&&... args) {
-    return detail::invoke_impl<F, MP, true, D, O>(std::move(p),
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(proxy&& p, Args&&... args) {
+    return detail::invoke_impl<F, MP, true, D, S>(std::move(p),
                                                   std::forward<Args>(args)...);
   }
-  template <class D, class O, class... Args>
-  friend detail::ret_t<O> invoke(const proxy&& p, Args&&... args) {
-    return detail::invoke_impl<F, MP, true, D, O>(std::move(p),
+  template <class D, class S, class... Args>
+  friend detail::ret_t<S> invoke(const proxy&& p, Args&&... args) {
+    return detail::invoke_impl<F, MP, true, D, S>(std::move(p),
                                                   std::forward<Args>(args)...);
   }
-  template <class R>
-  friend const R& reflect(const proxy& p) noexcept {
-    return detail::proxy_helper::get_meta<detail::reflection_meta<true, R>>(p)
-        .reflector;
+  template <class M>
+  friend const M& reflect(const proxy& p) noexcept {
+    return detail::proxy_helper::get_meta<detail::reflection_meta<true, M>>(p)
+        .metadata;
   }
 
 private:
@@ -1548,56 +1548,56 @@ private:
   typename MP::template storage<detail::proxy_meta<F, MP>> meta_;
 };
 
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(proxy_indirect_accessor<F, MP>& p, Args&&... args) {
-  return invoke<D, O>(p, std::forward<Args>(args)...);
+  return invoke<D, S>(p, std::forward<Args>(args)...);
 }
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(const proxy_indirect_accessor<F, MP>& p, Args&&... args) {
-  return invoke<D, O>(p, std::forward<Args>(args)...);
+  return invoke<D, S>(p, std::forward<Args>(args)...);
 }
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(proxy_indirect_accessor<F, MP>&& p, Args&&... args) {
-  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
+  return invoke<D, S>(std::move(p), std::forward<Args>(args)...);
 }
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(const proxy_indirect_accessor<F, MP>&& p, Args&&... args) {
-  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
+  return invoke<D, S>(std::move(p), std::forward<Args>(args)...);
 }
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(proxy<F, MP>& p, Args&&... args) {
-  return invoke<D, O>(p, std::forward<Args>(args)...);
+  return invoke<D, S>(p, std::forward<Args>(args)...);
 }
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(const proxy<F, MP>& p, Args&&... args) {
-  return invoke<D, O>(p, std::forward<Args>(args)...);
+  return invoke<D, S>(p, std::forward<Args>(args)...);
 }
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(proxy<F, MP>&& p, Args&&... args) {
-  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
+  return invoke<D, S>(std::move(p), std::forward<Args>(args)...);
 }
-template <class D, class O, facade F, class MP, class... Args>
-[[deprecated("Use unqualified invoke instead")]] detail::ret_t<O>
+template <class D, class S, facade F, class MP, class... Args>
+[[deprecated("Use unqualified invoke instead")]] detail::ret_t<S>
     proxy_invoke(const proxy<F, MP>&& p, Args&&... args) {
-  return invoke<D, O>(std::move(p), std::forward<Args>(args)...);
+  return invoke<D, S>(std::move(p), std::forward<Args>(args)...);
 }
 
-template <class R, facade F, class MP>
-[[deprecated("Use unqualified reflect instead")]] const R&
+template <class M, facade F, class MP>
+[[deprecated("Use unqualified reflect instead")]] const M&
     proxy_reflect(const proxy_indirect_accessor<F, MP>& p) noexcept {
-  return reflect<R>(p);
+  return reflect<M>(p);
 }
-template <class R, facade F, class MP>
-[[deprecated("Use unqualified reflect instead")]] const R&
+template <class M, facade F, class MP>
+[[deprecated("Use unqualified reflect instead")]] const M&
     proxy_reflect(const proxy<F, MP>& p) noexcept {
-  return reflect<R>(p);
+  return reflect<M>(p);
 }
 
 template <facade F>
@@ -1644,29 +1644,29 @@ private:
   F f_;
 };
 
-template <bool IsDirect, class D, class O, class A>
-struct conv_impl {
+template <bool IsDirect, class D, class S, class A>
+struct op_impl {
   static constexpr bool is_direct = IsDirect;
   using dispatch_type = D;
-  using overload_type = O;
+  using signature_type = S;
   using access_type = A;
 };
-template <bool IsDirect, class R, class A>
+template <bool IsDirect, class M, class A>
 struct refl_impl {
   static constexpr bool is_direct = IsDirect;
-  using reflector_type = R;
+  using metadata_type = M;
   using access_type = A;
 };
 template <class Self, class... Ds>
 struct legacy_accessor_traits {};
-template <class Self, class D, class... Os>
-  requires(requires { typename D::template accessor<Self, D, Os...>; })
-struct legacy_accessor_traits<Self, proxy_operation<D, Os>...>
-    : std::type_identity<typename D::template accessor<Self, D, Os...>> {};
-template <class Self, class R>
-  requires(requires { typename R::template accessor<Self, R>; })
-struct legacy_accessor_traits<Self, proxy_reflection<R>>
-    : std::type_identity<typename R::template accessor<Self, R>> {};
+template <class Self, class D, class... Ss>
+  requires(requires { typename D::template accessor<Self, D, Ss...>; })
+struct legacy_accessor_traits<Self, proxy_operation<D, Ss>...>
+    : std::type_identity<typename D::template accessor<Self, D, Ss...>> {};
+template <class Self, class M>
+  requires(requires { typename M::template accessor<Self, M>; })
+struct legacy_accessor_traits<Self, proxy_reflection<M>>
+    : std::type_identity<typename M::template accessor<Self, M>> {};
 template <class T>
 struct legacy_access {
   template <class Self, class... Ds>
@@ -1677,13 +1677,13 @@ struct default_access_traits : std::type_identity<legacy_access<T>> {};
 template <class T>
 using default_access_t = default_access_traits<T>::type;
 
-template <class Ss, class Cs, class Rs, std::size_t MaxSize,
+template <class Fs, class Os, class Rs, std::size_t MaxSize,
           std::size_t MaxAlign, lifetime_requirement Copyability,
           lifetime_requirement Relocatability,
           lifetime_requirement Destructibility>
 struct facade_impl {
-  using super_types = Ss;
-  using convention_types = Cs;
+  using super_types = Fs;
+  using operation_types = Os;
   using reflection_types = Rs;
   static constexpr std::size_t max_size = MaxSize;
   static constexpr std::size_t max_align = MaxAlign;
@@ -1710,14 +1710,14 @@ private:
   LR lr_;
 };
 
-template <class C>
-struct view_conv_traits : std::type_identity<void> {};
-template <class C>
-  requires(!C::is_direct)
-struct view_conv_traits<C> : std::type_identity<C> {};
-template <class... Cs>
-using view_conv_types =
-    composite_t<std::tuple<>, typename view_conv_traits<Cs>::type...>;
+template <class O>
+struct view_op_traits : std::type_identity<void> {};
+template <class O>
+  requires(!O::is_direct)
+struct view_op_traits<O> : std::type_identity<O> {};
+template <class... Os>
+using view_op_types =
+    composite_t<std::tuple<>, typename view_op_traits<Os>::type...>;
 template <class... Rs>
 using view_refl_types =
     composite_t<std::tuple<>, std::conditional_t<Rs::is_direct, void, Rs>...>;
@@ -1768,8 +1768,8 @@ struct view_facade
     : detail::facade_impl<
           detail::specialization_t<detail::view_super_types,
                                    typename F::super_types>,
-          detail::specialization_t<detail::view_conv_types,
-                                   typename F::convention_types>,
+          detail::specialization_t<detail::view_op_types,
+                                   typename F::operation_types>,
           detail::specialization_t<detail::view_refl_types,
                                    typename F::reflection_types>,
           sizeof(void*), alignof(void*), lifetime_requirement::trivial,
@@ -1780,7 +1780,7 @@ struct weak_facade
     : detail::facade_impl<
           detail::specialization_t<detail::weak_super_types,
                                    typename F::super_types>,
-          std::tuple<detail::conv_impl<
+          std::tuple<detail::op_impl<
               true, detail::weak_lock_dispatch,
               proxy_dependent_signature<detail::weak_lock_signature>,
               detail::weak_lock_access>>,

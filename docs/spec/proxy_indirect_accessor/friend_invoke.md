@@ -3,29 +3,29 @@
 > Since: 4.1.0
 
 ```cpp
-template <class D, class O, class... Args>
-return-type-of<O> invoke(proxy_indirect_accessor<F, MP>& p, Args&&... args);
-template <class D, class O, class... Args>
-return-type-of<O> invoke(const proxy_indirect_accessor<F, MP>& p, Args&&... args);
-template <class D, class O, class... Args>
-return-type-of<O> invoke(proxy_indirect_accessor<F, MP>&& p, Args&&... args);
-template <class D, class O, class... Args>
-return-type-of<O> invoke(const proxy_indirect_accessor<F, MP>&& p, Args&&... args);
+template <class D, class S, class... Args>
+return-type-of<S> invoke(proxy_indirect_accessor<F, MP>& p, Args&&... args);
+template <class D, class S, class... Args>
+return-type-of<S> invoke(const proxy_indirect_accessor<F, MP>& p, Args&&... args);
+template <class D, class S, class... Args>
+return-type-of<S> invoke(proxy_indirect_accessor<F, MP>&& p, Args&&... args);
+template <class D, class S, class... Args>
+return-type-of<S> invoke(const proxy_indirect_accessor<F, MP>&& p, Args&&... args);
 ```
 
-Invokes a `proxy_indirect_accessor<F, MP>` with a specified dispatch type `D`, an overload type `O`, and arguments, through an *indirect* convention. Let `Args2...` be the argument types of `O`, `R` be the return type of `O`. `return-type-of<O>` is `R`.
+Invokes a `proxy_indirect_accessor<F, MP>` with a specified dispatch type `D`, a signature type `S`, and arguments, through an *indirect* operation. Let `Args2...` be the argument types of `S`, `R` be the return type of `S`. `return-type-of<S>` is `R`.
 
 Let `ptr` be the contained value of the `proxy` object associated to `p` with the same cv ref-qualifiers. Equivalent to [`INVOKE<R>`](https://en.cppreference.com/w/cpp/utility/functional)`(D(), *ptr, static_cast<Args2>(args)...)`.
 
-There shall be a convention type `Conv` defined in the convention types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
+There shall be an operation type `Op` defined in the operation types of `F` or of any super of `F`, reachable via `typename F::super_types` transitively, where
 
-- `Conv::is_direct` is `false`, and
-- `typename Conv::dispatch_type` is `D`, and
-- [`substituted-overload`](../ProxyOverload.md)`<typename Conv::overload_type, F, MP>` is `O`.
+- `Op::is_direct` is `false`, and
+- `typename Op::dispatch_type` is `D`, and
+- [`substituted-signature`](../ProxySignature.md)`<typename Op::signature_type, F, MP>` is `S`.
 
 This function is not visible to ordinary [unqualified](https://en.cppreference.com/w/cpp/language/unqualified_lookup) or [qualified lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup). It can only be found by [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl) when `proxy_indirect_accessor<F, MP>` is an associated class of the arguments.
 
-A `proxy_indirect_accessor<F, MP>` is obtained by dereferencing a [`proxy<F, MP>`](../proxy/README.md) (i.e., `*p`). To invoke a *direct* convention, use [`invoke`](../proxy/friend_invoke.md) on the [`proxy<F, MP>`](../proxy/README.md) itself.
+A `proxy_indirect_accessor<F, MP>` is obtained by dereferencing a [`proxy<F, MP>`](../proxy/README.md) (i.e., `*p`). To invoke a *direct* operation, use [`invoke`](../proxy/friend_invoke.md) on the [`proxy<F, MP>`](../proxy/README.md) itself.
 
 ## Notes
 

@@ -57,8 +57,8 @@ using wildcard = converter<noreturn_conversion>;
 
 template <class T>
 struct operation_traits;
-template <class D, class O>
-struct operation_traits<proxy_operation<D, O>> : overload_traits<O> {};
+template <class D, class S>
+struct operation_traits<proxy_operation<D, S>> : signature_traits<S> {};
 
 #define PRO5D_DEF_CAST_ACCESSOR(oq, pq, ne, ...)                               \
   template <class Self, class D, class T>                                      \

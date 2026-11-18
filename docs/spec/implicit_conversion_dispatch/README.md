@@ -9,7 +9,7 @@
 class implicit_conversion_dispatch;
 ```
 
-Class `implicit_conversion_dispatch` models a [dispatch](../ProxyDispatch.md) type for implicit type conversion expressions. A convention of `implicit_conversion_dispatch` added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md) has the access type [`implicit_conversion_access`](../implicit_conversion_access/README.md).
+Class `implicit_conversion_dispatch` models a [dispatch](../ProxyDispatch.md) type for implicit type conversion expressions. An operation of `implicit_conversion_dispatch` added via [`basic_facade_builder`](../basic_facade_builder/add_convention.md) has the access type [`implicit_conversion_access`](../implicit_conversion_access/README.md).
 
 *Since 5.0.0*: the accessibility is provided by `implicit_conversion_access`. Previously, `implicit_conversion_dispatch` provided the accessibility via its member template `accessor`.
 
