@@ -3,8 +3,11 @@
 // Licensed under the MIT License.
 
 #include "utils.h"
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <new>
 #include <proxy/proxy.h>
+#include <type_traits>
 
 namespace proxy_lifetime_tests_detail {
 
@@ -48,6 +51,36 @@ static_assert(!std::is_convertible_v<pro::proxy<utils::spec::Stringable>,
                                      pro::proxy<TestTrivialFacade>>);
 static_assert(!std::is_convertible_v<pro::proxy<TestTrivialFacade>,
                                      pro::proxy<TestFacade>>);
+
+struct TestNonDestructibleFacade
+    : pro::facade_builder                                              //
+      ::add_convention<utils::spec::FreeToString, std::string() const> //
+      ::support_relocation<pro::lifetime_requirement::none>            //
+      ::support_destruction<pro::lifetime_requirement::none>           //
+      ::build {};
+
+struct TestNonDestructibleTrivialRelocationFacade
+    : pro::facade_builder                                              //
+      ::add_convention<utils::spec::FreeToString, std::string() const> //
+      ::support_relocation<pro::lifetime_requirement::trivial>         //
+      ::support_destruction<pro::lifetime_requirement::none>           //
+      ::build {};
+
+struct TestNonDestructibleRelocationFacade
+    : pro::facade_builder                                              //
+      ::add_convention<utils::spec::FreeToString, std::string() const> //
+      ::support_relocation<pro::lifetime_requirement::nothrow>         //
+      ::support_destruction<pro::lifetime_requirement::none>           //
+      ::build {};
+
+template <class P>
+concept MemberSwappable = requires(P& lhs, P& rhs) { lhs.swap(rhs); };
+
+static_assert(!std::is_destructible_v<pro::proxy<TestNonDestructibleFacade>>);
+static_assert(
+    MemberSwappable<pro::proxy<TestNonDestructibleTrivialRelocationFacade>>);
+static_assert(
+    !MemberSwappable<pro::proxy<TestNonDestructibleRelocationFacade>>);
 
 } // namespace proxy_lifetime_tests_detail
 
@@ -1587,6 +1620,17 @@ TEST(ProxyLifetimeTests, Test_ConvertingCopyAssignment_NoRelocation) {
   ASSERT_EQ(ToString(*p1), "Session 3");
   ASSERT_TRUE(p2.has_value());
   ASSERT_EQ(ToString(*p2), "Session 2");
+}
+
+TEST(ProxyLifetimeTests, Test_NonDestructible_Construction) {
+  using Proxy = pro::proxy<detail::TestNonDestructibleFacade>;
+  alignas(Proxy) std::byte null_storage[sizeof(Proxy)];
+  alignas(Proxy) std::byte value_storage[sizeof(Proxy)];
+  Proxy* p1 = ::new (static_cast<void*>(null_storage)) Proxy(nullptr);
+  ASSERT_FALSE(p1->has_value());
+  int v = 123;
+  Proxy* p2 = ::new (static_cast<void*>(value_storage)) Proxy(&v);
+  ASSERT_EQ(ToString(**p2), "123");
 }
 
 TEST(ProxyLifetimeTests, Test_Substitution_TrivialDerived) {

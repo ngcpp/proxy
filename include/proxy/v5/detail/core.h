@@ -1164,7 +1164,7 @@ public:
   using metadata_policy_type = MP;
 
   proxy() noexcept { initialize(); }
-  proxy(std::nullptr_t) noexcept : proxy() {}
+  proxy(std::nullptr_t) noexcept { initialize(); }
   proxy(const proxy&) noexcept
     requires(F::copyability == lifetime_requirement::trivial)
   = default;
@@ -1334,6 +1334,9 @@ public:
     return *this;
   }
   ~proxy()
+    requires(F::destructibility == lifetime_requirement::none)
+  = delete;
+  ~proxy()
     requires(F::destructibility == lifetime_requirement::trivial)
   = default;
   ~proxy() noexcept(F::destructibility == lifetime_requirement::nothrow)
@@ -1355,8 +1358,10 @@ public:
                                      lifetime_requirement::nothrow ||
                                  F::copyability ==
                                      lifetime_requirement::trivial)
-    requires(F::relocatability >= lifetime_requirement::supported ||
-             F::copyability == lifetime_requirement::trivial)
+    requires(F::relocatability == lifetime_requirement::trivial ||
+             F::copyability == lifetime_requirement::trivial ||
+             (F::relocatability >= lifetime_requirement::supported &&
+              F::destructibility >= lifetime_requirement::supported))
   {
     if constexpr (F::relocatability == lifetime_requirement::trivial ||
                   F::copyability == lifetime_requirement::trivial) {
