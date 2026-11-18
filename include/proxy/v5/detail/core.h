@@ -1695,6 +1695,8 @@ struct facade_impl {
 template <class LR, class CLR, class RR, class CRR>
 class observer_ptr {
 public:
+  using element_type = std::remove_reference_t<LR>;
+
   explicit observer_ptr(LR lr) noexcept : lr_(lr) {}
   observer_ptr(const observer_ptr&) = default;
   auto operator->() noexcept { return std::addressof(lr_); }
