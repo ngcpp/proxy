@@ -6,9 +6,13 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <initializer_list>
+#include <memory>
 #include <new>
 #include <proxy/proxy.h>
+#include <string>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace proxy_lifetime_tests_detail {
 
@@ -52,6 +56,8 @@ static_assert(!std::is_convertible_v<pro::proxy<utils::spec::Stringable>,
                                      pro::proxy<TestTrivialFacade>>);
 static_assert(!std::is_convertible_v<pro::proxy<TestTrivialFacade>,
                                      pro::proxy<TestFacade>>);
+
+static_assert(std::is_nothrow_assignable_v<pro::proxy<TestFacade>&, int*>);
 
 struct TestNonDestructibleFacade
     : pro::facade_builder                                              //
@@ -147,6 +153,74 @@ struct TestNonDestructibleCopyFacade
       ::support_relocation<pro::lifetime_requirement::none>            //
       ::support_destruction<pro::lifetime_requirement::none>           //
       ::build {};
+
+struct TestOwningCopyFacade
+    : pro::facade_builder                                              //
+      ::add_convention<utils::spec::FreeToString, std::string() const> //
+      ::support_copy<pro::lifetime_requirement::nothrow>               //
+      ::support_relocation<pro::lifetime_requirement::nothrow>         //
+      ::build {};
+
+struct TestOwningDerivedFacade : pro::facade_builder                      //
+                                 ::add_facade<TestOwningCopyFacade, true> //
+                                 ::build {};
+
+enum class AssignmentEvent { kSourceUsed, kOwnerDestroyed };
+
+const std::vector<AssignmentEvent> kSourceUsedBeforeOwnerDestroyed{
+    AssignmentEvent::kSourceUsed, AssignmentEvent::kOwnerDestroyed};
+
+struct AssignmentOrder {
+  const void* source = nullptr;
+  std::vector<AssignmentEvent> events;
+};
+
+template <bool Movable>
+class OrderedPtr {
+public:
+  using element_type = int;
+
+  OrderedPtr(int* value, AssignmentOrder* order) noexcept
+      : value_(value), order_(order) {
+    order_->source = this;
+  }
+  OrderedPtr(const OrderedPtr& rhs) noexcept
+      : value_(rhs.value_), order_(rhs.order_) {
+    rhs.Use();
+  }
+  OrderedPtr(OrderedPtr&& rhs) noexcept
+    requires(Movable)
+      : value_(rhs.value_), order_(rhs.order_) {
+    rhs.Use();
+  }
+  OrderedPtr(OrderedPtr&&)
+    requires(!Movable)
+  = delete;
+  int& operator*() const noexcept { return *value_; }
+
+private:
+  void Use() const noexcept {
+    if (order_->source == this) {
+      order_->events.push_back(AssignmentEvent::kSourceUsed);
+    }
+  }
+
+  int* value_;
+  AssignmentOrder* order_;
+};
+
+template <class T>
+struct OrderedOwner {
+  template <class... Args>
+  explicit OrderedOwner(AssignmentOrder* order, Args&&... args)
+      : order(order), member(std::forward<Args>(args)...) {}
+  ~OrderedOwner() { order->events.push_back(AssignmentEvent::kOwnerDestroyed); }
+
+  friend std::string to_string(const OrderedOwner&) { return "owner"; }
+
+  AssignmentOrder* order;
+  T member;
+};
 
 } // namespace proxy_lifetime_tests_detail
 
@@ -515,18 +589,15 @@ TEST(ProxyLifetimeTests, TestPolyAssignment_FromValue_ToNull) {
     pro::proxy<detail::TestFacade> p;
     p = utils::LifetimeTracker::Session{&tracker};
     ASSERT_TRUE(p.has_value());
-    ASSERT_EQ(ToString(*p), "Session 3");
+    ASSERT_EQ(ToString(*p), "Session 2");
     expected_ops.emplace_back(1,
                               utils::LifetimeOperationType::kValueConstruction);
     expected_ops.emplace_back(2,
                               utils::LifetimeOperationType::kMoveConstruction);
-    expected_ops.emplace_back(3,
-                              utils::LifetimeOperationType::kMoveConstruction);
-    expected_ops.emplace_back(2, utils::LifetimeOperationType::kDestruction);
     expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
   }
-  expected_ops.emplace_back(3, utils::LifetimeOperationType::kDestruction);
+  expected_ops.emplace_back(2, utils::LifetimeOperationType::kDestruction);
   ASSERT_TRUE(tracker.GetOperations() == expected_ops);
 }
 
@@ -843,18 +914,15 @@ TEST(ProxyLifetimeTests, TestCopyAssignment_FromValue_ToNull) {
                               utils::LifetimeOperationType::kValueConstruction);
     p1 = p2;
     ASSERT_TRUE(p1.has_value());
-    ASSERT_EQ(ToString(*p1), "Session 3");
+    ASSERT_EQ(ToString(*p1), "Session 2");
     ASSERT_TRUE(p2.has_value());
     ASSERT_EQ(ToString(*p2), "Session 1");
     expected_ops.emplace_back(2,
                               utils::LifetimeOperationType::kCopyConstruction);
-    expected_ops.emplace_back(3,
-                              utils::LifetimeOperationType::kMoveConstruction);
-    expected_ops.emplace_back(2, utils::LifetimeOperationType::kDestruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
   }
   expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
-  expected_ops.emplace_back(3, utils::LifetimeOperationType::kDestruction);
+  expected_ops.emplace_back(2, utils::LifetimeOperationType::kDestruction);
   ASSERT_TRUE(tracker.GetOperations() == expected_ops);
 }
 
@@ -936,15 +1004,18 @@ TEST(ProxyLifetimeTests, TestMoveAssignment_FromValue_ToValue) {
                               utils::LifetimeOperationType::kValueConstruction);
     p1 = std::move(p2);
     ASSERT_TRUE(p1.has_value());
-    ASSERT_EQ(ToString(*p1), "Session 3");
+    ASSERT_EQ(ToString(*p1), "Session 4");
     ASSERT_FALSE(p2.has_value());
-    expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
     expected_ops.emplace_back(3,
                               utils::LifetimeOperationType::kMoveConstruction);
     expected_ops.emplace_back(2, utils::LifetimeOperationType::kDestruction);
+    expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
+    expected_ops.emplace_back(4,
+                              utils::LifetimeOperationType::kMoveConstruction);
+    expected_ops.emplace_back(3, utils::LifetimeOperationType::kDestruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
   }
-  expected_ops.emplace_back(3, utils::LifetimeOperationType::kDestruction);
+  expected_ops.emplace_back(4, utils::LifetimeOperationType::kDestruction);
   ASSERT_TRUE(tracker.GetOperations() == expected_ops);
 }
 
@@ -969,12 +1040,13 @@ TEST(ProxyLifetimeTests, TestMoveAssignment_FromValue_ToValue_Exception) {
       ASSERT_EQ(e.type_, utils::LifetimeOperationType::kMoveConstruction);
     }
     ASSERT_TRUE(exception_thrown);
-    ASSERT_FALSE(p1.has_value());
+    ASSERT_TRUE(p1.has_value());
+    ASSERT_EQ(ToString(*p1), "Session 1");
     ASSERT_FALSE(p2.has_value());
-    expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
     expected_ops.emplace_back(2, utils::LifetimeOperationType::kDestruction);
     ASSERT_TRUE(tracker.GetOperations() == expected_ops);
   }
+  expected_ops.emplace_back(1, utils::LifetimeOperationType::kDestruction);
   ASSERT_TRUE(tracker.GetOperations() == expected_ops);
 }
 
@@ -1316,6 +1388,41 @@ TEST(ProxyLifetimeTests, Test_CopyAssignment_NoRelocation) {
   ASSERT_EQ(ToString(*p1), "111");
 }
 
+TEST(ProxyLifetimeTests, Test_CopyAssignment_NoRelocation_NothrowCopy) {
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>                 //
+                  ::support_copy<pro::lifetime_requirement::nothrow>    //
+                  ::support_relocation<pro::lifetime_requirement::none> //
+                  ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<Pinned> p1 = &v1;
+  pro::proxy<Pinned> p2 = &v2;
+  static_assert(noexcept(p1 = p2));
+  p1 = p2;
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "222");
+}
+
+TEST(ProxyLifetimeTests, Test_CopyAssignment_ThrowingRelocation_NothrowCopy) {
+  struct ThrowingRelocation
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>                      //
+        ::support_copy<pro::lifetime_requirement::nothrow>         //
+        ::support_relocation<pro::lifetime_requirement::supported> //
+        ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<ThrowingRelocation> p1{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
+  pro::proxy<ThrowingRelocation> p2{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v2};
+  static_assert(noexcept(p1 = p2));
+  p1 = p2;
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "222");
+}
+
 TEST(ProxyLifetimeTests, Test_PointerAssignment_NoRelocationNoCopy) {
   struct Pinned : pro::facade_builder //
                   ::add_convention<utils::spec::FreeToString,
@@ -1370,6 +1477,22 @@ TEST(ProxyLifetimeTests, Test_PointerAssignment_ThrowingInitialization) {
                utils::ConstructionFailure);
   ASSERT_TRUE(p3.has_value());
   ASSERT_EQ(ToString(*p3), "111");
+}
+
+TEST(ProxyLifetimeTests, Test_PointerAssignment_ThrowingMove_NothrowCopy) {
+  struct ThrowingRelocation
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>                      //
+        ::support_relocation<pro::lifetime_requirement::supported> //
+        ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<ThrowingRelocation> p{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
+  utils::ThrowOnMovePtr<int> ptr{&v2};
+  static_assert(noexcept(p = ptr));
+  p = ptr;
+  ASSERT_EQ(ToString(*p), "222");
 }
 
 TEST(ProxyLifetimeTests, TestSwap_NoRelocation) {
@@ -1683,9 +1806,75 @@ TEST(ProxyLifetimeTests, Test_ConvertingCopyAssignment_NoRelocation) {
   pro::proxy<PinnedDerived> p2{
       std::in_place_type<utils::LifetimeTracker::Session>, &tracker};
   p1 = p2;
-  ASSERT_EQ(ToString(*p1), "Session 3");
+  ASSERT_EQ(ToString(*p1), "Session 4");
   ASSERT_TRUE(p2.has_value());
   ASSERT_EQ(ToString(*p2), "Session 2");
+}
+
+TEST(ProxyLifetimeTests,
+     Test_ConvertingCopyAssignment_NoRelocation_NothrowCopy) {
+  struct Pinned : pro::facade_builder //
+                  ::add_convention<utils::spec::FreeToString,
+                                   std::string() const>                 //
+                  ::support_copy<pro::lifetime_requirement::nothrow>    //
+                  ::support_relocation<pro::lifetime_requirement::none> //
+                  ::build {};
+  struct PinnedDerived : pro::facade_builder  //
+                         ::add_facade<Pinned> //
+                         ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<Pinned> p1 = &v1;
+  pro::proxy<PinnedDerived> p2 = &v2;
+  static_assert(noexcept(p1 = p2));
+  p1 = p2;
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "222");
+}
+
+TEST(ProxyLifetimeTests,
+     Test_ConvertingCopyAssignment_ThrowingRelocation_NothrowCopy) {
+  struct ThrowingRelocation
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>                      //
+        ::support_copy<pro::lifetime_requirement::nothrow>         //
+        ::support_relocation<pro::lifetime_requirement::supported> //
+        ::build {};
+  struct ThrowingRelocationDerived : pro::facade_builder              //
+                                     ::add_facade<ThrowingRelocation> //
+                                     ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<ThrowingRelocation> p1{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v1};
+  pro::proxy<ThrowingRelocationDerived> p2{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v2};
+  static_assert(noexcept(p1 = p2));
+  p1 = p2;
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "222");
+}
+
+TEST(ProxyLifetimeTests,
+     Test_ConvertingCopyAssignment_ThrowingRelocation_TrivialCopy) {
+  struct TrivialCopy
+      : pro::facade_builder //
+        ::add_convention<utils::spec::FreeToString,
+                         std::string() const>                      //
+        ::support_copy<pro::lifetime_requirement::trivial>         //
+        ::support_relocation<pro::lifetime_requirement::supported> //
+        ::build {};
+  struct TrivialCopyDerived : pro::facade_builder       //
+                              ::add_facade<TrivialCopy> //
+                              ::build {};
+  int v1 = 111, v2 = 222;
+  pro::proxy<TrivialCopy> p1{std::in_place_type<utils::ThrowOnMovePtr<int>>,
+                             &v1};
+  pro::proxy<TrivialCopyDerived> p2{
+      std::in_place_type<utils::ThrowOnMovePtr<int>>, &v2};
+  static_assert(noexcept(p1 = p2));
+  p1 = p2;
+  ASSERT_EQ(ToString(*p1), "222");
+  ASSERT_EQ(ToString(*p2), "222");
 }
 
 TEST(ProxyLifetimeTests, Test_NonDestructible_Construction) {
@@ -1708,6 +1897,112 @@ TEST(ProxyLifetimeTests, Test_NonDestructible_NonDestructiblePtr) {
       Proxy(std::in_place_type<detail::NonDestructiblePtr>, &v);
   Proxy* p2 = ::new (static_cast<void*>(storage2)) Proxy(*p1);
   ASSERT_EQ(ToString(**p2), "123");
+}
+
+TEST(ProxyLifetimeTests, TestCopyAssignment_FromOwnedValue) {
+  using F = detail::TestOwningCopyFacade;
+  detail::AssignmentOrder order;
+  int v = 7;
+  auto owner = std::make_shared<detail::OrderedOwner<pro::proxy<F>>>(
+      &order, std::in_place_type<detail::OrderedPtr<true>>, &v, &order);
+  pro::proxy<F>& source = owner->member;
+  pro::proxy<F> target = std::move(owner);
+  target = source;
+  ASSERT_EQ(ToString(*target), "7");
+  ASSERT_EQ(order.events, detail::kSourceUsedBeforeOwnerDestroyed);
+}
+
+TEST(ProxyLifetimeTests, TestCopyAssignment_FromOwnedValue_NoRelocation) {
+  struct F : pro::facade_builder                                              //
+             ::add_convention<utils::spec::FreeToString, std::string() const> //
+             ::support_copy<pro::lifetime_requirement::supported>             //
+             ::support_relocation<pro::lifetime_requirement::none>            //
+             ::build {};
+  detail::AssignmentOrder order;
+  int v = 7;
+  auto owner = std::make_shared<detail::OrderedOwner<pro::proxy<F>>>(
+      &order, std::in_place_type<detail::OrderedPtr<true>>, &v, &order);
+  pro::proxy<F>& source = owner->member;
+  pro::proxy<F> target = std::move(owner);
+  target = source;
+  ASSERT_EQ(ToString(*target), "7");
+  ASSERT_EQ(order.events, detail::kSourceUsedBeforeOwnerDestroyed);
+}
+
+TEST(ProxyLifetimeTests, TestMoveAssignment_FromOwnedValue) {
+  using F = detail::TestOwningCopyFacade;
+  detail::AssignmentOrder order;
+  int v = 7;
+  auto owner = std::make_shared<detail::OrderedOwner<pro::proxy<F>>>(
+      &order, std::in_place_type<detail::OrderedPtr<true>>, &v, &order);
+  pro::proxy<F>& source = owner->member;
+  pro::proxy<F> target = std::move(owner);
+  target = std::move(source);
+  ASSERT_EQ(ToString(*target), "7");
+  ASSERT_EQ(order.events, detail::kSourceUsedBeforeOwnerDestroyed);
+}
+
+TEST(ProxyLifetimeTests, Test_ConvertingCopyAssignment_FromOwnedValue) {
+  using F = detail::TestOwningCopyFacade;
+  using F2 = detail::TestOwningDerivedFacade;
+  detail::AssignmentOrder order;
+  int v = 7;
+  auto owner = std::make_shared<detail::OrderedOwner<pro::proxy<F2>>>(
+      &order, std::in_place_type<detail::OrderedPtr<true>>, &v, &order);
+  pro::proxy<F2>& source = owner->member;
+  pro::proxy<F> target = std::move(owner);
+  target = source;
+  ASSERT_EQ(ToString(*target), "7");
+  ASSERT_EQ(order.events, detail::kSourceUsedBeforeOwnerDestroyed);
+}
+
+TEST(ProxyLifetimeTests, Test_ConvertingMoveAssignment_FromOwnedValue) {
+  using F = detail::TestOwningCopyFacade;
+  using F2 = detail::TestOwningDerivedFacade;
+  detail::AssignmentOrder order;
+  int v = 7;
+  auto owner = std::make_shared<detail::OrderedOwner<pro::proxy<F2>>>(
+      &order, std::in_place_type<detail::OrderedPtr<true>>, &v, &order);
+  pro::proxy<F2>& source = owner->member;
+  pro::proxy<F> target = std::move(owner);
+  target = std::move(source);
+  ASSERT_EQ(ToString(*target), "7");
+  ASSERT_EQ(order.events, detail::kSourceUsedBeforeOwnerDestroyed);
+}
+
+TEST(ProxyLifetimeTests, TestPolyAssignment_FromOwnedValue) {
+  struct F : pro::facade_builder                                              //
+             ::add_convention<utils::spec::FreeToString, std::string() const> //
+             ::add_skill<pro::skills::rtti>                                   //
+             ::restrict_layout<4 * sizeof(void*)>                             //
+             ::support_relocation<pro::lifetime_requirement::nothrow>         //
+             ::build {};
+  using Owner = detail::OrderedOwner<detail::OrderedPtr<true>>;
+  detail::AssignmentOrder order;
+  int v = 7;
+  auto target = pro::make_proxy_inplace<F, Owner>(&order, &v, &order);
+  detail::OrderedPtr<true>& source = proxy_cast<Owner&>(*target).member;
+  target = std::move(source);
+  ASSERT_EQ(ToString(*target), "7");
+  ASSERT_EQ(order.events, detail::kSourceUsedBeforeOwnerDestroyed);
+}
+
+TEST(ProxyLifetimeTests, TestPolyAssignment_FromOwnedValue_NonMovablePtr) {
+  struct F : pro::facade_builder                                              //
+             ::add_convention<utils::spec::FreeToString, std::string() const> //
+             ::support_relocation<pro::lifetime_requirement::none>            //
+             ::build {};
+  detail::AssignmentOrder order;
+  int v = 7;
+  auto owner =
+      std::make_shared<detail::OrderedOwner<detail::OrderedPtr<false>>>(
+          &order, &v, &order);
+  detail::OrderedPtr<false>& source = owner->member;
+  pro::proxy<F> target = std::move(owner);
+  static_assert(noexcept(target = source));
+  target = source;
+  ASSERT_EQ(ToString(*target), "7");
+  ASSERT_EQ(order.events, detail::kSourceUsedBeforeOwnerDestroyed);
 }
 
 TEST(ProxyLifetimeTests, Test_Substitution_TrivialDerived) {
