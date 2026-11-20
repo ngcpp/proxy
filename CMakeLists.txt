@@ -34,6 +34,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 if(PROXY_FREESTANDING)
   add_compile_options(-ffreestanding -fno-exceptions -fno-rtti)
   add_link_options(-nodefaultlibs -lc)
+  # libstdc++ cannot build its std module with -ffreestanding (https://gcc.gnu.org/PR125460).
+  if(CMAKE_CXX_STDLIB_MODULES_JSON MATCHES "libstdc\\+\\+\\.modules\\.json$")
+    set(CMAKE_CXX_STDLIB_MODULES_JSON "")
+  endif()
 endif()
 
 file(GLOB_RECURSE proxy_public_headers CONFIGURE_DEPENDS
