@@ -45,6 +45,7 @@ jobs:
         CC=clang-${{ matrix.compiler.version }}
         CXX=clang++-${{ matrix.compiler.version }}
         CXXFLAGS=-stdlib=libc++
+        CXX_STDLIB_MODULES_JSON=/usr/lib/llvm-${{ matrix.compiler.version }}/lib/libc++.modules.json
         EOF
 
     - name: Check toolchain versions
@@ -55,12 +56,12 @@ jobs:
 
     - name: Build and run test with cmake
       run: |
-        cmake --preset default '-DPROXY_BUILD_MODULES=${{ matrix.compiler.modules }}' '-DBUILD_DOC_TESTING=${{ matrix.compiler.doc_tests }}'
+        cmake --preset default '-DPROXY_BUILD_MODULES=${{ matrix.compiler.modules }}' '-DBUILD_DOC_TESTING=${{ matrix.compiler.doc_tests }}' ${CXX_STDLIB_MODULES_JSON:+"-DCMAKE_CXX_STDLIB_MODULES_JSON=$CXX_STDLIB_MODULES_JSON"}
         cmake --build --preset default -j
         ctest --preset default -j
 
     - name: Build and run freestanding test with cmake
       run: |
-        cmake --preset freestanding '-DPROXY_BUILD_MODULES=${{ matrix.compiler.modules }}' '-DBUILD_DOC_TESTING=${{ matrix.compiler.doc_tests }}'
+        cmake --preset freestanding '-DPROXY_BUILD_MODULES=${{ matrix.compiler.modules }}' '-DBUILD_DOC_TESTING=${{ matrix.compiler.doc_tests }}' ${CXX_STDLIB_MODULES_JSON:+"-DCMAKE_CXX_STDLIB_MODULES_JSON=$CXX_STDLIB_MODULES_JSON"}
         cmake --build --preset freestanding -j
         ctest --preset freestanding -j
