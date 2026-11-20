@@ -52,6 +52,10 @@ struct TestTraitsFacade : pro::facade_builder                     //
                           ::add_direct_reflection<TraitsMetadata> //
                           ::build {};
 
+struct TestViewTraitsFacade : pro::facade_builder              //
+                              ::add_reflection<TraitsMetadata> //
+                              ::build {};
+
 struct DescriptionAccess {
   template <class Self, class... Ds>
   struct PRO5D_ENFORCE_EBO accessor : accessor<Self, Ds>... {};
@@ -163,6 +167,14 @@ TEST(ProxyReflectionTests, TestTraits_FancyPtr) {
   ASSERT_EQ(p.ReflectTraits().is_nothrow_move_constructible_, true);
   ASSERT_EQ(p.ReflectTraits().is_nothrow_destructible_, true);
   ASSERT_EQ(p.ReflectTraits().is_trivial_, false);
+}
+
+TEST(ProxyReflectionTests, TestTraits_View) {
+  int foo = 123;
+  pro::proxy_view<detail::TestViewTraitsFacade> p =
+      pro::make_proxy_view<detail::TestViewTraitsFacade>(foo);
+  ASSERT_EQ(p->ReflectTraits().is_default_constructible_, true);
+  ASSERT_EQ(p->ReflectTraits().is_trivial_, true);
 }
 
 TEST(ProxyReflectionTests, TestSharedAccess) {
