@@ -360,8 +360,6 @@ private:
   P* p_;
 };
 
-struct relocate_dispatch;
-
 template <qualifier_type Q>
 using erased_ptr_t = std::conditional_t<Q == qualifier_type::const_lv ||
                                             Q == qualifier_type::const_rv,
@@ -372,19 +370,7 @@ constexpr auto invocation_function =
     [](erased_ptr_t<Q> ptr, Args... args) noexcept(NE) -> R {
   auto* self = std::launder(
       static_cast<std::remove_reference_t<add_qualifier_t<P, Q>>*>(ptr));
-  if constexpr (std::is_same_v<D, relocate_dispatch>) {
-    [self](void* rhs) {
-      if constexpr (is_bitwise_trivially_relocatable_v<P>) {
-        if constexpr (!std::is_empty_v<P>) {
-          std::uninitialized_copy_n(reinterpret_cast<const std::byte*>(self),
-                                    sizeof(P), static_cast<std::byte*>(rhs));
-        }
-      } else {
-        destroying_guard<P> guard{self};
-        std::construct_at(static_cast<P*>(rhs), std::move(*self));
-      }
-    }(args...);
-  } else if constexpr (Q == qualifier_type::rv) {
+  if constexpr (Q == qualifier_type::rv) {
     destroying_guard<P> guard{self};
     return invoke_dispatch<D, R>(get_operand<P, IsDirect, Q>(self),
                                  std::forward<Args>(args)...);
@@ -556,6 +542,22 @@ struct copy_dispatch {
   PRO5D_STATIC_CALL(void, const T& self, void* rhs) noexcept(
       std::is_nothrow_copy_constructible_v<T>) {
     std::construct_at(static_cast<T*>(rhs), self);
+  }
+};
+struct relocate_dispatch {
+  template <class T>
+  PRO5D_STATIC_CALL(void, T& self, void* rhs) noexcept(
+      relocatability_traits<T, lifetime_requirement::nothrow>::applicable) {
+    if constexpr (is_bitwise_trivially_relocatable_v<T>) {
+      if constexpr (!std::is_empty_v<T>) {
+        std::uninitialized_copy_n(
+            reinterpret_cast<const std::byte*>(std::addressof(self)), sizeof(T),
+            static_cast<std::byte*>(rhs));
+      }
+    } else {
+      destroying_guard<T> guard{std::addressof(self)};
+      std::construct_at(static_cast<T*>(rhs), std::move(self));
+    }
   }
 };
 struct destroy_dispatch {
@@ -1020,16 +1022,15 @@ struct proxy_traits
       specialization_t<accessors_t, direct_access_groups, proxy<F, MP>, F, MP>;
   using meta_base = specialization_t<
       proxy_meta_base_t,
-      composite_t<
-          typename proxy_traits::super_meta,
-          lifetime_meta_t<MP, copy_dispatch, void(void*) const noexcept,
-                          void(void*) const, F::copyability>,
-          lifetime_meta_t<MP, relocate_dispatch, void(void*) && noexcept,
-                          void(void*) &&, F::relocatability>,
-          lifetime_meta_t<MP, destroy_dispatch, void() && noexcept, void() &&,
-                          F::destructibility>,
-          typename proxy_traits::self_op_meta,
-          typename proxy_traits::refl_meta>>;
+      composite_t<typename proxy_traits::super_meta,
+                  lifetime_meta_t<MP, copy_dispatch, void(void*) const noexcept,
+                                  void(void*) const, F::copyability>,
+                  lifetime_meta_t<MP, relocate_dispatch, void(void*) noexcept,
+                                  void(void*), F::relocatability>,
+                  lifetime_meta_t<MP, destroy_dispatch, void() && noexcept,
+                                  void() &&, F::destructibility>,
+                  typename proxy_traits::self_op_meta,
+                  typename proxy_traits::refl_meta>>;
 
   template <class P>
   static consteval void diagnose_proxiable() {
@@ -1507,8 +1508,8 @@ private:
       } else {
         detail::proxy_helper::get_meta<detail::invocation_meta<
             MP, true, detail::relocate_dispatch,
-            void(void*) && noexcept(F::relocatability ==
-                                    lifetime_requirement::nothrow)>>(rhs)
+            void(void*) noexcept(F::relocatability ==
+                                 lifetime_requirement::nothrow)>>(rhs)
             .function(rhs_ptr, ptr_);
       }
       meta_ = detail::proxy_helper::get_meta_storage(rhs);
