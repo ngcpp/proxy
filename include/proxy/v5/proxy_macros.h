@@ -278,15 +278,16 @@ stick to a specific major version of the Proxy library.")
 #endif // __msft_lib_proxy
 #define __msft_lib_proxy PRO5D_DEPRECATED_MSFT_LIB_PROXY
 
-#if defined(__clang__)
-#pragma clang deprecated(PRO5D_DEPRECATED_MSFT_LIB_PROXY5,                     \
-                         "use __ngcpp_lib_proxy5 instead")
+#ifdef __clang__
+#pragma clang deprecated(                                                      \
+    PRO5D_DEPRECATED_MSFT_LIB_PROXY5,                                          \
+    "Use __ngcpp_lib_proxy5 instead of __msft_lib_proxy5")
 #pragma clang deprecated(PRO5D_DEPRECATED_MSFT_LIB_PROXY,                      \
-                         "use __ngcpp_lib_proxy instead")
+                         "Use __ngcpp_lib_proxy instead of __msft_lib_proxy")
 #elif defined(_MSC_VER)
 #pragma deprecated("PRO5D_DEPRECATED_MSFT_LIB_PROXY5")
 #pragma deprecated("PRO5D_DEPRECATED_MSFT_LIB_PROXY")
-#endif
+#endif // __clang__
 
 #ifdef PRO_DEF_MEM_DISPATCH
 #undef PRO_DEF_MEM_DISPATCH

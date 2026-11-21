@@ -22,7 +22,7 @@ Starting with 3.0.0, Proxy ships a feature-test macro that encodes the library v
 | 3.1.0   | `__msft_lib_proxy`   | `202410L` |
 | 3.0.0   | `__msft_lib_proxy`   | `202408L` |
 
-`__msft_lib_proxy` and its major-qualified form `__msft_lib_proxy5` are retained as deprecated aliases for backward compatibility. Supporting compilers issue a deprecation warning when either alias is used.
+`__msft_lib_proxy` and its major-qualified form `__msft_lib_proxy5` are retained as deprecated aliases for backward compatibility. Clang and MSVC issue a deprecation warning when either alias is expanded, but not when it is only tested with `#ifdef` or `defined`. GCC has no facility to deprecate a macro, so it accepts both aliases without a warning.
 
 ## Example
 
