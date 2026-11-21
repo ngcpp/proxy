@@ -360,16 +360,17 @@ R invoke_dispatch(Args&&... args) {
 #pragma warning(pop)
 #endif // defined(_MSC_VER) && !defined(__clang__)
 
-template <class P>
-struct destroying_guard {
-  explicit destroying_guard(P* p) noexcept : p_(p) {}
-  ~destroying_guard() noexcept(std::is_nothrow_destructible_v<P>) { p_->~P(); }
-
-private:
-  P* p_;
+struct construction_dispatch {
+  template <class T>
+  PRO5D_STATIC_CALL(void, T&& self, void* rhs) noexcept(
+      nothrow_constructible<std::remove_cvref_t<T>, T>) {
+    std::construct_at(static_cast<std::remove_cvref_t<T>*>(rhs),
+                      std::forward<T>(self));
+  }
 };
-
-struct relocate_dispatch;
+struct destruction_dispatch {
+  PRO5D_STATIC_CALL(void, auto&&) noexcept {}
+};
 
 template <qualifier_type Q>
 using erased_ptr_t = std::conditional_t<Q == qualifier_type::const_lv ||
@@ -381,20 +382,20 @@ constexpr auto invocation_function =
     [](erased_ptr_t<Q> ptr, Args... args) noexcept(NE) -> R {
   auto* self = std::launder(
       static_cast<std::remove_reference_t<add_qualifier_t<P, Q>>*>(ptr));
-  if constexpr (std::is_same_v<D, relocate_dispatch>) {
-    [self](void* rhs) {
-      if constexpr (is_bitwise_trivially_relocatable_v<P>) {
-        if constexpr (!std::is_empty_v<P>) {
-          std::uninitialized_copy_n(reinterpret_cast<const std::byte*>(self),
-                                    sizeof(P), static_cast<std::byte*>(rhs));
-        }
-      } else {
-        destroying_guard<P> guard{self};
-        std::construct_at(static_cast<P*>(rhs), std::move(*self));
-      }
-    }(args...);
+  if constexpr (std::is_same_v<D, construction_dispatch> &&
+                Q == qualifier_type::rv &&
+                is_bitwise_trivially_relocatable_v<P>) {
+    if constexpr (!std::is_empty_v<P>) {
+      std::uninitialized_copy_n(reinterpret_cast<const std::byte*>(self),
+                                sizeof(P), static_cast<std::byte*>(args)...);
+    }
   } else if constexpr (Q == qualifier_type::rv) {
-    destroying_guard<P> guard{self};
+    struct destroying_guard {
+      ~destroying_guard() noexcept(std::is_nothrow_destructible_v<P>) {
+        p->~P();
+      }
+      P* p;
+    } guard{self};
     return invoke_dispatch<D, R>(get_operand<P, IsDirect, Q>(self),
                                  std::forward<Args>(args)...);
   } else {
@@ -560,16 +561,6 @@ consteval bool is_metadata_well_formed() {
   }
   return false;
 }
-struct copy_dispatch {
-  template <class T>
-  PRO5D_STATIC_CALL(void, const T& self,
-                    void* rhs) noexcept(nothrow_constructible<T, const T&>) {
-    std::construct_at(static_cast<T*>(rhs), self);
-  }
-};
-struct destroy_dispatch {
-  PRO5D_STATIC_CALL(void, auto&&) noexcept {}
-};
 template <class MP, class D, class SNE, class SE, lifetime_requirement LR>
 struct lifetime_meta_traits : std::type_identity<void> {};
 template <class MP, class D, class SNE, class SE>
@@ -1031,12 +1022,12 @@ struct proxy_traits
       proxy_meta_base_t,
       composite_t<
           typename proxy_traits::super_meta,
-          lifetime_meta_t<MP, copy_dispatch, void(void*) const noexcept,
+          lifetime_meta_t<MP, construction_dispatch, void(void*) const noexcept,
                           void(void*) const, F::copyability>,
-          lifetime_meta_t<MP, relocate_dispatch, void(void*) && noexcept,
+          lifetime_meta_t<MP, construction_dispatch, void(void*) && noexcept,
                           void(void*) &&, F::relocatability>,
-          lifetime_meta_t<MP, destroy_dispatch, void() && noexcept, void() &&,
-                          F::destructibility>,
+          lifetime_meta_t<MP, destruction_dispatch, void() && noexcept,
+                          void() &&, F::destructibility>,
           typename proxy_traits::self_op_meta,
           typename proxy_traits::refl_meta>>;
 
@@ -1500,7 +1491,7 @@ private:
             static_cast<const std::byte*>(detail::proxy_helper::get_ptr(rhs)),
             F2::max_size, ptr_);
       } else {
-        invoke<detail::copy_dispatch,
+        invoke<detail::construction_dispatch,
                void(void*) const noexcept(
                    F::copyability == lifetime_requirement::nothrow)>(rhs, ptr_);
       }
@@ -1520,7 +1511,7 @@ private:
                                   F2::max_size, ptr_);
       } else {
         detail::proxy_helper::get_meta<detail::invocation_meta<
-            MP, true, detail::relocate_dispatch,
+            MP, true, detail::construction_dispatch,
             void(void*) && noexcept(F::relocatability ==
                                     lifetime_requirement::nothrow)>>(rhs)
             .function(rhs_ptr, ptr_);
@@ -1547,7 +1538,7 @@ private:
   {
     if constexpr (F::destructibility != lifetime_requirement::trivial) {
       if (meta_) {
-        invoke<detail::destroy_dispatch,
+        invoke<detail::destruction_dispatch,
                void() && noexcept(F::destructibility ==
                                   lifetime_requirement::nothrow)>(
             std::move(*this));
