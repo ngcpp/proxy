@@ -362,42 +362,48 @@ private:
 
 struct relocate_dispatch;
 
+template <qualifier_type Q>
+using erased_ptr_t = std::conditional_t<Q == qualifier_type::const_lv ||
+                                            Q == qualifier_type::const_rv,
+                                        const void*, void*>;
+template <class P, bool IsDirect, class D, qualifier_type Q, bool NE, class R,
+          class... Args>
+constexpr auto invocation_function =
+    [](erased_ptr_t<Q> ptr, Args... args) noexcept(NE) -> R {
+  auto* self = std::launder(
+      static_cast<std::remove_reference_t<add_qualifier_t<P, Q>>*>(ptr));
+  if constexpr (std::is_same_v<D, relocate_dispatch>) {
+    [self](void* rhs) {
+      if constexpr (is_bitwise_trivially_relocatable_v<P>) {
+        if constexpr (!std::is_empty_v<P>) {
+          std::uninitialized_copy_n(reinterpret_cast<const std::byte*>(self),
+                                    sizeof(P), static_cast<std::byte*>(rhs));
+        }
+      } else {
+        destroying_guard<P> guard{self};
+        std::construct_at(static_cast<P*>(rhs), std::move(*self));
+      }
+    }(args...);
+  } else if constexpr (Q == qualifier_type::rv) {
+    destroying_guard<P> guard{self};
+    return invoke_dispatch<D, R>(get_operand<P, IsDirect, Q>(self),
+                                 std::forward<Args>(args)...);
+  } else {
+    return invoke_dispatch<D, R>(get_operand<P, IsDirect, Q>(self),
+                                 std::forward<Args>(args)...);
+  }
+};
+
 template <class S>
 struct signature_traits : inapplicable_traits {};
 template <qualifier_type Q, bool NE, class R, class... Args>
 struct signature_traits_impl : applicable_traits {
   using return_type = R;
-  using pointer_type = std::conditional_t<Q == qualifier_type::const_lv ||
-                                              Q == qualifier_type::const_rv,
-                                          const void*, void*>;
-  using function_type = R(pointer_type, Args...) noexcept(NE);
+  using function_type = R(erased_ptr_t<Q>, Args...) noexcept(NE);
 
   template <class P, bool IsDirect, class D>
   static constexpr auto invoke =
-      [](pointer_type ptr, Args... args) noexcept(NE) -> R {
-    auto* self = std::launder(
-        static_cast<std::remove_reference_t<add_qualifier_t<P, Q>>*>(ptr));
-    if constexpr (std::is_same_v<D, relocate_dispatch>) {
-      [self](void* rhs) {
-        if constexpr (is_bitwise_trivially_relocatable_v<P>) {
-          if constexpr (!std::is_empty_v<P>) {
-            std::uninitialized_copy_n(reinterpret_cast<const std::byte*>(self),
-                                      sizeof(P), static_cast<std::byte*>(rhs));
-          }
-        } else {
-          destroying_guard<P> guard{self};
-          std::construct_at(static_cast<P*>(rhs), std::move(*self));
-        }
-      }(args...);
-    } else if constexpr (Q == qualifier_type::rv) {
-      destroying_guard<P> guard{self};
-      return invoke_dispatch<D, R>(get_operand<P, IsDirect, Q>(self),
-                                   std::forward<Args>(args)...);
-    } else {
-      return invoke_dispatch<D, R>(get_operand<P, IsDirect, Q>(self),
-                                   std::forward<Args>(args)...);
-    }
-  };
+      invocation_function<P, IsDirect, D, Q, NE, R, Args...>;
 
   static constexpr qualifier_type this_qualifier = Q;
   template <class P, bool IsDirect, class D>
