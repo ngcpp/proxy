@@ -196,6 +196,17 @@ struct add_qualifier_traits<T, qualifier_type::const_rv>
 template <class T, qualifier_type Q>
 using add_qualifier_t = add_qualifier_traits<T, Q>::type;
 
+template <class T>
+constexpr decltype(auto) move_or_copy(T& value) noexcept {
+  if constexpr (std::is_move_constructible_v<T> &&
+                (std::is_nothrow_move_constructible_v<T> ||
+                 !std::is_nothrow_copy_constructible_v<T>)) {
+    return std::move(value);
+  } else {
+    return std::as_const(value);
+  }
+}
+
 template <class T, lifetime_requirement LR>
 struct copyability_traits : inapplicable_traits {};
 template <class T>
@@ -1255,14 +1266,11 @@ public:
              F::destructibility >= lifetime_requirement::supported)
   {
     if (this != std::addressof(rhs)) [[likely]] {
-      if constexpr (F::copyability == lifetime_requirement::nothrow) {
-        destroy();
-        initialize(rhs);
-      } else if constexpr (F::relocatability >=
-                           lifetime_requirement::supported) {
-        *this = proxy{rhs};
-      } else {
+      if (meta_) {
+        proxy temp = rhs;
         reset();
+        initialize(detail::move_or_copy(temp));
+      } else {
         initialize(rhs);
       }
     }
@@ -1277,8 +1285,13 @@ public:
              F::copyability != lifetime_requirement::trivial)
   {
     if (this != std::addressof(rhs)) [[likely]] {
-      reset();
-      initialize(std::move(rhs));
+      if (meta_) {
+        proxy temp = std::move(rhs);
+        reset();
+        initialize(std::move(temp));
+      } else {
+        initialize(std::move(rhs));
+      }
     }
     return *this;
   }
@@ -1292,13 +1305,11 @@ public:
              F::copyability >= lifetime_requirement::supported &&
              F::destructibility >= lifetime_requirement::supported)
   {
-    if constexpr (F::copyability >= lifetime_requirement::nothrow) {
-      destroy();
-      initialize(rhs);
-    } else if constexpr (F::relocatability >= lifetime_requirement::supported) {
-      *this = proxy{rhs};
-    } else {
+    if (meta_) {
+      proxy temp = rhs;
       reset();
+      initialize(detail::move_or_copy(temp));
+    } else {
       initialize(rhs);
     }
     return *this;
@@ -1314,8 +1325,13 @@ public:
              F::destructibility >= lifetime_requirement::supported &&
              F::copyability != lifetime_requirement::trivial)
   {
-    reset();
-    initialize(std::move(rhs));
+    if (meta_) {
+      proxy temp = std::move(rhs);
+      reset();
+      initialize(std::move(temp));
+    } else {
+      initialize(std::move(rhs));
+    }
     return *this;
   }
   template <class P>
@@ -1327,15 +1343,13 @@ public:
              std::is_constructible_v<std::decay_t<P>, P> &&
              F::destructibility >= lifetime_requirement::supported)
   {
-    if constexpr (std::is_nothrow_constructible_v<std::decay_t<P>, P>) {
-      destroy();
-      initialize<std::decay_t<P>>(std::forward<P>(ptr));
-    } else if constexpr (F::relocatability >= lifetime_requirement::supported ||
-                         F::copyability >= lifetime_requirement::nothrow) {
-      *this = proxy{std::forward<P>(ptr)};
-    } else {
+    using VP = std::decay_t<P>;
+    if (meta_) {
+      VP temp(std::forward<P>(ptr));
       reset();
-      initialize<std::decay_t<P>>(std::forward<P>(ptr));
+      initialize<VP>(detail::move_or_copy(temp));
+    } else {
+      initialize<VP>(std::forward<P>(ptr));
     }
     return *this;
   }
@@ -1405,14 +1419,16 @@ public:
     if (meta_) {
       if (rhs.meta_) {
         proxy temp = *this;
-        *this = rhs;
-        rhs = temp;
+        reset();
+        initialize(rhs);
+        rhs.reset();
+        rhs.initialize(temp);
       } else {
-        rhs = *this;
+        rhs.initialize(*this);
         reset();
       }
     } else if (rhs.meta_) {
-      *this = rhs;
+      initialize(rhs);
       rhs.reset();
     }
   }
@@ -1496,7 +1512,10 @@ private:
     }
   }
   template <facade F2>
-  void initialize(proxy<F2, MP>&& rhs) {
+  void initialize(proxy<F2, MP>&& rhs)
+    requires(F::relocatability >= lifetime_requirement::supported &&
+             F::copyability != lifetime_requirement::trivial)
+  {
     PRO5D_DEBUG(std::ignore = &pro_symbol_guard;)
     if (rhs.has_value()) {
       detail::proxy_helper::meta_resetting_guard<F2, MP> guard{rhs};
