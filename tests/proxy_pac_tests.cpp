@@ -63,6 +63,11 @@ struct CopyableFacade : pro::facade_builder                                  //
                         ::build {};
 static_assert(!IsInlineMetaPreferred<CopyableFacade>);
 
+// A signed data pointer has only 8 PAC bits, so a single relocation keeps its
+// signature with probability 1/256. A test fails spuriously only when all 16
+// attempts collide, which lowers the rate to 1/2^128.
+constexpr std::size_t RelocationAttemptCount = 16;
+
 } // namespace proxy_pac_tests_detail
 
 namespace detail = proxy_pac_tests_detail;
@@ -70,23 +75,38 @@ namespace detail = proxy_pac_tests_detail;
 TEST(ProxyPacTests, TestBinaryRepresentation_InlineMetaStorage) {
   pro::proxy<detail::DefaultFacade> p1 = std::make_shared<int>(123);
   auto p1_data = detail::GetRawBytes(p1);
-  auto p2 = std::move(p1);
-  auto p2_data = detail::GetRawBytes(p2);
+  pro::proxy<detail::DefaultFacade>
+      destinations[detail::RelocationAttemptCount];
+  bool changed = false;
+  for (auto& destination : destinations) {
+    destination = std::move(p1);
+    if (detail::GetRawBytes(destination) != p1_data) {
+      changed = true;
+    }
+    p1 = std::move(destination);
+  }
 
   // Pointer authentication signs the stored metadata with address diversity, so
   // a genuine relocation re-signs it and the raw bytes of the signed meta
   // change
-  EXPECT_NE(p1_data, p2_data);
+  EXPECT_TRUE(changed);
 }
 
 TEST(ProxyPacTests, TestBinaryRepresentation_StaticMetaStorage) {
   pro::proxy<detail::CopyableFacade> p1 = std::make_shared<int>(123);
   auto p1_data = detail::GetRawBytes(p1);
-  auto p2 = p1;
-  auto p2_data = detail::GetRawBytes(p2);
+  pro::proxy<detail::CopyableFacade>
+      destinations[detail::RelocationAttemptCount];
+  bool changed = false;
+  for (auto& destination : destinations) {
+    destination = p1;
+    if (detail::GetRawBytes(destination) != p1_data) {
+      changed = true;
+    }
+  }
 
   // Both inline metadata and static metadata has pointer authentication
-  EXPECT_NE(p1_data, p2_data);
+  EXPECT_TRUE(changed);
 }
 
 TEST(ProxyPacTests, TestBitFlipAttack_InlineMetaStorage) {
@@ -114,8 +134,11 @@ TEST(ProxyPacTests, TestRelocationAttack_InlineMetaStorage) {
       {
         int a = 123;
         pro::proxy<detail::DefaultFacade> p1 = &a;
-        pro::proxy<detail::DefaultFacade> p2;
-        detail::BitwiseCopy(p1, p2);
+        pro::proxy<detail::DefaultFacade>
+            destinations[detail::RelocationAttemptCount];
+        for (auto& destination : destinations) {
+          detail::BitwiseCopy(p1, destination);
+        }
       },
       "");
 }
@@ -125,8 +148,11 @@ TEST(ProxyPacTests, TestRelocationAttack_StaticMetaStorage) {
       {
         int a = 123;
         pro::proxy<detail::CopyableFacade> p1 = &a;
-        pro::proxy<detail::CopyableFacade> p2;
-        detail::BitwiseCopy(p1, p2);
+        pro::proxy<detail::CopyableFacade>
+            destinations[detail::RelocationAttemptCount];
+        for (auto& destination : destinations) {
+          detail::BitwiseCopy(p1, destination);
+        }
       },
       "");
 }
