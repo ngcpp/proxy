@@ -49,6 +49,23 @@ using MockCopyableSmallPtr =
 using MockTrivialPtr = MockPtr<true, true, true, sizeof(void*), alignof(void*)>;
 using MockFunctionPtr = void (*)();
 
+struct MockNonDestructiblePtr {
+  using element_type = MockNonDestructiblePtr;
+
+  MockNonDestructiblePtr(const MockNonDestructiblePtr&) noexcept = default;
+  ~MockNonDestructiblePtr() = delete;
+  const MockNonDestructiblePtr* operator->() const noexcept { return this; }
+};
+
+struct MockThrowingDestructionPtr {
+  using element_type = MockThrowingDestructionPtr;
+
+  MockThrowingDestructionPtr(const MockThrowingDestructionPtr&) noexcept =
+      default;
+  ~MockThrowingDestructionPtr() noexcept(false) {}
+  const MockThrowingDestructionPtr* operator->() const noexcept { return this; }
+};
+
 } // namespace proxy_traits_tests_detail
 
 namespace pro {
@@ -212,6 +229,24 @@ static_assert(
 static_assert(
     std::is_assignable_v<pro::proxy<CopyableSmallFacade>, MockFunctionPtr>);
 static_assert(sizeof(pro::proxy<CopyableSmallFacade>) == 2 * sizeof(void*));
+
+struct NonDestructibleCopyableFacade
+    : pro::facade_builder                                    //
+      ::support_copy<pro::lifetime_requirement::supported>   //
+      ::support_relocation<pro::lifetime_requirement::none>  //
+      ::support_destruction<pro::lifetime_requirement::none> //
+      ::build {};
+static_assert(
+    pro::proxiable<MockNonDestructiblePtr, NonDestructibleCopyableFacade>);
+
+struct NothrowCopyableFacade
+    : pro::facade_builder                                         //
+      ::support_copy<pro::lifetime_requirement::nothrow>          //
+      ::support_relocation<pro::lifetime_requirement::none>       //
+      ::support_destruction<pro::lifetime_requirement::supported> //
+      ::build {};
+static_assert(
+    pro::proxiable<MockThrowingDestructionPtr, NothrowCopyableFacade>);
 
 struct TrivialFacade
     : pro::facade_builder                                       //

@@ -5,8 +5,10 @@
 void swap(proxy& rhs)
     noexcept(F::relocatability >= lifetime_requirement::nothrow ||
         F::copyability == lifetime_requirement::trivial)
-    requires(F::relocatability >= lifetime_requirement::supported ||
-        F::copyability == lifetime_requirement::trivial);
+    requires(F::relocatability == lifetime_requirement::trivial ||
+        F::copyability == lifetime_requirement::trivial ||
+        (F::relocatability >= lifetime_requirement::supported &&
+            F::destructibility >= lifetime_requirement::supported));
 
 // (2) (since 5.0.0)
 void swap(proxy& rhs)
