@@ -2,8 +2,8 @@
 // Copyright (c) 2026-Present Next Gen C++ Foundation.
 // Licensed under the MIT License.
 
-#ifndef MSFT_PROXY_V5_PROXY_MACROS_H_
-#define MSFT_PROXY_V5_PROXY_MACROS_H_
+#ifndef NGCPP_PROXY_V5_PROXY_MACROS_H_
+#define NGCPP_PROXY_V5_PROXY_MACROS_H_
 
 #if __cpp_static_call_operator >= 202207L
 #define PRO5D_STATIC_CALL(ret, ...) static ret operator()(__VA_ARGS__)
@@ -29,7 +29,7 @@
 #define PRO5D_DEBUG(...) __VA_ARGS__
 #endif // NDEBUG
 
-#define __msft_lib_proxy5 202606L
+#define __ngcpp_lib_proxy5 202606L
 
 #define PRO5D_DIRECT_FUNC_IMPL(...)                                            \
   noexcept(noexcept(__VA_ARGS__))                                              \
@@ -248,17 +248,46 @@ Note: To resolve this error: \n\
 - Or use the `" #qualified_name "` macro (note the `5` suffix) to explicitly \
 stick to a specific major version of the Proxy library.")
 
-#ifdef __msft_lib_proxy
-#undef __msft_lib_proxy
-#define __msft_lib_proxy                                                       \
+#ifdef __ngcpp_lib_proxy
+#undef __ngcpp_lib_proxy
+#define __ngcpp_lib_proxy                                                      \
   [] {                                                                         \
-    PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(__msft_lib_proxy,                  \
-                                            __msft_lib_proxy5);                \
+    PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(__ngcpp_lib_proxy,                 \
+                                            __ngcpp_lib_proxy5);               \
     return 0L;                                                                 \
   }()
 #else
-#define __msft_lib_proxy __msft_lib_proxy5
+#define __ngcpp_lib_proxy __ngcpp_lib_proxy5
+#endif // __ngcpp_lib_proxy
+
+// Deprecated Microsoft-era feature-test macro aliases
+
+#define PRO5D_DEPRECATED_MSFT_LIB_PROXY5 __ngcpp_lib_proxy5
+#define __msft_lib_proxy5 PRO5D_DEPRECATED_MSFT_LIB_PROXY5
+
+#ifdef __msft_lib_proxy
+#undef __msft_lib_proxy
+#define PRO5D_DEPRECATED_MSFT_LIB_PROXY                                        \
+  [] {                                                                         \
+    PRO5D_AMBIGUOUS_MACRO_DIAGNOSTIC_ASSERT(__msft_lib_proxy,                  \
+                                            __ngcpp_lib_proxy5);               \
+    return 0L;                                                                 \
+  }()
+#else
+#define PRO5D_DEPRECATED_MSFT_LIB_PROXY __ngcpp_lib_proxy
 #endif // __msft_lib_proxy
+#define __msft_lib_proxy PRO5D_DEPRECATED_MSFT_LIB_PROXY
+
+#ifdef __clang__
+#pragma clang deprecated(                                                      \
+    PRO5D_DEPRECATED_MSFT_LIB_PROXY5,                                          \
+    "Use __ngcpp_lib_proxy5 instead of __msft_lib_proxy5")
+#pragma clang deprecated(PRO5D_DEPRECATED_MSFT_LIB_PROXY,                      \
+                         "Use __ngcpp_lib_proxy instead of __msft_lib_proxy")
+#elif defined(_MSC_VER)
+#pragma deprecated("PRO5D_DEPRECATED_MSFT_LIB_PROXY5")
+#pragma deprecated("PRO5D_DEPRECATED_MSFT_LIB_PROXY")
+#endif // __clang__
 
 #ifdef PRO_DEF_MEM_DISPATCH
 #undef PRO_DEF_MEM_DISPATCH
@@ -305,4 +334,4 @@ stick to a specific major version of the Proxy library.")
 #define PRO_ENABLE_FREE PRO5_ENABLE_FREE
 #endif // PRO_ENABLE_FREE
 
-#endif // MSFT_PROXY_V5_PROXY_MACROS_H_
+#endif // NGCPP_PROXY_V5_PROXY_MACROS_H_
