@@ -14,7 +14,7 @@ repos:
         args: ["--maxkb=1024"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.5
+    rev: v0.17.6
     hooks:
       - id: ruff-format
 
@@ -26,7 +26,7 @@ repos:
         exclude: '^(subprojects|build|bazel-.*)/'
 
   - repo: https://github.com/keith/pre-commit-buildifier
-    rev: 10.1.0
+    rev: 10.2.0
     hooks:
       - id: buildifier
         exclude: '^(subprojects|build|bazel-.*)/'
